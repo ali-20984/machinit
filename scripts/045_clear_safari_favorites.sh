@@ -48,7 +48,7 @@ try:
             plistlib.dump(plist, f)
         print("Successfully cleared Safari Favorites.")
     else:
-        print("Favorites Bar not found in plist.")
+        print("Favorites Bar not found or empty.")
 
 except Exception as e:
     print(f"Error processing plist: {e}")
@@ -66,3 +66,9 @@ EOF
 else
     echo "Bookmarks file not found at $BOOKMARKS_FILE. Safari might not have been run yet."
 fi
+
+echo "Disabling Safari 'launched' notifications..."
+defaults write com.apple.coreservices.uiagent CSUIHasSafariBeenLaunched -bool YES
+defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z
+
+echo "Safari configuration complete."

@@ -1,6 +1,14 @@
 #!/bin/bash
 echo "Installing comprehensive development tools..."
 
+# General Utilities
+echo "Installing Coreutils..."
+brew install coreutils
+
+# Version Control
+echo "Installing/Updating Git..."
+brew install git
+
 # C++ Development Tools
 echo "Installing C++ tools..."
 # cmake: Build system

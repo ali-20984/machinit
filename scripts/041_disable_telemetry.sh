@@ -17,4 +17,9 @@ defaults write com.apple.AdLib forceLimitAdTracking -bool true
 # Disable Siri analytics (if Siri is enabled, this limits data collection)
 defaults write com.apple.assistant.support "Siri Data Sharing Opt-In Status" -int 2
 
+# Unload Crash Reporter
+echo "Unloading Crash Reporter..."
+launchctl unload -w /System/Library/LaunchAgents/com.apple.ReportCrash.plist
+sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.ReportCrash.Root.plist
+
 echo "Telemetry disabled."

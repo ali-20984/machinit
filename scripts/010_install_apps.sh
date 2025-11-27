@@ -1,4 +1,7 @@
 #!/bin/bash
 echo "Installing applications..."
-# brew install git node ...
+
+echo "Installing iTerm2..."
+brew install --cask iterm2
+
 echo "Applications installed."
