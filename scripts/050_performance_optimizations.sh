@@ -13,21 +13,10 @@ echo "Disabling Spotlight indexing..."
 sudo mdutil -a -i off
 check_status "Spotlight indexing disabled"
 
-echo "Disabling Dashboard..."
-defaults write com.apple.dashboard mcx-disabled -boolean YES
-check_status "Dashboard disabled"
-
 echo "Disabling global animations..."
 defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
 defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
 check_status "Global animations disabled"
-
-echo "Optimizing Dock animations..."
-defaults write com.apple.dock launchanim -bool false
-defaults write com.apple.dock expose-animation-duration -float 0
-defaults write com.apple.dock springboard-show-duration -int 0
-defaults write com.apple.dock springboard-hide-duration -int 0
-check_status "Dock animations disabled"
 
 echo "Optimizing SSD settings..."
 # SSD optimizations 

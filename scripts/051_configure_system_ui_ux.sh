@@ -9,6 +9,12 @@ defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
 echo "Disabling transparency..."
 defaults write com.apple.universalaccess reduceTransparency -bool true
 
+# Reduce motion and differentiate without color (Accessibility)
+echo "Reducing motion and enabling differentiate without color..."
+defaults write com.apple.Accessibility DifferentiateWithoutColor -int 1
+defaults write com.apple.Accessibility ReduceMotionEnabled -int 1
+defaults write com.apple.universalaccess reduceMotion -int 1
+
 # Disable the sound effects on boot
 echo "Disabling boot sound effects..."
 sudo nvram SystemAudioVolume=" "
@@ -85,5 +91,59 @@ defaults write com.apple.screencapture location -string "${HOME}/Downloads"
 defaults write com.apple.screencapture type -string "png"
 # Disable shadow in screenshots
 defaults write com.apple.screencapture disable-shadow -bool true
+
+# Time Machine Settings
+echo "Configuring Time Machine..."
+# Prevent Time Machine from prompting to use new hard drives as backup volume
+defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
+# Disable local Time Machine backups
+if hash tmutil &> /dev/null; then
+    sudo tmutil disablelocal 2>/dev/null || echo "Note: 'tmutil disablelocal' might not be supported on this macOS version."
+fi
+
+# Activity Monitor Settings
+echo "Configuring Activity Monitor..."
+# Show the main window when launching Activity Monitor
+defaults write com.apple.ActivityMonitor OpenMainWindow -bool true
+# Show all processes in Activity Monitor
+defaults write com.apple.ActivityMonitor ShowCategory -int 0
+
+# TextEdit Settings
+echo "Configuring TextEdit..."
+# Open and save files as UTF-8 in TextEdit
+defaults write com.apple.TextEdit PlainTextEncoding -int 4
+defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
+
+# Disk Utility Settings
+echo "Configuring Disk Utility..."
+# Enable the debug menu in Disk Utility
+defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
+defaults write com.apple.DiskUtility advanced-image-options -bool true
+
+echo "Restarting affected applications..."
+for app in "Activity Monitor" \
+    "Address Book" \
+    "Calendar" \
+    "cfprefsd" \
+    "Contacts" \
+    "Dock" \
+    "Finder" \
+    "Google Chrome Canary" \
+    "Google Chrome" \
+    "Mail" \
+    "Messages" \
+    "Opera" \
+    "Photos" \
+    "Safari" \
+    "SizeUp" \
+    "Spectacle" \
+    "SystemUIServer" \
+    "Terminal" \
+    "Transmission" \
+    "Tweetbot" \
+    "Twitter" \
+    "iCal"; do
+    killall "${app}" &> /dev/null
+done
 
 echo "UI/UX configuration complete. Note: Some changes may require a logout/restart to take effect."
