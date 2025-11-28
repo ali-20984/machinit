@@ -1,4 +1,6 @@
 #!/bin/bash
+source "$(dirname "$0")/utils.sh"
+
 echo "Configuring Power Management..."
 
 # Enable lid wakeup
@@ -12,5 +14,9 @@ sudo pmset -a displaysleep 15
 # Disable machine sleep while charging
 echo "Disabling machine sleep while charging..."
 sudo pmset -c sleep 0
+
+# Enable Low Power Mode (Always)
+echo "Enabling Low Power Mode (Always)..."
+sudo pmset -a lowpowermode 1
 
 echo "Power management configuration complete."

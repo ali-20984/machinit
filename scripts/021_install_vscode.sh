@@ -1,3 +1,5 @@
 #!/bin/bash
+source "$(dirname "$0")/utils.sh"
+
 echo "Installing Visual Studio Code..."
-brew install --cask visual-studio-code
+install_brew_package visual-studio-code

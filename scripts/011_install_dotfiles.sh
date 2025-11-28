@@ -41,4 +41,57 @@ else
     print_error "Error: .functions file not found at $FUNCTIONS_FILE"
 fi
 
+# Install .aliases
+ALIASES_FILE="$ASSETS_DIR/.aliases"
+TARGET_ALIASES="$HOME/.aliases"
+
+if [ -f "$ALIASES_FILE" ]; then
+    echo "Installing .aliases..."
+    ln -sf "$ALIASES_FILE" "$TARGET_ALIASES"
+    print_success "Linked $ALIASES_FILE to $TARGET_ALIASES"
+
+    if ! grep -q "source ~/.aliases" "$ZSHRC"; then
+        echo "[ -f ~/.aliases ] && source ~/.aliases" >> "$ZSHRC"
+        print_success "Added source command for .aliases to $ZSHRC"
+    else
+        print_info ".aliases already sourced in $ZSHRC"
+    fi
+else
+    print_error "Error: .aliases file not found at $ALIASES_FILE"
+fi
+
+# Install .gitignore_global
+GITIGNORE_FILE="$ASSETS_DIR/.gitignore_global"
+TARGET_GITIGNORE="$HOME/.gitignore_global"
+
+if [ -f "$GITIGNORE_FILE" ]; then
+    echo "Installing .gitignore_global..."
+    ln -sf "$GITIGNORE_FILE" "$TARGET_GITIGNORE"
+    print_success "Linked $GITIGNORE_FILE to $TARGET_GITIGNORE"
+    
+    echo "Configuring git to use global ignore file..."
+    git config --global core.excludesfile "$TARGET_GITIGNORE"
+    print_success "Git configured to use $TARGET_GITIGNORE"
+else
+    print_error "Error: .gitignore_global file not found at $GITIGNORE_FILE"
+fi
+
+# Install .nanorc
+NANORC_FILE="$ASSETS_DIR/.nanorc"
+TARGET_NANORC="$HOME/.nanorc"
+
+if [ -f "$NANORC_FILE" ]; then
+    echo "Installing .nanorc..."
+    ln -sf "$NANORC_FILE" "$TARGET_NANORC"
+    print_success "Linked $NANORC_FILE to $TARGET_NANORC"
+    
+    # Create nano backup directory
+    if [ ! -d "$HOME/.nano-backups" ]; then
+        mkdir -p "$HOME/.nano-backups"
+        print_success "Created nano backup directory at $HOME/.nano-backups"
+    fi
+else
+    print_error "Error: .nanorc file not found at $NANORC_FILE"
+fi
+
 echo "Dotfiles installation complete."

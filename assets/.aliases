@@ -1,0 +1,35 @@
+alias bup="brew update && brew upgrade && brew cleanup"
+alias shrug="echo '¯\_(ツ)_/¯' | pbcopy"
+alias ll="/opt/homebrew/opt/coreutils/libexec/gnubin/ls -AhlFo --color --group-directories-first"
+alias reloaddns="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
+alias dnsreload="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
+alias timestamp="date +%s"
+alias jsrefresh="rm -rf node_modules/ package-lock.json && npm install"
+
+# Navigation
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias ~="cd ~"
+alias -- -="cd -"
+
+# Shortcuts
+alias c="clear"
+alias h="history"
+alias o="open ."
+
+# Network
+alias ping_test="ping 1.1.1.1"
+alias myip="curl ifconfig.me"
+alias localip="ipconfig getifaddr en0"
+
+# System
+alias path='echo -e ${PATH//:/\\n}'
+alias cpu='top -o cpu'
+alias mem='top -o rsize'
+
+# Lock the screen (when going AFK)
+alias afk='pmset displaysleepnow'
+
+# Find WiFi password, add the name:
+alias wifi_pass='security find-generic-password -wa'

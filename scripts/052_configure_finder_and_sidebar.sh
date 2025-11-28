@@ -1,38 +1,44 @@
 #!/bin/bash
+source "$(dirname "$0")/utils.sh"
+
 echo "Configuring Finder..."
 
 # Allow quitting via ⌘ + Q; doing so will also hide desktop icons
 echo "Allowing Quit in Finder..."
-defaults write com.apple.finder QuitMenuItem -bool true
+set_default com.apple.finder QuitMenuItem bool true
 
 # Disable window animations and Get Info animations
 echo "Disabling Finder animations..."
-defaults write com.apple.finder DisableAllAnimations -bool true
+set_default com.apple.finder DisableAllAnimations bool true
 
 # Show all filename extensions
 echo "Showing all filename extensions..."
-defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+set_default NSGlobalDomain AppleShowAllExtensions bool true
+
+# Show Library folder
+echo "Unhiding ~/Library..."
+chflags nohidden ~/Library && xattr -d com.apple.FinderInfo ~/Library 2>/dev/null
 
 # Show status bar
 echo "Showing status bar..."
-defaults write com.apple.finder ShowStatusBar -bool true
+set_default com.apple.finder ShowStatusBar bool true
 
 # Show path bar
 echo "Showing path bar..."
-defaults write com.apple.finder ShowPathbar -bool true
+set_default com.apple.finder ShowPathbar bool true
 
 # When performing a search, search the current folder by default
 echo "Setting default search scope to current folder..."
-defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
+set_default com.apple.finder FXDefaultSearchScope string "SCcf"
 
 # Avoid creating .DS_Store files on network or USB volumes
 echo "Preventing .DS_Store creation on network/USB volumes..."
-defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
-defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
+set_default com.apple.desktopservices DSDontWriteNetworkStores bool true
+set_default com.apple.desktopservices DSDontWriteUSBStores bool true
 
 # Use list view in all Finder windows by default
 echo "Setting default view style to List View..."
-defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+set_default com.apple.finder FXPreferredViewStyle string "Nlsv"
 
 # Show the ~/Library folder
 echo "Unhiding ~/Library..."
@@ -45,14 +51,18 @@ sudo chflags nohidden /Volumes
 # Sidebar Configurations
 echo "Configuring Finder Sidebar..."
 
+# Set sidebar icon size to Medium
+echo "Setting sidebar icon size to Medium..."
+set_default NSGlobalDomain NSTableViewDefaultSizeMode int 2
+
 # Hide iCloud Drive
-defaults write com.apple.finder SidebarICloudDrive -bool false
+set_default com.apple.finder SidebarICloudDrive bool false
 
 # Hide Shared Section (Bonjour)
-defaults write com.apple.finder SidebarBonjourBrowser -bool false
+set_default com.apple.finder SidebarBonjourBrowser bool false
 
 # Hide Tags
-defaults write com.apple.finder ShowRecentTags -bool false
+set_default com.apple.finder ShowRecentTags bool false
 
 # Add items to Sidebar Favorites (Best effort using sfltool)
 # Note: This is experimental and might not work on all macOS versions without 'mysides'

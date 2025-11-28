@@ -1,15 +1,18 @@
 #!/bin/bash
+source "$(dirname "$0")/utils.sh"
+
 echo "Configuring Terminal theme (Matrix Red)..."
 
 # Only use UTF-8 in Terminal.app
+# -array is complex for set_default, using raw defaults write
 defaults write com.apple.terminal StringEncodings -array 4
 
 # Enable Secure Keyboard Entry in Terminal.app
 # See: https://security.stackexchange.com/a/47786/8918
-defaults write com.apple.terminal SecureKeyboardEntry -bool true
+set_default com.apple.terminal SecureKeyboardEntry bool true
 
 # Don’t display the annoying prompt when quitting iTerm
-defaults write com.googlecode.iterm2 PromptOnQuit -bool false
+set_default com.googlecode.iterm2 PromptOnQuit bool false
 
 # Use AppleScript to configure the default Terminal profile
 # Colors are in 16-bit RGB (0-65535)

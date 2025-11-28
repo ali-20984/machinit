@@ -1,4 +1,6 @@
 #!/bin/bash
+source "$(dirname "$0")/utils.sh"
+
 echo "Clearing Safari Favorites..."
 
 # Close Safari to ensure we can write to the file
@@ -68,56 +70,75 @@ else
 fi
 
 echo "Disabling Safari 'launched' notifications..."
-defaults write com.apple.coreservices.uiagent CSUIHasSafariBeenLaunched -bool YES
+set_default com.apple.coreservices.uiagent CSUIHasSafariBeenLaunched bool YES
+# Date handling in set_default is tricky, using raw defaults write for date
 defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z
 
 echo "Configuring Safari Privacy and Security..."
 
 # Privacy: don’t send search queries to Apple
-defaults write com.apple.Safari UniversalSearchEnabled -bool false
-defaults write com.apple.Safari SuppressSearchSuggestions -bool true
+set_default com.apple.Safari UniversalSearchEnabled bool false
+set_default com.apple.Safari SuppressSearchSuggestions bool true
 
 # Show the full URL in the address bar (note: this still hides the scheme)
-defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
+set_default com.apple.Safari ShowFullURLInSmartSearchField bool true
 
 # Allow hitting the Backspace key to go to the previous page in history
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2BackspaceKeyNavigationEnabled -bool true
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2BackspaceKeyNavigationEnabled bool true
 
 # Hide Safari’s bookmarks bar by default
-defaults write com.apple.Safari ShowFavoritesBar -bool false
+set_default com.apple.Safari ShowFavoritesBar bool false
 
 # Hide Safari’s sidebar in Top Sites
-defaults write com.apple.Safari ShowSidebarInTopSites -bool false
+set_default com.apple.Safari ShowSidebarInTopSites bool false
 
 # Disable Safari’s thumbnail cache for History and Top Sites
-defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
+set_default com.apple.Safari DebugSnapshotsUpdatePolicy int 2
 
 # Enable the Develop menu and the Web Inspector in Safari
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+set_default com.apple.Safari IncludeDevelopMenu bool true
+set_default com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey bool true
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled bool true
 
 # Disable AutoFill
-defaults write com.apple.Safari AutoFillFromAddressBook -bool false
-defaults write com.apple.Safari AutoFillPasswords -bool false
-defaults write com.apple.Safari AutoFillCreditCardData -bool false
-defaults write com.apple.Safari AutoFillMiscellaneousForms -bool false
+set_default com.apple.Safari AutoFillFromAddressBook bool false
+set_default com.apple.Safari AutoFillPasswords bool false
+set_default com.apple.Safari AutoFillCreditCardData bool false
+set_default com.apple.Safari AutoFillMiscellaneousForms bool false
 
 # Warn about fraudulent websites
-defaults write com.apple.Safari WarnAboutFraudulentWebsites -bool true
+set_default com.apple.Safari WarnAboutFraudulentWebsites bool true
 
 # Disable Java
-defaults write com.apple.Safari WebKitJavaEnabled -bool false
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabled -bool false
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabledForLocalFiles -bool false
+set_default com.apple.Safari WebKitJavaEnabled bool false
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabled bool false
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabledForLocalFiles bool false
+
+# Improve Safari security (Explicitly disable Java again)
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabled bool false
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabledForLocalFiles bool false
 
 # Disable plug-ins
-defaults write com.apple.Safari WebKitPluginsEnabled -bool false
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2PluginsEnabled -bool false
+set_default com.apple.Safari WebKitPluginsEnabled bool false
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2PluginsEnabled bool false
 
 # Block pop-up windows
-defaults write com.apple.Safari WebKitJavaScriptCanOpenWindowsAutomatically -bool false
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically -bool false
+set_default com.apple.Safari WebKitJavaScriptCanOpenWindowsAutomatically bool false
+set_default com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically bool false
+
+# Clear Safari History
+echo "Clearing Safari History..."
+if [ "$DRY_RUN" = true ]; then
+    echo "[DRY RUN] Would clear Safari History files."
+else
+    rm -rf ~/Library/Safari/History.db
+    rm -rf ~/Library/Safari/History.db-lock
+    rm -rf ~/Library/Safari/History.db-shm
+    rm -rf ~/Library/Safari/History.db-wal
+    rm -rf ~/Library/Safari/LastSession.plist
+    rm -rf ~/Library/Safari/RecentlyClosedTabs.plist
+    print_success "Safari History cleared."
+fi
 
 echo "Restarting Safari..."
 killall Safari &> /dev/null

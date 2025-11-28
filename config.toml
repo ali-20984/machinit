@@ -1,0 +1,82 @@
+# Machinit Configuration File
+# This file allows you to configure various aspects of the installation process.
+
+[general]
+dry_run = false
+
+[system]
+computer_name = "" # Leave empty to prompt user or keep current
+timezone = "Europe/Paris"
+
+[apps]
+# List of Homebrew formulae to install
+formulae = [
+    "git",
+    "node",
+    "python",
+    "tree",
+    "wget"
+]
+
+# List of Homebrew casks to install
+casks = [
+    "google-chrome",
+    "visual-studio-code",
+    "iterm2",
+    "firefox"
+]
+
+[defaults]
+# Example macOS defaults
+# Format: [domain, key, type, value]
+settings = [
+    ["NSGlobalDomain", "AppleInterfaceStyle", "string", "Dark"],
+    ["com.apple.dock", "autohide", "bool", "true"]
+]
+
+[scripts]
+# Configure which scripts to run.
+# If a script is not listed here, it will run by default.
+# Set to false to skip a script.
+"001_env_setup.sh" = true
+"002_install_homebrew.sh" = true
+"003_update_terminal_tools.sh" = true
+"004_install_nvm.sh" = true
+"005_install_rust.sh" = true
+"006_install_vcpkg.sh" = true
+"007_install_powershell.sh" = true
+"008_install_cli_tools.sh" = true
+"009_install_fonts.sh" = true
+"010_install_apps.sh" = true
+"011_install_dotfiles.sh" = true
+"020_configure_firefox_policies.sh" = true
+"020_install_firefox.sh" = true
+"021_install_vscode.sh" = true
+"022_install_codex.sh" = true
+"023_install_opencode.sh" = true
+"024_install_beeper.sh" = true
+"025_install_github_desktop.sh" = true
+"026_install_keepassxc.sh" = true
+"027_install_chrome_devtools_mcp.sh" = true
+"028_install_google_chrome.sh" = true
+"029_install_nextcloud.sh" = true
+"030_install_bitwarden.sh" = true
+"031_install_vscode_extensions.sh" = true
+"032_install_microsoft_excel.sh" = true
+"033_install_microsoft_outlook.sh" = true
+"034_install_microsoft_powerpoint.sh" = true
+"035_install_microsoft_word.sh" = true
+"036_install_adobe_reader.sh" = true
+"037_install_openvpn.sh" = true
+"041_disable_telemetry.sh" = true
+"042_disable_siri.sh" = true
+"043_configure_dock_and_mission_control.sh" = true
+"044_configure_dock_apps.sh" = true
+"045_configure_safari.sh" = true
+"046_configure_terminal.sh" = true
+"047_configure_login_screen.sh" = true
+"050_performance_optimizations.sh" = true
+"051_configure_system_ui_ux.sh" = true
+"052_configure_finder_and_sidebar.sh" = true
+"053_configure_power_management.sh" = true
+"099_set_wallpaper.sh" = true

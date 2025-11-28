@@ -1,3 +1,5 @@
 #!/bin/bash
+source "$(dirname "$0")/utils.sh"
+
 echo "Installing Firefox..."
-brew install --cask firefox
+install_brew_package firefox

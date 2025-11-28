@@ -26,6 +26,21 @@ MachInit is an automated, "hands-off" initialization script for macOS. It sets u
     ./install.sh
     ```
 
+### Dry Run Mode
+
+To see what changes would be made without actually applying them, use the `--dry-run` flag:
+
+```bash
+./install.sh --dry-run
+```
+
+### Configuration
+
+You can customize the installation process by editing `config.toml`. This file allows you to define:
+- System defaults (Computer Name, Timezone)
+- Applications to install (Homebrew Formulae and Casks)
+- macOS Defaults (Dock settings, UI tweaks)
+
 ## 🛠️ What it Does
 
 The script executes a series of ordered scripts located in the `scripts/` directory:
@@ -36,20 +51,20 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Shell**: Installs PowerShell, updates terminal tools (coreutils), and configures `nvm` (Node.js) and `pyenv` (Python).
 - **Fonts**: Installs custom fonts (Fantasque Sans Mono).
 - **Telemetry**: Disables macOS telemetry, crash reporting, and personalized ads.
-- **Privacy**: Disables Siri and hides iCloud Drive.
+- **Privacy**: Disables Siri, hides iCloud Drive, enables Firewall and Stealth Mode.
 
 ### Applications
 
 - **Browsers**: Firefox (with extensions), Google Chrome.
-- **Development**: VS Code (with extensions), Codex, OpenCode, Chrome DevTools MCP, iTerm2.
+- **Development**: VS Code (with extensions), Codex, OpenCode, Chrome DevTools MCP, iTerm2, Mark Text, Standard Notes.
 - **Communication**: Beeper, Outlook.
 - **Productivity**: Microsoft Office 365 (Word, Excel, PowerPoint), Adobe Acrobat Reader, Nextcloud, Bitwarden, KeePassXC.
-- **Utilities**: GitHub Desktop, OpenVPN Connect, vcpkg.
+- **Utilities**: GitHub Desktop, OpenVPN Connect, vcpkg, Glances, pgcli.
 
 ### Development Stack
 
 - **Languages**: Rust, Node.js, Python, C++ (gcc, llvm, cmake, ninja).
-- **Tools**: Git, Yarn, pnpm, Poetry.
+- **Tools**: Git, Yarn, pnpm, Poetry, jq, httpie, ripgrep, fd, fzf.
 
 ### Customization & UI
 
@@ -57,7 +72,8 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Dock**: Configures Dock size, removes default apps, and pins selected apps.
 - **Terminal**: Sets a custom "Matrix Red" theme for Terminal.app.
 - **Login Screen**: Configures a "Console-style" login screen.
-- **Safari**: Clears favorites and suppresses "launched" notifications.
+- **Safari**: Clears favorites, history, and suppresses "launched" notifications.
+- **Dotfiles**: Installs `.aliases`, `.functions`, `.nanorc`, and `.gitignore_global`.
 
 ### Performance Optimizations
 
@@ -65,6 +81,21 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Animations**: Reduces motion, transparency, and disables window animations.
 - **SSD**: Optimizes power management for SSDs (disables hibernation, sleepimage).
 - **HiDPI**: Enables HiDPI display modes.
+- **Power Management**: Enables Low Power Mode (Always) and disables sleep while charging.
+
+## 🧪 Development
+
+### Linting
+
+To check the scripts for syntax errors and best practices:
+
+```bash
+./scripts/lint.sh
+```
+
+### CI/CD
+
+This project uses GitHub Actions for Continuous Integration. The pipeline runs `shellcheck` on all scripts and executes a dry-run test on macOS runners to ensure stability.
 
 ## ⚠️ Disclaimer
 
