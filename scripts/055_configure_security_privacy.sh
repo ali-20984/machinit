@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 055_configure_security_privacy.sh
+# Description: Configure Security Privacy
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring Security and Privacy..."

@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 043_configure_dock_and_mission_control.sh
+# Description: Configure Dock And Mission Control
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring Dock size..."

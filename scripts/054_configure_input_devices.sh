@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 054_configure_input_devices.sh
+# Description: Configure Input Devices
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring Input Devices (Keyboard, Mouse, Trackpad)..."

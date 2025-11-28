@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 003_update_terminal_tools.sh
+# Description: Update Terminal Tools
+# Author: supermarsx
+#
 echo "Updating Homebrew..."
 brew update
 

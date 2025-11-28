@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 031_install_vscode_extensions.sh
+# Description: Install Vscode Extensions
+# Author: supermarsx
+#
 echo "Installing VS Code extensions..."
 
 # Ensure 'code' command is available

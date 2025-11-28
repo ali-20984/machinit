@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 047_configure_login_screen.sh
+# Description: Configure Login Screen
+# Author: supermarsx
+#
 echo "Configuring Login Screen..."
 
 # Note: Modern macOS (Big Sur+) has very restricted login screen customization.

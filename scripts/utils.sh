@@ -8,7 +8,9 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-CONFIG_FILE="$(dirname "$(dirname "$0")")/config.toml"
+if [ -z "$CONFIG_FILE" ]; then
+    CONFIG_FILE="$(dirname "$(dirname "$0")")/config.toml"
+fi
 PARSER_SCRIPT="$(dirname "$0")/lib/config_parser.py"
 
 # Check for Dry Run environment variable

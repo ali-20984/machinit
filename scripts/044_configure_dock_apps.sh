@@ -1,11 +1,15 @@
 #!/bin/bash
+#
+# Script: 044_configure_dock_apps.sh
+# Description: Configure Dock Apps
+# Author: supermarsx
+#
+source "$(dirname "$0")/utils.sh"
+
 echo "Configuring Dock apps..."
 
-# Check if dockutil is installed
-if ! command -v dockutil &> /dev/null; then
-    echo "dockutil not found. Installing via Homebrew..."
-    brew install dockutil
-fi
+echo "Ensuring dockutil is installed..."
+install_brew_package dockutil
 
 echo "Clearing existing Dock items..."
 dockutil --remove all --no-restart

@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 052_configure_finder_and_sidebar.sh
+# Description: Configure Finder And Sidebar
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring Finder..."

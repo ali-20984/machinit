@@ -1,15 +1,24 @@
 import sys
 import tomllib
 import os
+import re
 
 def get_config_value(config_path, key_path):
     try:
         with open(config_path, "rb") as f:
             data = tomllib.load(f)
         
-        keys = key_path.split(".")
+        # Split by dot, but respect quotes
+        # Regex matches a dot that is NOT followed by an odd number of quotes
+        # This handles simple cases like section."key.with.dot".subkey
+        keys = re.split(r'\.(?=(?:[^"]*"[^"]*")*[^"]*$)', key_path)
+        
         value = data
         for key in keys:
+            # Remove surrounding quotes if present
+            if key.startswith('"') and key.endswith('"'):
+                key = key[1:-1]
+            
             value = value.get(key)
             if value is None:
                 return ""

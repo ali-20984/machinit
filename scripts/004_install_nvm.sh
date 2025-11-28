@@ -1,6 +1,13 @@
 #!/bin/bash
+#
+# Script: 004_install_nvm.sh
+# Description: Install Nvm
+# Author: supermarsx
+#
+source "$(dirname "$0")/utils.sh"
+
 echo "Installing nvm..."
-brew install nvm
+install_brew_package nvm
 
 # Create nvm directory
 mkdir -p ~/.nvm

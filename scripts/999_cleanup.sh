@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 999_cleanup.sh
+# Description: Cleanup
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 function global_cleanup() {

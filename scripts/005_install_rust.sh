@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 005_install_rust.sh
+# Description: Install Rust
+# Author: supermarsx
+#
 echo "Installing Rust via rustup..."
 
 if command -v rustup &> /dev/null; then

@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 045_configure_safari.sh
+# Description: Configure Safari
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Clearing Safari Favorites..."

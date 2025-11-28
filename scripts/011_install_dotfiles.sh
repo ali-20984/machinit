@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 011_install_dotfiles.sh
+# Description: Install Dotfiles
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Installing dotfiles..."

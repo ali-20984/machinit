@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 046_configure_terminal.sh
+# Description: Configure Terminal
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring Terminal theme (Matrix Red)..."

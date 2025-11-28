@@ -43,7 +43,58 @@ You can customize the installation process by editing `config.toml`. This file a
 
 ## 🛠️ What it Does
 
-The script executes a series of ordered scripts located in the `scripts/` directory:
+The script executes a series of ordered scripts located in the `scripts/` directory.
+
+### Scripts Reference
+
+| Script | Description |
+|--------|-------------|
+| `001_env_setup.sh` | Env Setup |
+| `002_install_homebrew.sh` | Install Homebrew |
+| `003_update_terminal_tools.sh` | Update Terminal Tools |
+| `004_install_nvm.sh` | Install Nvm |
+| `005_install_rust.sh` | Install Rust |
+| `006_install_vcpkg.sh` | Install Vcpkg |
+| `007_install_powershell.sh` | Install Powershell |
+| `008_install_cli_tools.sh` | Install Cli Tools |
+| `009_install_fonts.sh` | Install Fonts |
+| `010_install_apps.sh` | Install Apps |
+| `011_install_dotfiles.sh` | Install Dotfiles |
+| `020_configure_firefox_policies.sh` | Configure Firefox Policies |
+| `020_install_firefox.sh` | Install Firefox |
+| `021_install_vscode.sh` | Install Vscode |
+| `022_install_codex.sh` | Install Codex |
+| `023_install_opencode.sh` | Install Opencode |
+| `024_install_beeper.sh` | Install Beeper |
+| `025_install_github_desktop.sh` | Install Github Desktop |
+| `026_install_keepassxc.sh` | Install Keepassxc |
+| `027_install_chrome_devtools_mcp.sh` | Install Chrome Devtools Mcp |
+| `028_install_google_chrome.sh` | Install Google Chrome |
+| `029_install_nextcloud.sh` | Install Nextcloud |
+| `030_install_bitwarden.sh` | Install Bitwarden |
+| `031_install_vscode_extensions.sh` | Install Vscode Extensions |
+| `032_install_microsoft_excel.sh` | Install Microsoft Excel |
+| `033_install_microsoft_outlook.sh` | Install Microsoft Outlook |
+| `034_install_microsoft_powerpoint.sh` | Install Microsoft Powerpoint |
+| `035_install_microsoft_word.sh` | Install Microsoft Word |
+| `036_install_adobe_reader.sh` | Install Adobe Reader |
+| `037_install_openvpn.sh` | Install Openvpn |
+| `041_disable_telemetry.sh` | Disable Telemetry |
+| `042_disable_siri.sh` | Disable Siri |
+| `043_configure_dock_and_mission_control.sh` | Configure Dock And Mission Control |
+| `044_configure_dock_apps.sh` | Configure Dock Apps |
+| `045_configure_safari.sh` | Configure Safari |
+| `046_configure_terminal.sh` | Configure Terminal |
+| `047_configure_login_screen.sh` | Configure Login Screen |
+| `050_performance_optimizations.sh` | Performance Optimizations |
+| `051_configure_system_ui_ux.sh` | Configure System Ui Ux |
+| `052_configure_finder_and_sidebar.sh` | Configure Finder And Sidebar |
+| `053_configure_power_management.sh` | Configure Power Management |
+| `054_configure_input_devices.sh` | Configure Input Devices |
+| `055_configure_security_privacy.sh` | Configure Security Privacy |
+| `056_configure_system_apps.sh` | Configure System Apps |
+| `099_set_wallpaper.sh` | Set Wallpaper |
+| `999_cleanup.sh` | Cleanup |
 
 ### System & Environment
 

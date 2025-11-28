@@ -30,6 +30,42 @@ if [ -f "$TEST_DIR/test_config_parser.py" ]; then
     fi
 fi
 
+if [ -f "$TEST_DIR/test_config_parser_extended.py" ]; then
+    python3 "$TEST_DIR/test_config_parser_extended.py"
+    if [ $? -ne 0 ]; then
+        echo "✗ test_config_parser_extended.py failed"
+        FAILED=1
+    else
+        echo "✓ test_config_parser_extended.py passed"
+    fi
+fi
+
+echo "--------------------------------------------------"
+
+echo "Running Extended Shell Tests..."
+if [ -f "$TEST_DIR/test_utils_extended.sh" ]; then
+    bash "$TEST_DIR/test_utils_extended.sh"
+    if [ $? -ne 0 ]; then
+        echo "✗ test_utils_extended.sh failed"
+        FAILED=1
+    else
+        echo "✓ test_utils_extended.sh passed"
+    fi
+fi
+
+echo "--------------------------------------------------"
+
+echo "Running Integrity Tests..."
+if [ -f "$TEST_DIR/test_integrity.sh" ]; then
+    bash "$TEST_DIR/test_integrity.sh"
+    if [ $? -ne 0 ]; then
+        echo "✗ test_integrity.sh failed"
+        FAILED=1
+    else
+        echo "✓ test_integrity.sh passed"
+    fi
+fi
+
 echo "--------------------------------------------------"
 
 if [ $FAILED -eq 0 ]; then

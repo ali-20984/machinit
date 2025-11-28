@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 056_configure_system_apps.sh
+# Description: Configure System Apps
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring System Applications..."

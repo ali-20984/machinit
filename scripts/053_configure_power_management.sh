@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 053_configure_power_management.sh
+# Description: Configure Power Management
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring Power Management..."

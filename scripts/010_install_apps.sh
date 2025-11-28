@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 010_install_apps.sh
+# Description: Install Apps
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Installing applications..."

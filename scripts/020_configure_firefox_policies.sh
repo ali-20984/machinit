@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 020_configure_firefox_policies.sh
+# Description: Configure Firefox Policies
+# Author: supermarsx
+#
 echo "Configuring Firefox extensions..."
 
 FIREFOX_APP="/Applications/Firefox.app"

@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 002_install_homebrew.sh
+# Description: Install Homebrew
+# Author: supermarsx
+#
 echo "Checking for Homebrew..."
 if ! command -v brew &> /dev/null; then
     echo "Homebrew not found. Installing..."

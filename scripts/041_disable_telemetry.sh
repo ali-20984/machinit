@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 041_disable_telemetry.sh
+# Description: Disable Telemetry
+# Author: supermarsx
+#
 echo "Disabling macOS telemetry and analytics..."
 
 # Disable Crash Reporter

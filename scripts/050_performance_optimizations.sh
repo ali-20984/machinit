@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 050_performance_optimizations.sh
+# Description: Performance Optimizations
+# Author: supermarsx
+#
 echo "Running performance optimizations..."
 
 function check_status() {

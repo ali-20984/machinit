@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 099_set_wallpaper.sh
+# Description: Set Wallpaper
+# Author: supermarsx
+#
 
 # Get absolute path to the assets directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

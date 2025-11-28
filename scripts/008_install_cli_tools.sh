@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 008_install_cli_tools.sh
+# Description: Install Cli Tools
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Installing comprehensive development tools..."

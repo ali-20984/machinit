@@ -1,3 +1,10 @@
 #!/bin/bash
+#
+# Script: 007_install_powershell.sh
+# Description: Install Powershell
+# Author: supermarsx
+#
+source "$(dirname "$0")/utils.sh"
+
 echo "Installing PowerShell..."
-brew install --cask powershell
+install_brew_package powershell "--cask"

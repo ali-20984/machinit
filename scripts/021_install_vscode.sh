@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 021_install_vscode.sh
+# Description: Install Vscode
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Installing Visual Studio Code..."

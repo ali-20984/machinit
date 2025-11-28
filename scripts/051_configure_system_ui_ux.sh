@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 051_configure_system_ui_ux.sh
+# Description: Configure System Ui Ux
+# Author: supermarsx
+#
 source "$(dirname "$0")/utils.sh"
 
 echo "Configuring UI/UX and System Preferences..."

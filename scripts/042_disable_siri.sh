@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Script: 042_disable_siri.sh
+# Description: Disable Siri
+# Author: supermarsx
+#
 echo "Fully disabling Siri..."
 
 # Disable Siri

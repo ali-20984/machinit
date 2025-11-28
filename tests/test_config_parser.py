@@ -17,7 +17,7 @@ import subprocess
 
 class TestConfigParser(unittest.TestCase):
     def setUp(self):
-        self.parser_script = os.path.join(os.path.dirname(__file__), '../lib/config_parser.py')
+        self.parser_script = os.path.join(os.path.dirname(__file__), '../scripts/lib/config_parser.py')
         self.test_toml = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         self.test_toml.write('''
 [section]
