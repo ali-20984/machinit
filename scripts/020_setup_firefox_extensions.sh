@@ -10,6 +10,11 @@ if [ ! -d "$FIREFOX_APP" ]; then
     exit 1
 fi
 
+if [ -f "$POLICIES_FILE" ]; then
+    echo "Firefox policies.json already exists at $POLICIES_FILE. Skipping."
+    exit 0
+fi
+
 echo "Creating distribution directory..."
 # Try to create directory, use sudo if permission denied
 if ! mkdir -p "$DIST_DIR" 2>/dev/null; then

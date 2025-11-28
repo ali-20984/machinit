@@ -1,0 +1,16 @@
+#!/bin/bash
+echo "Configuring Power Management..."
+
+# Enable lid wakeup
+echo "Enabling lid wakeup..."
+sudo pmset -a lidwake 1
+
+# Sleep the display after 15 minutes
+echo "Setting display sleep to 15 minutes..."
+sudo pmset -a displaysleep 15
+
+# Disable machine sleep while charging
+echo "Disabling machine sleep while charging..."
+sudo pmset -c sleep 0
+
+echo "Power management configuration complete."

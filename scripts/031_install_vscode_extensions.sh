@@ -24,9 +24,42 @@ extensions=(
     "streetsidesoftware.code-spell-checker"
 )
 
+# Get list of installed extensions
+installed_extensions=$(code --list-extensions)
+
 for ext in "${extensions[@]}"; do
-    echo "Installing $ext..."
-    code --install-extension "$ext" --force
+    if echo "$installed_extensions" | grep -qi "^$ext$"; then
+        echo "Extension $ext is already installed. Skipping."
+    else
+        echo "Installing $ext..."
+        code --install-extension "$ext" --force
+    fi
 done
 
-echo "VS Code extensions installation complete."
+echo "Configuring VS Code Settings (Dark Mode)..."
+SETTINGS_FILE="$HOME/Library/Application Support/Code/User/settings.json"
+mkdir -p "$(dirname "$SETTINGS_FILE")"
+
+if [ ! -f "$SETTINGS_FILE" ]; then
+    echo "{}" > "$SETTINGS_FILE"
+fi
+
+# Use Python to update settings.json safely
+python3 -c "
+import json
+import os
+
+settings_path = os.path.expanduser('$SETTINGS_FILE')
+try:
+    with open(settings_path, 'r') as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    data = {}
+
+data['workbench.colorTheme'] = 'OLED Pure Black'
+
+with open(settings_path, 'w') as f:
+    json.dump(data, f, indent=4)
+"
+
+echo "VS Code extensions installation and configuration complete."

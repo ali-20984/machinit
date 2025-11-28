@@ -5,6 +5,35 @@ echo "Installing comprehensive development tools..."
 echo "Installing Coreutils..."
 brew install coreutils
 
+echo "Installing Moreutils..."
+brew install moreutils
+
+echo "Installing Findutils..."
+brew install findutils
+
+echo "Installing GNU Sed..."
+brew install gnu-sed --with-default-names
+
+echo "Installing Bash and Completion..."
+brew install bash
+brew install bash-completion2
+
+echo "Installing Tree..."
+brew install tree
+
+echo "Installing p7zip..."
+brew install p7zip
+
+echo "Installing Lua..."
+brew install lua
+
+echo "Installing GitHub CLI..."
+brew install gh
+
+# Network Tools
+echo "Installing Network Tools..."
+brew install iproute2mac bind mtr
+
 # Version Control
 echo "Installing/Updating Git..."
 brew install git
@@ -33,5 +62,8 @@ echo "Installing JavaScript/Node tools..."
 # Note: These might install a system node version as a dependency.
 # You can still use nvm (installed in 004) to manage active node versions.
 brew install yarn pnpm
+
+echo "Cleaning up Brew..."
+brew cleanup
 
 echo "Development tools installation complete."

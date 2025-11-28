@@ -7,7 +7,8 @@ if command -v rustup &> /dev/null; then
 else
     echo "Installing Rustup..."
     # Install rustup with -y to disable confirmation prompts (hands-off)
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    # User requested sudo injection
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo sh -s -- -y
     
     # Source the environment to make it available immediately
     if [ -f "$HOME/.cargo/env" ]; then

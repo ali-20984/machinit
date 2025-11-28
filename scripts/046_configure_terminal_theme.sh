@@ -13,9 +13,9 @@ tell application "Terminal"
         
         tell defaultSettings
             set background color to {0, 0, 0}
-            set normal text color to {65535, 35000, 35000} -- Pale Red
-            set bold text color to {65535, 20000, 20000} -- Stronger Red
-            set cursor color to {65535, 35000, 35000}
+            set normal text color to {55000, 0, 0} -- Matrix Red (Darker)
+            set bold text color to {65535, 0, 0} -- Matrix Red (Bright)
+            set cursor color to {65535, 0, 0}
             
             -- Set Font (Fantasque Sans Mono)
             -- Note: The font must be installed for this to work.
