@@ -83,6 +83,40 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **HiDPI**: Enables HiDPI display modes.
 - **Power Management**: Enables Low Power Mode (Always) and disables sleep while charging.
 
+### Included Shell Enhancements
+
+The installation includes a set of useful aliases and functions (installed to `~/.aliases` and `~/.functions`).
+
+#### Aliases
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `bup` | `brew update && brew upgrade && brew cleanup` | Update Homebrew and cleanup |
+| `shrug` | `echo '¯\_(ツ)_/¯' \| pbcopy` | Copy shrug kaomoji to clipboard |
+| `ll` | `ls -AhlFo ...` | Enhanced list view |
+| `reloaddns` | `dscacheutil -flushcache ...` | Flush DNS cache |
+| `dnsreload` | `dscacheutil -flushcache ...` | Flush DNS cache (alias) |
+| `jsrefresh` | `rm -rf node_modules ...` | Reinstall npm dependencies |
+| `..` | `cd ..` | Go up one directory |
+| `c` | `clear` | Clear terminal |
+| `o` | `open .` | Open current directory in Finder |
+| `myip` | `curl ifconfig.me` | Show public IP |
+| `localip` | `ipconfig getifaddr en0` | Show local IP |
+| `afk` | `pmset displaysleepnow` | Lock screen (display sleep) |
+| `wifi_pass` | `security find-generic-password -wa` | Show WiFi password |
+
+#### Functions
+
+- **`mkd <dir>`**: Create a directory and enter it.
+- **`cdf`**: Change directory to the current Finder window.
+- **`targz <file>`**: Create a `.tar.gz` archive using the best available compression.
+- **`fs [path]`**: Determine size of a file or directory.
+- **`server [port]`**: Start a simple HTTP server (default port 8000).
+- **`dataurl <file>`**: Create a data URL from a file.
+- **`digga <domain>`**: Run `dig` and display useful info.
+- **`tre [path]`**: Enhanced `tree` command.
+- **`generate_git_key <email>`**: Generate a new SSH key for GitHub and add it to the agent.
+
 ## 🧪 Development
 
 ### Linting
@@ -90,7 +124,7 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 To check the scripts for syntax errors and best practices:
 
 ```bash
-./scripts/lint.sh
+./dev_scripts/lint.sh
 ```
 
 ### CI/CD

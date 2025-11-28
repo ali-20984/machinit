@@ -33,7 +33,7 @@ tell application "Terminal"
             -- Set Font (Fantasque Sans Mono)
             -- Note: The font must be installed for this to work.
             set font name to "FantasqueSansMono-Regular"
-            set font size to 16
+            set font size to 10
         end tell
         
         -- Apply to all open windows
@@ -46,5 +46,17 @@ tell application "Terminal"
     end try
 end tell
 EOD
+
+# Configure shell prompt (PS1) for zsh
+# Hide user and host, orange introduction
+ZSHRC="$HOME/.zshrc"
+if [ -f "$ZSHRC" ]; then
+    if ! grep -q "PROMPT=" "$ZSHRC"; then
+        echo "" >> "$ZSHRC"
+        echo "# Custom Prompt: Orange introduction, hidden user/host" >> "$ZSHRC"
+        # %F{208} is orange-ish (256 color), %~ is current path, %f resets color
+        echo "export PROMPT='%F{208}➜ %f%~ '" >> "$ZSHRC"
+    fi
+fi
 
 echo "Terminal theme configured."

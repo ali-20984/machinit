@@ -27,6 +27,12 @@ DEST_FILE="$DEST_DIR/$FILENAME"
 echo "Copying wallpaper to $DEST_FILE..."
 cp "$WALLPAPER_FILE" "$DEST_FILE"
 
+# Symlink Wallpapers folder to Pictures
+if [ ! -d "$HOME/Pictures/Wallpapers" ]; then
+    echo "Symlinking Wallpapers to ~/Pictures/Wallpapers..."
+    ln -s "$DEST_DIR" "$HOME/Pictures/Wallpapers"
+fi
+
 echo "Setting desktop wallpaper..."
 
 # Create a temporary Swift script to set wallpaper with options (Centered, Black background)

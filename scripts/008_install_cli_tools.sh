@@ -56,6 +56,8 @@ install_brew_package pipx
 install_brew_package rbenv
 install_brew_package python
 install_brew_package ruby
+install_brew_package rustup
+install_brew_package wget
 
 # Network Tools
 echo "Installing Network Tools..."
@@ -100,8 +102,16 @@ install_brew_package poetry
 
 # JavaScript/Node Development Tools
 echo "Installing JavaScript/Node tools..."
+install_brew_package npm
 install_brew_package yarn
 install_brew_package pnpm
+
+echo "Installing @github/copilot globally..."
+if command -v npm &> /dev/null; then
+    npm install -g @github/copilot
+else
+    echo "npm not found. Skipping @github/copilot installation."
+fi
 
 echo "Cleaning up Brew..."
 brew cleanup

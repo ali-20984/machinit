@@ -5,11 +5,23 @@ echo "Installing dotfiles..."
 
 # Get the absolute path to the assets directory
 ASSETS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)"
+
+# Function to backup existing files
+function backup_file() {
+    local file="$1"
+    if [ -e "$file" ] && [ ! -L "$file" ]; then
+        local backup="${file}.bak.$(date +%s)"
+        mv "$file" "$backup"
+        print_info "Backed up existing $file to $backup"
+    fi
+}
+
 FUNCTIONS_FILE="$ASSETS_DIR/.functions"
 TARGET_FILE="$HOME/.functions"
 
 if [ -f "$FUNCTIONS_FILE" ]; then
     echo "Installing .functions..."
+    backup_file "$TARGET_FILE"
     # Create a symbolic link
     ln -sf "$FUNCTIONS_FILE" "$TARGET_FILE"
     print_success "Linked $FUNCTIONS_FILE to $TARGET_FILE"
@@ -47,6 +59,7 @@ TARGET_ALIASES="$HOME/.aliases"
 
 if [ -f "$ALIASES_FILE" ]; then
     echo "Installing .aliases..."
+    backup_file "$TARGET_ALIASES"
     ln -sf "$ALIASES_FILE" "$TARGET_ALIASES"
     print_success "Linked $ALIASES_FILE to $TARGET_ALIASES"
 
@@ -63,10 +76,11 @@ fi
 # Install .gitignore_global
 GITIGNORE_FILE="$ASSETS_DIR/.gitignore_global"
 TARGET_GITIGNORE="$HOME/.gitignore_global"
-
 if [ -f "$GITIGNORE_FILE" ]; then
     echo "Installing .gitignore_global..."
+    backup_file "$TARGET_GITIGNORE"
     ln -sf "$GITIGNORE_FILE" "$TARGET_GITIGNORE"
+    print_success "Linked $GITIGNORE_FILE to $TARGET_GITIGNORE"
     print_success "Linked $GITIGNORE_FILE to $TARGET_GITIGNORE"
     
     echo "Configuring git to use global ignore file..."
@@ -78,10 +92,11 @@ fi
 
 # Install .nanorc
 NANORC_FILE="$ASSETS_DIR/.nanorc"
-TARGET_NANORC="$HOME/.nanorc"
-
 if [ -f "$NANORC_FILE" ]; then
     echo "Installing .nanorc..."
+    backup_file "$TARGET_NANORC"
+    ln -sf "$NANORC_FILE" "$TARGET_NANORC"
+    print_success "Linked $NANORC_FILE to $TARGET_NANORC"
     ln -sf "$NANORC_FILE" "$TARGET_NANORC"
     print_success "Linked $NANORC_FILE to $TARGET_NANORC"
     

@@ -64,6 +64,14 @@ set_default com.apple.finder SidebarBonjourBrowser bool false
 # Hide Tags
 set_default com.apple.finder ShowRecentTags bool false
 
+# Create Projects folder and symlink
+echo "Setting up Projects folder..."
+mkdir -p "$HOME/Documents/Projects"
+if [ ! -d "$HOME/Projects" ]; then
+    ln -s "$HOME/Documents/Projects" "$HOME/Projects"
+    echo "Symlinked ~/Documents/Projects to ~/Projects"
+fi
+
 # Add items to Sidebar Favorites (Best effort using sfltool)
 # Note: This is experimental and might not work on all macOS versions without 'mysides'
 if command -v sfltool &> /dev/null; then
@@ -72,6 +80,8 @@ if command -v sfltool &> /dev/null; then
     sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}"
     # Add Computer
     sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file:///"
+    # Add Projects
+    sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}/Projects"
     # Add Photos (if exists)
     if [ -d "${HOME}/Pictures/Photos Library.photoslibrary" ]; then
          sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}/Pictures/Photos Library.photoslibrary"

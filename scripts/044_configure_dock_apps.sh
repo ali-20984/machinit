@@ -17,6 +17,7 @@ dockutil --add "/Applications/Firefox.app" --no-restart
 dockutil --add "/System/Applications/Utilities/Terminal.app" --no-restart
 dockutil --add "/Applications/Beeper.app" --no-restart
 dockutil --add "/Applications/Bitwarden.app" --no-restart
+dockutil --add "/Applications/GitHub Desktop.app" --no-restart
 dockutil --add "/Applications/Microsoft Word.app" --no-restart
 dockutil --add "/Applications/Microsoft Excel.app" --no-restart
 

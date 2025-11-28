@@ -7,7 +7,10 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 SCRIPTS_DIR="./scripts"
 LOG_FILE="./install.log"
+CONFIG_FILE="./config.toml"
+PARSER_SCRIPT="./lib/config_parser.py"
 DRY_RUN=false
+UPDATE=false
 
 # Parse arguments
 for arg in "$@"; do
@@ -18,8 +21,27 @@ for arg in "$@"; do
         echo "No changes will be made to the system."
         shift
         ;;
+        --update)
+        UPDATE=true
+        shift
+        ;;
     esac
 done
+
+# Self-update mechanism
+if [ "$UPDATE" = true ]; then
+    echo "Checking for updates..."
+    if [ -d ".git" ]; then
+        if git pull; then
+            echo "Update completed. Restarting script..."
+            exec "$0" "$@"
+        else
+            echo "Update failed. Continuing with current version..."
+        fi
+    else
+        echo "Not a git repository. Cannot self-update."
+    fi
+fi
 
 export DRY_RUN
 
@@ -93,8 +115,11 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     fi
 
     # Execute script
-    if "$script"; then
+    # We use pipefail to ensure we catch script errors even when piping to tee
+    set -o pipefail
+    if "$script" 2>&1 | tee -a "$LOG_FILE"; then
         echo "✓ $script_name completed successfully." | tee -a "$LOG_FILE"
+        set +o pipefail
     else
         echo "✗ $script_name failed." | tee -a "$LOG_FILE"
         exit 1

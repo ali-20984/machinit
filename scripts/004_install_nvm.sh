@@ -5,6 +5,9 @@ brew install nvm
 # Create nvm directory
 mkdir -p ~/.nvm
 
+# Fix permissions for nvm directory
+chmod -R 755 ~/.nvm
+
 # Get nvm prefix
 NVM_PREFIX=$(brew --prefix nvm)
 
