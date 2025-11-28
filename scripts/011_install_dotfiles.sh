@@ -1,4 +1,6 @@
 #!/bin/bash
+source "$(dirname "$0")/utils.sh"
+
 echo "Installing dotfiles..."
 
 # Get the absolute path to the assets directory
@@ -10,7 +12,7 @@ if [ -f "$FUNCTIONS_FILE" ]; then
     echo "Installing .functions..."
     # Create a symbolic link
     ln -sf "$FUNCTIONS_FILE" "$TARGET_FILE"
-    echo "Linked $FUNCTIONS_FILE to $TARGET_FILE"
+    print_success "Linked $FUNCTIONS_FILE to $TARGET_FILE"
 
     # Add source command to .zshrc if not present
     ZSHRC="$HOME/.zshrc"
@@ -22,12 +24,21 @@ if [ -f "$FUNCTIONS_FILE" ]; then
         echo "" >> "$ZSHRC"
         echo "# Load custom functions" >> "$ZSHRC"
         echo "[ -f ~/.functions ] && source ~/.functions" >> "$ZSHRC"
-        echo "Added source command to $ZSHRC"
+        print_success "Added source command to $ZSHRC"
     else
-        echo ".functions already sourced in $ZSHRC"
+        print_info ".functions already sourced in $ZSHRC"
     fi
+    
+    # Check for dependencies used in .functions
+    echo "Checking dependencies for .functions..."
+    check_command "python3"
+    check_command "git"
+    check_command "tree"
+    check_command "pigz" || print_info "pigz is optional but recommended for 'targz'"
+    check_command "zopfli" || print_info "zopfli is optional but recommended for 'targz'"
+    
 else
-    echo "Error: .functions file not found at $FUNCTIONS_FILE"
+    print_error "Error: .functions file not found at $FUNCTIONS_FILE"
 fi
 
 echo "Dotfiles installation complete."
