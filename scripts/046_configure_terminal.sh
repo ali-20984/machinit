@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Terminal theme (Matrix Red)..."
+echo "Configuring Terminal theme (muted matrix)..."
 
 # Only use UTF-8 in Terminal.app
 # -array is complex for set_default, using raw defaults write
@@ -30,10 +30,11 @@ tell application "Terminal"
         set defaultSettings to default settings
         
         tell defaultSettings
-            set background color to {0, 0, 0}
-            set normal text color to {55000, 0, 0} -- Matrix Red (Darker)
-            set bold text color to {65535, 0, 0} -- Matrix Red (Bright)
-            set cursor color to {65535, 0, 0}
+            set background color to {2000, 2000, 2000}
+            set normal text color to {48000, 47000, 47000}
+            set bold text color to {65535, 28000, 24000}
+            set cursor color to {56000, 20000, 18000}
+            set transparency to 0.03 -- 97% opacity
             
             -- Set Font (Fantasque Sans Mono)
             -- Note: The font must be installed for this to work.
@@ -59,10 +60,10 @@ if [ -f "$ZSHRC" ]; then
     if ! grep -q "PROMPT=" "$ZSHRC"; then
         {
             echo ""
-            echo "# Custom Prompt: Colored user marker and folder path"
-            echo "export PROMPT='%F{39}%n%f %F{208}➜%f %F{70}%~%f '"
+            echo "# Custom Prompt: Muted palette"
+            echo "export PROMPT='%F{72}%n%f %F{180}➜%f %F{109}%~%f '"
         } >>"$ZSHRC"
-        # %n = user, %~ = current dir; %F{color} starts color, %f resets
+        # %n = user, %~ = current dir; colors reference xterm palette indexes
     fi
 fi
 

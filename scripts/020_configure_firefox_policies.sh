@@ -63,7 +63,7 @@ fi
 
 print_info "Creating distribution directory..."
 if ! ensure_distribution_dir; then
-  exit 0
+  exit 1
 fi
 
 if [ "$DRY_RUN" = true ]; then
@@ -95,11 +95,11 @@ EOF
 
 if ! move_policies "$TMP_POLICIES"; then
   rm -f "$TMP_POLICIES"
-  exit 0
+  exit 1
 fi
 
 if ! secure_policies; then
-  exit 0
+  exit 1
 fi
 
 print_success "Firefox extensions configured via policies.json."

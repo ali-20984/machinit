@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-CYAN='\033[0;36m'
-GRAY='\033[0;37m'
+GREEN='\033[38;5;70m'
+RED='\033[38;5;167m'
+YELLOW='\033[38;5;179m'
+CYAN='\033[38;5;109m'
+GRAY='\033[38;5;246m'
 NC='\033[0m' # No Color
 
 # Configuration
@@ -17,10 +17,6 @@ PARSER_SCRIPT="$(dirname "$0")/lib/config_parser.py"
 # Check for Dry Run environment variable
 if [ -z "$DRY_RUN" ]; then
     DRY_RUN=false
-fi
-
-if [ -z "$MACHINIT_SUDO_MANAGED" ]; then
-    MACHINIT_SUDO_MANAGED=false
 fi
 
 SUDO_STATUS_MESSAGE_SHOWN=false
@@ -68,10 +64,6 @@ function execute() {
 #              in a predictable place before we run the real command.
 function ensure_sudo() {
     if [ "$DRY_RUN" = true ]; then
-        return 0
-    fi
-
-    if [ "$MACHINIT_SUDO_MANAGED" = true ]; then
         return 0
     fi
 

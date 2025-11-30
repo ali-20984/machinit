@@ -13,11 +13,11 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Color codes for terminal output (kept muted/sober)
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
+# Color codes for terminal output (muted palette)
+GREEN='\033[38;5;70m'
+YELLOW='\033[38;5;179m'
+RED='\033[38;5;167m'
+BLUE='\033[38;5;110m'
 NC='\033[0m'
 
 # ==============================================================================
@@ -237,9 +237,6 @@ printf "%b\n" "${YELLOW}Timestamp: $(date)${NC}" | tee -a "$LOG_FILE"
 if [ "$DRY_RUN" = false ]; then
     start_sudo_keepalive
     refresh_sudo_credentials
-    export MACHINIT_SUDO_MANAGED=true
-else
-    export MACHINIT_SUDO_MANAGED=false
 fi
 
 # ==============================================================================
