@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Chrome DevTools MCP..."
+print_install "Chrome DevTools MCP"
 install_brew_package chrome-devtools-mcp

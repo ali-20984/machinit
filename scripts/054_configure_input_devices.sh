@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Input Devices (Keyboard, Mouse, Trackpad)..."
+print_config "Input Devices"
 
 # Disable multitouch swipes (Navigate with scrolls)
 echo "Disabling multitouch swipes..."

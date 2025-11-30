@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring UI/UX and System Preferences..."
+print_config "UI/UX and System Preferences"
 
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change
@@ -99,7 +99,7 @@ set_default com.apple.screensaver askForPassword int 1
 set_default com.apple.screensaver askForPasswordDelay int 10
 
 # Screen Capture Settings
-echo "Configuring Screen Capture..."
+print_config "Screen Capture"
 # Save screenshots to the Downloads folder
 set_default com.apple.screencapture location string "${HOME}/Downloads"
 # Save screenshots in PNG format

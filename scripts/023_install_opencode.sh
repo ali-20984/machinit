@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing OpenCode..."
+print_install "OpenCode"
 install_brew_package opencode

@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing GitHub Desktop..."
+print_install "GitHub Desktop"
 install_brew_package github "--cask"

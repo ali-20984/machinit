@@ -6,15 +6,15 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing applications..."
+print_header "Applications"
 
-echo "Installing iTerm2..."
+print_install "iTerm2"
 install_brew_package iterm2
 
-echo "Installing Mark Text..."
+print_install "Mark Text"
 install_brew_package mark-text "--cask"
 
-echo "Installing Standard Notes..."
+print_install "Standard Notes"
 install_brew_package standard-notes "--cask"
 
 echo "Applications installed."

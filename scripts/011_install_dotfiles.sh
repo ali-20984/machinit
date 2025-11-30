@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing dotfiles..."
+print_header "Dotfiles"
 
 # Get the absolute path to the assets directory
 ASSETS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)"
@@ -36,7 +36,7 @@ FUNCTIONS_FILE="$ASSETS_DIR/.functions"
 TARGET_FILE="$HOME/.functions"
 
 if [ -f "$FUNCTIONS_FILE" ]; then
-    echo "Installing .functions..."
+    print_install ".functions"
     backup_file "$TARGET_FILE"
     if execute ln -sf "$FUNCTIONS_FILE" "$TARGET_FILE"; then
         print_success "Linked $FUNCTIONS_FILE to $TARGET_FILE"
@@ -76,7 +76,7 @@ ALIASES_FILE="$ASSETS_DIR/.aliases"
 TARGET_ALIASES="$HOME/.aliases"
 
 if [ -f "$ALIASES_FILE" ]; then
-    echo "Installing .aliases..."
+    print_install ".aliases"
     backup_file "$TARGET_ALIASES"
     if execute ln -sf "$ALIASES_FILE" "$TARGET_ALIASES"; then
         print_success "Linked $ALIASES_FILE to $TARGET_ALIASES"
@@ -96,13 +96,13 @@ fi
 GITIGNORE_FILE="$ASSETS_DIR/.gitignore_global"
 TARGET_GITIGNORE="$HOME/.gitignore_global"
 if [ -f "$GITIGNORE_FILE" ]; then
-    echo "Installing .gitignore_global..."
+    print_install ".gitignore_global"
     backup_file "$TARGET_GITIGNORE"
     if execute ln -sf "$GITIGNORE_FILE" "$TARGET_GITIGNORE"; then
         print_success "Linked $GITIGNORE_FILE to $TARGET_GITIGNORE"
     fi
 
-    echo "Configuring git to use global ignore file..."
+    print_config "Git global ignore"
     git config --global core.excludesfile "$TARGET_GITIGNORE"
     print_success "Git configured to use $TARGET_GITIGNORE"
 else
@@ -113,7 +113,7 @@ fi
 NANORC_FILE="$ASSETS_DIR/.nanorc"
 TARGET_NANORC="$HOME/.nanorc"
 if [ -f "$NANORC_FILE" ]; then
-    echo "Installing .nanorc..."
+    print_install ".nanorc"
     backup_file "$TARGET_NANORC"
     if execute ln -sf "$NANORC_FILE" "$TARGET_NANORC"; then
         print_success "Linked $NANORC_FILE to $TARGET_NANORC"

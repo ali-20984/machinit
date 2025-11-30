@@ -91,12 +91,11 @@ function start_sudo_keepalive() {
     sudo -v
     
     # Start background loop to keep sudo alive
-    (
-        while true; do
-            sudo -n true 2>/dev/null
-            sleep 50
-        done
-    ) &
+    # The loop runs sudo -v to refresh the timestamp (not sudo -n which just checks)
+    while true; do
+        sleep 50
+        sudo -v 2>/dev/null
+    done &
     KEEPALIVE_PID=$!
     export MACHINIT_SUDO_KEEPALIVE_ACTIVE=true
 }

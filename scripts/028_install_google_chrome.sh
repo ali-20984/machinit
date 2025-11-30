@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Google Chrome..."
+print_install "Google Chrome"
 install_brew_package google-chrome "--cask"

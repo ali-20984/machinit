@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing OpenAI Codex CLI..."
+print_install "OpenAI Codex CLI"
 install_brew_package codex "--cask"

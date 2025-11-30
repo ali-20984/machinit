@@ -151,16 +151,16 @@ function ensure_sudo() {
 }
 
 # Function: execute_sudo
-# Description: Run command with elevated privileges. Uses sudo -n (non-interactive)
-#              since install.sh keeps credentials fresh with a keepalive loop.
+# Description: Run command with elevated privileges. The keepalive loop in
+#              install.sh keeps credentials fresh, so sudo won't prompt.
 function execute_sudo() {
     if [ "$DRY_RUN" = true ]; then
         print_dry_run "sudo $*"
         return 0
     fi
 
-    # Use sudo -n to avoid prompting (keepalive keeps credentials fresh)
-    sudo -n "$@"
+    # Use regular sudo - the keepalive loop keeps credentials fresh
+    sudo "$@"
 }
 
 # Function: execute_as_user

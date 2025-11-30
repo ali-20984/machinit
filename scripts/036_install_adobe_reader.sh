@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Adobe Acrobat Reader..."
+print_install "Adobe Acrobat Reader"
 install_brew_package adobe-acrobat-reader "--cask"

@@ -6,10 +6,10 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Visual Studio Code..."
+print_install "Visual Studio Code"
 install_brew_package visual-studio-code
 
-echo "Configuring VS Code..."
+print_config "VS Code"
 VSCODE_USER_DIR="$HOME/Library/Application Support/Code/User"
 mkdir -p "$VSCODE_USER_DIR"
 SETTINGS_FILE="$VSCODE_USER_DIR/settings.json"

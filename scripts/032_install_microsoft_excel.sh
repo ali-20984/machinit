@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Microsoft Excel..."
+print_install "Microsoft Excel"
 install_brew_package microsoft-excel "--cask"

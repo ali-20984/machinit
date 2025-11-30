@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Microsoft Outlook..."
+print_install "Microsoft Outlook"
 install_brew_package microsoft-outlook "--cask"

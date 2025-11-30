@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing OpenVPN Connect..."
+print_install "OpenVPN Connect"
 install_brew_package openvpn-connect "--cask"

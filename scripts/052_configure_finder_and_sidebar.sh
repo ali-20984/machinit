@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Finder..."
+print_config "Finder"
 
 # Allow quitting via ⌘ + Q; doing so will also hide desktop icons
 echo "Allowing Quit in Finder..."
@@ -54,7 +54,7 @@ echo "Unhiding /Volumes..."
 execute_sudo chflags nohidden /Volumes
 
 # Sidebar Configurations
-echo "Configuring Finder Sidebar..."
+print_config "Finder Sidebar"
 
 # Set sidebar icon size to Medium
 echo "Setting sidebar icon size to Medium..."

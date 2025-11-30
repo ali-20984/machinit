@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing KeePassXC..."
+print_install "KeePassXC"
 install_brew_package keepassxc "--cask"

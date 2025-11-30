@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Microsoft PowerPoint..."
+print_install "Microsoft PowerPoint"
 install_brew_package microsoft-powerpoint "--cask"

@@ -6,14 +6,14 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Security and Privacy..."
+print_config "Security and Privacy"
 
 # Disable Crash Reporter
 echo "Disabling Crash Reporter..."
 set_default com.apple.CrashReporter DialogType string "none"
 
 # Enable Firewall, Stealth Mode, and Block All Incoming Connections
-echo "Configuring Firewall..."
+print_config "Firewall"
 execute_sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
 execute_sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
 execute_sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall on

@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Power Management..."
+print_config "Power Management"
 
 # Enable lid wakeup
 echo "Enabling lid wakeup..."

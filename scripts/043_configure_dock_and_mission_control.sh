@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Dock size..."
+print_config "Dock and Mission Control"
 
 # Set the icon size of Dock items to 36 pixels (default is usually around 64)
 set_default com.apple.dock tilesize int 36

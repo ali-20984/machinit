@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Bitwarden..."
+print_install "Bitwarden"
 install_brew_package bitwarden "--cask"

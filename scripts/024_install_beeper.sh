@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Beeper..."
+print_install "Beeper"
 install_brew_package beeper "--cask"

@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Dock apps..."
+print_config "Dock Apps"
 
 echo "Ensuring dockutil is installed..."
 install_brew_package dockutil

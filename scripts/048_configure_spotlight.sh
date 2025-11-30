@@ -7,7 +7,7 @@
 
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Spotlight search behavior..."
+print_config "Spotlight"
 
 # Function: check_status
 # Description: Print a consistent success/failure marker after each grouped

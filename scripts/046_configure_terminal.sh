@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Configuring Terminal theme (muted matrix)..."
+print_config "Terminal Theme"
 
 # Only use UTF-8 in Terminal.app
 # -array is complex for set_default, using raw defaults write

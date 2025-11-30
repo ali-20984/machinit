@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Microsoft Word..."
+print_install "Microsoft Word"
 install_brew_package microsoft-word "--cask"

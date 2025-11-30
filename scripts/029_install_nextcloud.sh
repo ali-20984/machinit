@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Nextcloud..."
+print_install "Nextcloud"
 install_brew_package nextcloud "--cask"

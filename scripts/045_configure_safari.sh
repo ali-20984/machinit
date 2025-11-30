@@ -115,9 +115,9 @@ else
     fi
 fi
 
-echo "Configuring Safari Privacy and Security..."
+print_config "Safari Privacy and Security"
 
-# Privacy: don’t send search queries to Apple
+# Privacy: don't send search queries to Apple
 set_default com.apple.Safari UniversalSearchEnabled bool false
 set_default com.apple.Safari SuppressSearchSuggestions bool true
 
