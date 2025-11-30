@@ -4,28 +4,77 @@
 # Description: Configure Firefox Policies
 # Author: supermarsx
 #
-echo "Configuring Firefox extensions..."
+source "$(dirname "$0")/utils.sh"
+
+print_info "Configuring Firefox extensions..."
 
 FIREFOX_APP="/Applications/Firefox.app"
 DIST_DIR="$FIREFOX_APP/Contents/Resources/distribution"
 POLICIES_FILE="$DIST_DIR/policies.json"
+FDA_HINT=$'Grant the terminal running MachInit "Full Disk Access" (System Settings → Privacy & Security → Full Disk Access) and rerun this script with `./install.sh --start-from 020_configure_firefox_policies.sh`.'
+
+function ensure_distribution_dir() {
+  if execute mkdir -p "$DIST_DIR"; then
+    return 0
+  fi
+
+  print_info "Retrying directory creation with sudo..."
+  if execute_sudo mkdir -p "$DIST_DIR"; then
+    return 0
+  fi
+
+  print_error "Unable to create $DIST_DIR. $FDA_HINT"
+  return 1
+}
+
+function move_policies() {
+  local source_file="$1"
+  if mv "$source_file" "$POLICIES_FILE" 2>/dev/null; then
+    return 0
+  fi
+
+  print_info "Retrying policies copy with sudo..."
+  if execute_sudo mv "$source_file" "$POLICIES_FILE"; then
+    return 0
+  fi
+
+  print_error "Unable to write $POLICIES_FILE. $FDA_HINT"
+  return 1
+}
+
+function secure_policies() {
+  if chmod 644 "$POLICIES_FILE" 2>/dev/null; then
+    return 0
+  fi
+
+  print_info "Retrying chmod with sudo..."
+  if execute_sudo chmod 644 "$POLICIES_FILE"; then
+    return 0
+  fi
+
+  print_error "Unable to set permissions on $POLICIES_FILE. $FDA_HINT"
+  return 1
+}
 
 if [ ! -d "$FIREFOX_APP" ]; then
-    echo "Firefox is not installed at $FIREFOX_APP. Skipping extension configuration."
-    exit 1
+    print_info "Firefox is not installed at $FIREFOX_APP. Skipping configuration."
+    exit 0
 fi
 
-echo "Creating distribution directory..."
-# Try to create directory, use sudo if permission denied
-if ! mkdir -p "$DIST_DIR" 2>/dev/null; then
-    echo "Requesting sudo permissions to create Firefox distribution directory..."
-    sudo mkdir -p "$DIST_DIR"
+print_info "Creating distribution directory..."
+if ! ensure_distribution_dir; then
+  exit 0
 fi
 
-echo "Writing policies.json..."
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "Write policies.json to $POLICIES_FILE"
+    print_dry_run "chmod 644 $POLICIES_FILE"
+    exit 0
+fi
 
-# Define policies content
-cat <<EOF > /tmp/firefox_policies.json
+print_info "Writing policies.json..."
+TMP_POLICIES=$(mktemp)
+cat <<'EOF' >"$TMP_POLICIES"
 {
   "policies": {
     "Extensions": {
@@ -44,15 +93,13 @@ cat <<EOF > /tmp/firefox_policies.json
 }
 EOF
 
-# Move file to destination, use sudo if needed
-if ! mv /tmp/firefox_policies.json "$POLICIES_FILE" 2>/dev/null; then
-    echo "Requesting sudo permissions to write policies.json..."
-    sudo mv /tmp/firefox_policies.json "$POLICIES_FILE"
+if ! move_policies "$TMP_POLICIES"; then
+  rm -f "$TMP_POLICIES"
+  exit 0
 fi
 
-# Set permissions
-if ! chmod 644 "$POLICIES_FILE" 2>/dev/null; then
-    sudo chmod 644 "$POLICIES_FILE"
+if ! secure_policies; then
+  exit 0
 fi
 
-echo "Firefox extensions configured via policies.json."
+print_success "Firefox extensions configured via policies.json."

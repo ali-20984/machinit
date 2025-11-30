@@ -13,6 +13,13 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# Color codes for terminal output (kept muted/sober)
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
 # ==============================================================================
 # Configuration & Defaults
 # ==============================================================================
@@ -27,21 +34,23 @@ CONFIG_FILE=""
 PARSER_SCRIPT="./scripts/lib/config_parser.py"
 
 # Flags
-DRY_RUN=false       # If true, commands are printed but not executed
-UPDATE=false        # If true, the script updates itself via git and exits
-NO_LOG=false        # If true, logging to file is disabled
-VERBOSE=false       # If true, enables shell debug mode (set -x)
+DRY_RUN=false # If true, commands are printed but not executed
+UPDATE=false  # If true, the script updates itself via git and exits
+NO_LOG=false  # If true, logging to file is disabled
+VERBOSE=false # If true, enables shell debug mode (set -x)
 
 # State variables
-START_FROM=""       # Script name to resume execution from
+START_FROM=""        # Script name to resume execution from
 SET_COMPUTER_NAME="" # Computer name passed via argument
+KEEPALIVE_PID=""     # PID of the sudo keep-alive loop
 
 # ==============================================================================
 # Helper Functions
 # ==============================================================================
 
 # Function: show_help
-# Description: Displays the usage information and available options.
+# Description: Prints CLI usage plus available arguments so the user knows
+#              how to toggle dry-run, logging, configs, and resume points.
 function show_help() {
     echo "Usage: ./install.sh [OPTIONS]"
     echo ""
@@ -56,6 +65,82 @@ function show_help() {
     echo "  --help, -h              Show this help message."
     echo ""
 }
+
+# Function: start_sudo_keepalive
+# Description: Authenticates once with sudo and launches a background loop
+#              to refresh credentials every 30 seconds so child scripts do
+#              not prompt repeatedly during long installs.
+function start_sudo_keepalive() {
+    sudo -v
+    (
+        set +e
+        while true; do
+            sleep 60
+            sudo -n true 2>/dev/null || true
+        done
+    ) &
+    KEEPALIVE_PID=$!
+}
+
+# Function: stop_sudo_keepalive
+# Description: Cleans up the background refresh loop if it is running. This
+#              prevents runaway processes after install.sh exits early or
+#              completes normally.
+function stop_sudo_keepalive() {
+    if [ -n "$KEEPALIVE_PID" ] && kill -0 "$KEEPALIVE_PID" 2>/dev/null; then
+        kill "$KEEPALIVE_PID" 2>/dev/null || true
+    fi
+}
+
+# Function: refresh_sudo_credentials
+# Description: Ensures the cached sudo timestamp remains valid. If sudo
+#              credentials expire (e.g., user paused for an extended period),
+#              prompt once to renew before running privileged steps.
+function refresh_sudo_credentials() {
+    if [ "$DRY_RUN" = true ]; then
+        return
+    fi
+
+    if ! sudo -n true 2>/dev/null; then
+        echo "Sudo session expired. Please re-enter your password to continue."
+        sudo -v
+    fi
+}
+
+# Function: normalize_hostname
+# Description: Convert a friendly computer name into a HostName-safe value by
+#              lowercasing, replacing whitespace with hyphens, and stripping
+#              unsupported characters.
+function normalize_hostname() {
+    local raw="$1"
+    local normalized
+    normalized=$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]')
+    normalized=${normalized// /-}
+    normalized=$(printf '%s' "$normalized" | tr -cd '[:alnum:]-')
+    if [ -z "$normalized" ]; then
+        normalized="mac"
+    fi
+    echo "$normalized"
+}
+
+# Function: apply_computer_name
+# Description: Sets the various macOS identifiers (ComputerName/HostName/
+#              LocalHostName/NetBIOS) using a friendly name and a sanitized
+#              hostname for network-safe fields.
+function apply_computer_name() {
+    local friendly_name="$1"
+    local sanitized
+    sanitized=$(normalize_hostname "$friendly_name")
+
+    echo "Setting computer name to '$friendly_name' (hostname '$sanitized')..."
+    sudo scutil --set ComputerName "$friendly_name"
+    sudo scutil --set HostName "$sanitized"
+    sudo scutil --set LocalHostName "$sanitized"
+    sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$sanitized"
+    printf "%b\n" "${GREEN}Computer name set to '$friendly_name' (HostName: '$sanitized')${NC}" | tee -a "$LOG_FILE"
+}
+
+trap stop_sudo_keepalive EXIT
 
 # ==============================================================================
 # Argument Parsing
@@ -81,7 +166,7 @@ while [[ $# -gt 0 ]]; do
             NO_LOG=true
             shift
             ;;
-        --verbose|-v)
+        --verbose | -v)
             VERBOSE=true
             shift
             ;;
@@ -93,7 +178,7 @@ while [[ $# -gt 0 ]]; do
             SET_COMPUTER_NAME="$2"
             shift 2
             ;;
-        --help|-h)
+        --help | -h)
             show_help
             exit 0
             ;;
@@ -145,16 +230,16 @@ export DRY_RUN
 # Initialization
 # ==============================================================================
 
-echo "Starting Mac initialization..." | tee -a "$LOG_FILE"
-echo "Timestamp: $(date)" | tee -a "$LOG_FILE"
+printf "%b\n" "${YELLOW}Starting Mac initialization...${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${YELLOW}Timestamp: $(date)${NC}" | tee -a "$LOG_FILE"
 
 # Request sudo permissions upfront (unless in dry-run mode)
 if [ "$DRY_RUN" = false ]; then
-    # Ask for the administrator password upfront
-    sudo -v
-
-    # Keep-alive: update existing `sudo` time stamp until script has finished
-    while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+    start_sudo_keepalive
+    refresh_sudo_credentials
+    export MACHINIT_SUDO_MANAGED=true
+else
+    export MACHINIT_SUDO_MANAGED=false
 fi
 
 # ==============================================================================
@@ -163,39 +248,31 @@ fi
 
 if [ "$DRY_RUN" = false ]; then
     if [ -n "$SET_COMPUTER_NAME" ]; then
+        refresh_sudo_credentials
         # Use the name provided via CLI argument
         COMPUTER_NAME="$SET_COMPUTER_NAME"
-        echo "Setting computer name to '$COMPUTER_NAME' (from argument)..."
-        sudo scutil --set ComputerName "$COMPUTER_NAME"
-        sudo scutil --set HostName "$COMPUTER_NAME"
-        sudo scutil --set LocalHostName "$COMPUTER_NAME"
-        sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$COMPUTER_NAME"
-        echo "Computer name set to '$COMPUTER_NAME'" | tee -a "$LOG_FILE"
+        apply_computer_name "$COMPUTER_NAME"
     else
         # Interactive prompt
         current_name=$(scutil --get ComputerName)
         echo "Current Computer Name: $current_name"
-        read -p "Enter new computer name (or press Enter to keep '$current_name'): " COMPUTER_NAME
+        read -r -p "Enter new computer name (or press Enter to keep '$current_name'): " COMPUTER_NAME
 
         if [ -z "$COMPUTER_NAME" ]; then
             COMPUTER_NAME="$current_name"
         fi
 
-        read -p "Set computer name to '$COMPUTER_NAME'? (y/n) " -n 1 -r
+        read -r -n 1 -p "Set computer name to '$COMPUTER_NAME'? (y/n) "
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            echo "Setting computer name to '$COMPUTER_NAME'..."
-            sudo scutil --set ComputerName "$COMPUTER_NAME"
-            sudo scutil --set HostName "$COMPUTER_NAME"
-            sudo scutil --set LocalHostName "$COMPUTER_NAME"
-            sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$COMPUTER_NAME"
-            echo "Computer name set to '$COMPUTER_NAME'" | tee -a "$LOG_FILE"
+            refresh_sudo_credentials
+            apply_computer_name "$COMPUTER_NAME"
         else
             echo "Skipping computer name change." | tee -a "$LOG_FILE"
         fi
     fi
 else
-    echo "[DRY RUN] Would ask for computer name and set it."
+    printf "%b\n" "${BLUE}[DRY RUN] Would ask for computer name and set it.${NC}"
 fi
 
 # ==============================================================================
@@ -227,7 +304,7 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     [ -e "$script" ] || continue
 
     script_name=$(basename "$script")
-    ((CURRENT_COUNT++))
+    ((++CURRENT_COUNT))
 
     # --------------------------------------------------------------------------
     # Logic: Resume from specific script
@@ -237,12 +314,12 @@ for script in "$SCRIPTS_DIR"/*.sh; do
             SKIPPING_UNTIL_START=false
             echo "Found start script: $script_name. Resuming execution." | tee -a "$LOG_FILE"
         else
-            echo "[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (before start point)..." | tee -a "$LOG_FILE"
-            ((SKIPPED_COUNT++))
+            printf "%b\n" "${YELLOW}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (before start point)...${NC}" | tee -a "$LOG_FILE"
+            ((++SKIPPED_COUNT))
             continue
         fi
     fi
-    
+
     # --------------------------------------------------------------------------
     # Logic: Check Configuration
     # --------------------------------------------------------------------------
@@ -253,10 +330,10 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     else
         should_run=$(python3 "$PARSER_SCRIPT" "$CONFIG_FILE" "scripts.\"$script_name\"")
     fi
-    
+
     if [ "$should_run" == "false" ]; then
-        echo "[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (disabled in config)..." | tee -a "$LOG_FILE"
-        ((SKIPPED_COUNT++))
+        printf "%b\n" "${YELLOW}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (disabled in config)...${NC}" | tee -a "$LOG_FILE"
+        ((++SKIPPED_COUNT))
         continue
     fi
 
@@ -264,8 +341,10 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     # Logic: Execute Script
     # --------------------------------------------------------------------------
     echo "--------------------------------------------------" | tee -a "$LOG_FILE"
-    echo "[$CURRENT_COUNT/$TOTAL_SCRIPTS] Running $script_name..." | tee -a "$LOG_FILE"
-    
+    printf "%b\n" "${BLUE}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Running $script_name...${NC}" | tee -a "$LOG_FILE"
+
+    refresh_sudo_credentials
+
     # Ensure script is executable
     if [ ! -x "$script" ]; then
         chmod +x "$script"
@@ -275,20 +354,13 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     # We use pipefail to ensure we catch script errors even when piping to tee
     set -o pipefail
     if "$script" 2>&1 | tee -a "$LOG_FILE"; then
-        echo "✓ $script_name completed successfully." | tee -a "$LOG_FILE"
-        ((SUCCESS_COUNT++))
+        printf "%b\n" "${GREEN}✓ $script_name completed successfully.${NC}" | tee -a "$LOG_FILE"
+        ((++SUCCESS_COUNT))
         set +o pipefail
     else
-        echo "✗ $script_name failed." | tee -a "$LOG_FILE"
-        ((FAILED_COUNT++))
-        echo "--------------------------------------------------" | tee -a "$LOG_FILE"
-        echo "Execution aborted due to failure." | tee -a "$LOG_FILE"
-        echo "Summary:" | tee -a "$LOG_FILE"
-        echo "  Total: $TOTAL_SCRIPTS" | tee -a "$LOG_FILE"
-        echo "  Success: $SUCCESS_COUNT" | tee -a "$LOG_FILE"
-        echo "  Skipped: $SKIPPED_COUNT" | tee -a "$LOG_FILE"
-        echo "  Failed: $FAILED_COUNT" | tee -a "$LOG_FILE"
-        exit 1
+        printf "%b\n" "${RED}✗ $script_name failed.${NC}" | tee -a "$LOG_FILE"
+        ((++FAILED_COUNT))
+        set +o pipefail
     fi
 done
 
@@ -297,10 +369,16 @@ done
 # ==============================================================================
 
 echo "--------------------------------------------------" | tee -a "$LOG_FILE"
-echo "All scripts executed successfully!" | tee -a "$LOG_FILE"
+printf "%b\n" "${GREEN}All scripts executed successfully!${NC}" | tee -a "$LOG_FILE"
 echo "Summary:" | tee -a "$LOG_FILE"
 echo "  Total: $TOTAL_SCRIPTS" | tee -a "$LOG_FILE"
-echo "  Success: $SUCCESS_COUNT" | tee -a "$LOG_FILE"
-echo "  Skipped: $SKIPPED_COUNT" | tee -a "$LOG_FILE"
-echo "  Failed: $FAILED_COUNT" | tee -a "$LOG_FILE"
-echo "Initialization complete." | tee -a "$LOG_FILE"
+printf "  Success: %b\n" "${GREEN}$SUCCESS_COUNT${NC}" | tee -a "$LOG_FILE"
+printf "  Skipped: %b\n" "${YELLOW}$SKIPPED_COUNT${NC}" | tee -a "$LOG_FILE"
+printf "  Failed: %b\n" "${RED}$FAILED_COUNT${NC}" | tee -a "$LOG_FILE"
+
+if [ "$FAILED_COUNT" -gt 0 ]; then
+    printf "%b\n" "${RED}Some scripts reported failures. Review the log above for details.${NC}" | tee -a "$LOG_FILE"
+    exit 1
+fi
+
+printf "%b\n" "${GREEN}Initialization complete.${NC}" | tee -a "$LOG_FILE"

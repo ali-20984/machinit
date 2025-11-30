@@ -17,7 +17,7 @@ echo "Configuring Time Machine..."
 # Prevent Time Machine from prompting to use new hard drives as backup volume
 set_default com.apple.TimeMachine DoNotOfferNewDisksForBackup bool true
 # Disable local Time Machine backups
-if hash tmutil &> /dev/null; then
+if hash tmutil &>/dev/null; then
     sudo tmutil disablelocal 2>/dev/null || echo "Note: 'tmutil disablelocal' might not be supported on this macOS version."
 fi
 

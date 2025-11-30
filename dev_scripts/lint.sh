@@ -5,7 +5,7 @@
 
 echo "Running ShellCheck..."
 
-if ! command -v shellcheck &> /dev/null; then
+if ! command -v shellcheck &>/dev/null; then
     echo "Error: shellcheck is not installed."
     echo "Install it with: brew install shellcheck"
     exit 1
@@ -20,7 +20,7 @@ find "$(dirname "$0")/.." -name "*.sh" -not -path "*/node_modules/*" -print0 | x
 SHELLCHECK_EXIT=$?
 
 echo "Running Python Linting..."
-if command -v flake8 &> /dev/null; then
+if command -v flake8 &>/dev/null; then
     flake8 "$(dirname "$0")/.." --exclude=node_modules,venv,.git,__pycache__
     FLAKE8_EXIT=$?
 else

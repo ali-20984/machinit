@@ -15,7 +15,7 @@ mkdir -p "$VSCODE_USER_DIR"
 SETTINGS_FILE="$VSCODE_USER_DIR/settings.json"
 
 if [ ! -f "$SETTINGS_FILE" ]; then
-    echo "{}" > "$SETTINGS_FILE"
+    echo "{}" >"$SETTINGS_FILE"
 fi
 
 # Use python to update json safely

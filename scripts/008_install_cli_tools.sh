@@ -19,7 +19,20 @@ echo "Installing Findutils..."
 install_brew_package findutils
 
 echo "Installing GNU Sed..."
-install_brew_package gnu-sed "--with-default-names"
+install_brew_package gnu-sed
+if command -v brew &>/dev/null; then
+    if [ "$DRY_RUN" = true ]; then
+        print_dry_run "brew link gnu-sed --overwrite --force"
+    else
+        if brew list gnu-sed &>/dev/null; then
+            if brew link gnu-sed --overwrite --force; then
+                print_success "gnu-sed linked with default names."
+            else
+                print_error "Failed to force-link gnu-sed."
+            fi
+        fi
+    fi
+fi
 
 echo "Installing Bash and Completion..."
 install_brew_package bash
@@ -112,7 +125,7 @@ install_brew_package yarn
 install_brew_package pnpm
 
 echo "Installing @github/copilot globally..."
-if command -v npm &> /dev/null; then
+if command -v npm &>/dev/null; then
     npm install -g @github/copilot
 else
     echo "npm not found. Skipping @github/copilot installation."

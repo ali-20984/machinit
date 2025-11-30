@@ -8,8 +8,7 @@ FAILED=0
 
 echo "Running Shell Tests..."
 if [ -f "$TEST_DIR/test_utils.sh" ]; then
-    bash "$TEST_DIR/test_utils.sh"
-    if [ $? -ne 0 ]; then
+    if ! bash "$TEST_DIR/test_utils.sh"; then
         echo "✗ test_utils.sh failed"
         FAILED=1
     else
@@ -21,8 +20,7 @@ echo "--------------------------------------------------"
 
 echo "Running Python Tests..."
 if [ -f "$TEST_DIR/test_config_parser.py" ]; then
-    python3 "$TEST_DIR/test_config_parser.py"
-    if [ $? -ne 0 ]; then
+    if ! python3 "$TEST_DIR/test_config_parser.py"; then
         echo "✗ test_config_parser.py failed"
         FAILED=1
     else
@@ -31,8 +29,7 @@ if [ -f "$TEST_DIR/test_config_parser.py" ]; then
 fi
 
 if [ -f "$TEST_DIR/test_config_parser_extended.py" ]; then
-    python3 "$TEST_DIR/test_config_parser_extended.py"
-    if [ $? -ne 0 ]; then
+    if ! python3 "$TEST_DIR/test_config_parser_extended.py"; then
         echo "✗ test_config_parser_extended.py failed"
         FAILED=1
     else
@@ -44,8 +41,7 @@ echo "--------------------------------------------------"
 
 echo "Running Extended Shell Tests..."
 if [ -f "$TEST_DIR/test_utils_extended.sh" ]; then
-    bash "$TEST_DIR/test_utils_extended.sh"
-    if [ $? -ne 0 ]; then
+    if ! bash "$TEST_DIR/test_utils_extended.sh"; then
         echo "✗ test_utils_extended.sh failed"
         FAILED=1
     else
@@ -57,8 +53,7 @@ echo "--------------------------------------------------"
 
 echo "Running Integrity Tests..."
 if [ -f "$TEST_DIR/test_integrity.sh" ]; then
-    bash "$TEST_DIR/test_integrity.sh"
-    if [ $? -ne 0 ]; then
+    if ! bash "$TEST_DIR/test_integrity.sh"; then
         echo "✗ test_integrity.sh failed"
         FAILED=1
     else

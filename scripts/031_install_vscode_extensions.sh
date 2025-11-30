@@ -4,16 +4,19 @@
 # Description: Install Vscode Extensions
 # Author: supermarsx
 #
-echo "Installing VS Code extensions..."
+source "$(dirname "$0")/utils.sh"
 
-# Ensure 'code' command is available
-if ! command -v code &> /dev/null; then
+print_info "Installing VS Code extensions..."
+
+if ! command -v code &>/dev/null; then
     if [ -d "/Applications/Visual Studio Code.app" ]; then
         export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
-    else
-        echo "Visual Studio Code not found. Skipping extension installation."
-        exit 1
     fi
+fi
+
+if ! command -v code &>/dev/null; then
+    print_info "Visual Studio Code command line not found. Skipping extensions."
+    exit 0
 fi
 
 extensions=(
@@ -29,42 +32,55 @@ extensions=(
     "streetsidesoftware.code-spell-checker"
 )
 
-# Get list of installed extensions
-installed_extensions=$(code --list-extensions)
+if [ "$DRY_RUN" = true ]; then
+    installed_extensions=""
+else
+    installed_extensions=$(code --list-extensions 2>/dev/null)
+fi
 
 for ext in "${extensions[@]}"; do
-    if echo "$installed_extensions" | grep -qi "^$ext$"; then
-        echo "Extension $ext is already installed. Skipping."
+    if printf '%s\n' "$installed_extensions" | grep -Fixq "$ext"; then
+        print_info "Extension $ext is already installed."
     else
-        echo "Installing $ext..."
-        code --install-extension "$ext" --force
+        if [ "$DRY_RUN" = true ]; then
+            print_dry_run "code --install-extension $ext --force"
+        else
+            execute code --install-extension "$ext" --force
+        fi
     fi
 done
 
-echo "Configuring VS Code Settings (Dark Mode)..."
+print_info "Configuring VS Code settings..."
 SETTINGS_FILE="$HOME/Library/Application Support/Code/User/settings.json"
-mkdir -p "$(dirname "$SETTINGS_FILE")"
+execute mkdir -p "$(dirname "$SETTINGS_FILE")"
 
 if [ ! -f "$SETTINGS_FILE" ]; then
-    echo "{}" > "$SETTINGS_FILE"
+    if [ "$DRY_RUN" = true ]; then
+        print_dry_run "Create $SETTINGS_FILE with {}"
+    else
+        echo "{}" >"$SETTINGS_FILE"
+    fi
 fi
 
-# Use Python to update settings.json safely
-python3 -c "
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "Update $SETTINGS_FILE key workbench.colorTheme"
+else
+    python3 -c "
 import json
 import os
 
 settings_path = os.path.expanduser('$SETTINGS_FILE')
 try:
-    with open(settings_path, 'r') as f:
+    with open(settings_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError):
     data = {}
 
 data['workbench.colorTheme'] = 'OLED Pure Black'
 
-with open(settings_path, 'w') as f:
+with open(settings_path, 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=4)
 "
+fi
 
-echo "VS Code extensions installation and configuration complete."
+print_success "VS Code extensions installation and configuration complete."

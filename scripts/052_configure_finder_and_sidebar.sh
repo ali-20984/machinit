@@ -79,7 +79,7 @@ fi
 
 # Add items to Sidebar Favorites (Best effort using sfltool)
 # Note: This is experimental and might not work on all macOS versions without 'mysides'
-if command -v sfltool &> /dev/null; then
+if command -v sfltool &>/dev/null; then
     echo "Attempting to add items to sidebar using sfltool..."
     # Add Home
     sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}"
@@ -89,9 +89,9 @@ if command -v sfltool &> /dev/null; then
     sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}/Projects"
     # Add Photos (if exists)
     if [ -d "${HOME}/Pictures/Photos Library.photoslibrary" ]; then
-         sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}/Pictures/Photos Library.photoslibrary"
+        sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}/Pictures/Photos Library.photoslibrary"
     elif [ -d "/System/Applications/Photos.app" ]; then
-         sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file:///System/Applications/Photos.app"
+        sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file:///System/Applications/Photos.app"
     fi
     # Trash is not typically added to Sidebar Favorites, usually in Dock.
 fi

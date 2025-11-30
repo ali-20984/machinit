@@ -6,37 +6,40 @@
 #
 source "$(dirname "$0")/utils.sh"
 
+# Function: global_cleanup
+# Description: Performs cache purges across package managers plus optional
+#              system hygiene tasks to free disk and reset services.
 function global_cleanup() {
     print_info "Starting global cleanup..."
 
     # Homebrew Cleanup
-    if command -v brew &> /dev/null; then
+    if command -v brew &>/dev/null; then
         print_info "Cleaning up Homebrew..."
         execute brew cleanup -s
-        
+
         local brew_cache
         brew_cache=$(brew --cache)
         execute rm -rf "$brew_cache"
-        
+
         print_success "Homebrew cleaned."
     fi
 
     # NPM Cleanup
-    if command -v npm &> /dev/null; then
+    if command -v npm &>/dev/null; then
         print_info "Cleaning up npm cache..."
         execute npm cache clean --force
         print_success "npm cache cleaned."
     fi
 
     # Gem Cleanup
-    if command -v gem &> /dev/null; then
+    if command -v gem &>/dev/null; then
         print_info "Cleaning up Ruby gems..."
         execute gem cleanup
         print_success "Ruby gems cleaned."
     fi
 
     # Pip Cleanup (if pip is available)
-    if command -v pip3 &> /dev/null; then
+    if command -v pip3 &>/dev/null; then
         print_info "Cleaning up pip cache..."
         execute pip3 cache purge
         print_success "pip cache cleaned."

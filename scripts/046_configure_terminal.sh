@@ -38,7 +38,7 @@ tell application "Terminal"
             -- Set Font (Fantasque Sans Mono)
             -- Note: The font must be installed for this to work.
             set font name to "FantasqueSansMono-Regular"
-            set font size to 10
+            set font size to 13
         end tell
         
         -- Apply to all open windows
@@ -57,10 +57,12 @@ EOD
 ZSHRC="$HOME/.zshrc"
 if [ -f "$ZSHRC" ]; then
     if ! grep -q "PROMPT=" "$ZSHRC"; then
-        echo "" >> "$ZSHRC"
-        echo "# Custom Prompt: Orange introduction, hidden user/host" >> "$ZSHRC"
-        # %F{208} is orange-ish (256 color), %~ is current path, %f resets color
-        echo "export PROMPT='%F{208}➜ %f%~ '" >> "$ZSHRC"
+        {
+            echo ""
+            echo "# Custom Prompt: Colored user marker and folder path"
+            echo "export PROMPT='%F{39}%n%f %F{208}➜%f %F{70}%~%f '"
+        } >>"$ZSHRC"
+        # %n = user, %~ = current dir; %F{color} starts color, %f resets
     fi
 fi
 

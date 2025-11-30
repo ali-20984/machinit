@@ -39,7 +39,7 @@ fi
 
 # Test 3: Check config.toml validity
 echo "Test 3: Check config.toml validity"
-if command -v python3 &> /dev/null; then
+if command -v python3 &>/dev/null; then
     if python3 -c "import tomllib; f=open('$PROJECT_ROOT/config.toml','rb'); tomllib.load(f); f.close()" 2>/dev/null; then
         echo "PASS: config.toml is valid"
     else

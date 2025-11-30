@@ -4,21 +4,20 @@
 # Description: Disable Siri
 # Author: supermarsx
 #
-echo "Fully disabling Siri..."
+source "$(dirname "$0")/utils.sh"
 
-# Disable Siri
-defaults write com.apple.assistant.support "Assistant Enabled" -bool false
+print_info "Fully disabling Siri..."
 
-# Remove Siri from Menu Bar
-defaults write com.apple.Siri StatusMenuVisible -bool false
+set_default com.apple.assistant.support "Assistant Enabled" bool false
+set_default com.apple.Siri StatusMenuVisible bool false
+set_default com.apple.Siri UserHasDeclinedEnable bool true
 
-# Disable "Ask Siri"
-defaults write com.apple.Siri UserHasDeclinedEnable -bool true
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "killall SystemUIServer"
+    print_dry_run "killall Siri"
+else
+    killall SystemUIServer 2>/dev/null || true
+    killall Siri 2>/dev/null || true
+fi
 
-# Kill SystemUIServer to refresh menu bar
-killall SystemUIServer 2>/dev/null
-
-# Kill Siri processes if running
-killall Siri 2>/dev/null
-
-echo "Siri has been disabled."
+print_success "Siri has been disabled."

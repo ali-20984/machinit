@@ -11,21 +11,41 @@ echo "Configuring Dock apps..."
 echo "Ensuring dockutil is installed..."
 install_brew_package dockutil
 
+if ! command -v dockutil &>/dev/null; then
+	print_error "dockutil not found even after attempted installation. Skipping Dock configuration."
+	exit 0
+fi
+
 echo "Clearing existing Dock items..."
-dockutil --remove all --no-restart
+execute dockutil --remove all --no-restart
 
 echo "Adding apps to Dock..."
-# Add apps in the requested order
-dockutil --add "/Applications/Visual Studio Code.app" --no-restart
-dockutil --add "/Applications/Firefox.app" --no-restart
-dockutil --add "/System/Applications/Utilities/Terminal.app" --no-restart
-dockutil --add "/Applications/Beeper.app" --no-restart
-dockutil --add "/Applications/Bitwarden.app" --no-restart
-dockutil --add "/Applications/GitHub Desktop.app" --no-restart
-dockutil --add "/Applications/Microsoft Word.app" --no-restart
-dockutil --add "/Applications/Microsoft Excel.app" --no-restart
+declare -a DOCK_APPS=(
+	"/Applications/Visual Studio Code.app|Visual Studio Code"
+	"/Applications/Firefox.app|Firefox"
+	"/System/Applications/Utilities/Terminal.app|Terminal"
+	"/Applications/Beeper.app|Beeper"
+	"/Applications/Bitwarden.app|Bitwarden"
+	"/Applications/GitHub Desktop.app|GitHub Desktop"
+	"/Applications/Microsoft Word.app|Microsoft Word"
+	"/Applications/Microsoft Excel.app|Microsoft Excel"
+)
+
+for entry in "${DOCK_APPS[@]}"; do
+	IFS='|' read -r app_path label <<<"$entry"
+	if [ ! -e "$app_path" ]; then
+		print_info "Skipping $label because $app_path was not found."
+		continue
+	fi
+
+	if execute dockutil --add "$app_path" --no-restart; then
+		print_success "Pinned $label to the Dock."
+	else
+		print_error "Failed to pin $label. Run 'dockutil --add \"$app_path\"' manually if needed."
+	fi
+done
 
 # Restart Dock to apply changes
-killall Dock
+execute killall Dock
 
 echo "Dock apps configured."

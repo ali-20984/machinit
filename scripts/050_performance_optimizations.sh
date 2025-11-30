@@ -4,8 +4,13 @@
 # Description: Performance Optimizations
 # Author: supermarsx
 #
+source "$(dirname "$0")/utils.sh"
+
 echo "Running performance optimizations..."
 
+# Function: check_status
+# Description: Surface a concise success/failure message after each
+#              optimization block for easier troubleshooting.
 function check_status() {
     if [ $? -eq 0 ]; then
         echo "✓ $1"
@@ -14,17 +19,13 @@ function check_status() {
     fi
 }
 
-echo "Disabling Spotlight indexing..."
-sudo mdutil -a -i off
-check_status "Spotlight indexing disabled"
-
 echo "Disabling global animations..."
 defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
 defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
 check_status "Global animations disabled"
 
 echo "Optimizing SSD settings..."
-# SSD optimizations 
+# SSD optimizations
 # Note: 'trimforce enable' requires a reboot and user confirmation.
 # It is commented out to prevent interrupting the script flow.
 # echo "y" | sudo trimforce enable

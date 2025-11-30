@@ -74,7 +74,7 @@ echo "Allowing wallpaper tinting in windows..."
 set_default NSGlobalDomain AppleReduceDesktopTinting bool false
 
 # Set HostName to AdminHostInfo (requires sudo)
-# Note: This might conflict with the manual HostName setting above if run repeatedly, 
+# Note: This might conflict with the manual HostName setting above if run repeatedly,
 # but ensures login window shows the correct name.
 echo "Setting HostName for Login Window..."
 sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
@@ -130,7 +130,7 @@ for app in "Activity Monitor" \
     "Tweetbot" \
     "Twitter" \
     "iCal"; do
-    killall "${app}" &> /dev/null
+    killall "${app}" &>/dev/null
 done
 
 echo "UI/UX configuration complete. Note: Some changes may require a logout/restart to take effect."
@@ -160,7 +160,7 @@ for app in "Activity Monitor" \
     "Tweetbot" \
     "Twitter" \
     "iCal"; do
-    killall "${app}" &> /dev/null
+    killall "${app}" &>/dev/null
 done
 
 echo "UI/UX configuration complete. Note: Some changes may require a logout/restart to take effect."

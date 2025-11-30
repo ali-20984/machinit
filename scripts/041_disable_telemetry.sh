@@ -4,27 +4,52 @@
 # Description: Disable Telemetry
 # Author: supermarsx
 #
-echo "Disabling macOS telemetry and analytics..."
+source "$(dirname "$0")/utils.sh"
 
-# Disable Crash Reporter
-defaults write com.apple.CrashReporter DialogType -string "none"
+print_info "Disabling macOS telemetry and analytics..."
 
-# Disable sending crash reports to Apple
-defaults write com.apple.SubmitDiagInfo AutoSubmit -bool false
+CURRENT_UID=$(id -u)
 
-# Disable sending usage data to Apple
-defaults write com.apple.SubmitDiagInfo SubmitDiagInfo -bool false
+function disable_launch_item() {
+	local scope="$1"
+	local plist="$2"
+	local description="$3"
+	local target
 
-# Disable personalized advertising
-defaults write com.apple.AdLib allowApplePersonalizedAdvertising -bool false
-defaults write com.apple.AdLib forceLimitAdTracking -bool true
+	if [ "$scope" = "gui" ]; then
+		target="gui/$CURRENT_UID"
+	else
+		target="system"
+	fi
 
-# Disable Siri analytics (if Siri is enabled, this limits data collection)
-defaults write com.apple.assistant.support "Siri Data Sharing Opt-In Status" -int 2
+	if execute_sudo launchctl bootout "$target" "$plist"; then
+		print_success "$description disabled via launchctl bootout."
+		return 0
+	fi
+
+	print_info "bootout failed for $description. Trying legacy unload..."
+	if execute_sudo launchctl unload -w "$plist"; then
+		print_success "$description disabled via legacy unload."
+	else
+		print_error "Failed to disable $description."
+	fi
+}
+
+# Disable Crash Reporter dialogs and crash submissions
+set_default com.apple.CrashReporter DialogType string none
+set_default com.apple.SubmitDiagInfo AutoSubmit bool false
+set_default com.apple.SubmitDiagInfo SubmitDiagInfo bool false
+
+# Disable personalized advertising and limit tracking
+set_default com.apple.AdLib allowApplePersonalizedAdvertising bool false
+set_default com.apple.AdLib forceLimitAdTracking bool true
+
+# Disable Siri analytics (limit data sharing)
+set_default com.apple.assistant.support "Siri Data Sharing Opt-In Status" int 2
 
 # Unload Crash Reporter
-echo "Unloading Crash Reporter..."
-launchctl unload -w /System/Library/LaunchAgents/com.apple.ReportCrash.plist
-sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.ReportCrash.Root.plist
+print_info "Unloading Crash Reporter launch services..."
+disable_launch_item gui /System/Library/LaunchAgents/com.apple.ReportCrash.plist "ReportCrash agent"
+disable_launch_item system /System/Library/LaunchDaemons/com.apple.ReportCrash.Root.plist "ReportCrash daemon"
 
-echo "Telemetry disabled."
+print_success "Telemetry disabled."

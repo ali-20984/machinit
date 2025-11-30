@@ -4,7 +4,7 @@
 # Requires shfmt and black
 
 echo "Formatting Shell Scripts..."
-if command -v shfmt &> /dev/null; then
+if command -v shfmt &>/dev/null; then
     # -i 4: Indent with 4 spaces
     # -ci: Case indent
     find "$(dirname "$0")/.." -name "*.sh" -not -path "*/node_modules/*" -print0 | xargs -0 shfmt -w -i 4 -ci
@@ -15,7 +15,7 @@ else
 fi
 
 echo "Formatting Python Scripts..."
-if command -v black &> /dev/null; then
+if command -v black &>/dev/null; then
     black "$(dirname "$0")/.." --exclude "/(node_modules|venv|\.git|__pycache__)/"
     echo "Python scripts formatted."
 else

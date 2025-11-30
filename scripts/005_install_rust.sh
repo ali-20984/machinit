@@ -4,22 +4,79 @@
 # Description: Install Rust
 # Author: supermarsx
 #
+source "$(dirname "$0")/utils.sh"
+
 echo "Installing Rust via rustup..."
 
-if command -v rustup &> /dev/null; then
-    echo "Rustup is already installed. Updating..."
-    rustup update
+RUSTUP_DIR="$HOME/.rustup"
+CARGO_DIR="$HOME/.cargo"
+GROUP_NAME=$(id -gn "$USER")
+export RUSTUP_HOME="$RUSTUP_DIR"
+export CARGO_HOME="$CARGO_DIR"
+
+# Function: ensure_dir_permissions
+# Description: Make sure target directories exist and are writable by the
+#              invoking user before rustup manipulates them.
+function ensure_dir_permissions() {
+    local dir="$1"
+    if ! execute mkdir -p "$dir"; then
+        print_info "Retrying mkdir for $dir with sudo..."
+        execute_sudo mkdir -p "$dir"
+    fi
+
+    if [ "$DRY_RUN" = true ]; then
+        return
+    fi
+
+    local ownership_issues=false
+    if find "$dir" \( ! -user "$USER" -o ! -group "$GROUP_NAME" \) -print -quit | grep -q . 2>/dev/null; then
+        ownership_issues=true
+    fi
+
+    if [ "$ownership_issues" = true ]; then
+        print_info "Resetting ownership for $dir and its contents"
+        execute_sudo chown -R "$USER":"$GROUP_NAME" "$dir"
+    fi
+
+    if ! chmod -R u+rwX "$dir" 2>/dev/null; then
+        print_info "Retrying chmod for $dir with elevated privileges..."
+        execute_sudo chmod -R u+rwX "$dir"
+    fi
+}
+
+ensure_dir_permissions "$RUSTUP_DIR"
+ensure_dir_permissions "$CARGO_DIR"
+
+if command -v rustup &>/dev/null; then
+    print_info "Rustup is already installed. Updating toolchains..."
+    if ! execute rustup update; then
+        print_error "rustup update failed. Ensure $RUSTUP_DIR is writable and rerun the script."
+        exit 1
+    fi
 else
-    echo "Installing Rustup..."
-    # Install rustup with -y to disable confirmation prompts (hands-off)
-    # User requested sudo injection
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo sh -s -- -y
-    
-    # Source the environment to make it available immediately
-    if [ -f "$HOME/.cargo/env" ]; then
-        source "$HOME/.cargo/env"
+    print_info "Installing rustup..."
+    if [ "$DRY_RUN" = true ]; then
+        print_dry_run "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+    else
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     fi
 fi
 
-echo "Rust installation complete."
-echo "Cargo version: $(cargo --version)"
+if [ -f "$HOME/.cargo/env" ]; then
+    # shellcheck disable=SC1090
+    source "$HOME/.cargo/env"
+fi
+
+print_info "Ensuring stable toolchain is set as default..."
+if ! execute rustup default stable; then
+    print_error "Failed to set the stable toolchain as default. Run 'rustup default stable' manually after resolving any rustup errors."
+    exit 1
+fi
+
+if command -v cargo &>/dev/null; then
+    print_success "Rust installation complete."
+    cargo_version=$(cargo --version)
+    print_info "Cargo version: $cargo_version"
+else
+    print_error "Cargo not found after installation. Please check rustup output."
+fi

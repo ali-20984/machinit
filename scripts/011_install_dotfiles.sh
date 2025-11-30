@@ -11,13 +11,24 @@ echo "Installing dotfiles..."
 # Get the absolute path to the assets directory
 ASSETS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)"
 
-# Function to backup existing files
+# Function: backup_file
+# Description: Preserve a non-symlink target by renaming it with a timestamp
+#              before we replace it with the managed dotfile symlink.
 function backup_file() {
     local file="$1"
     if [ -e "$file" ] && [ ! -L "$file" ]; then
         local backup="${file}.bak.$(date +%s)"
-        mv "$file" "$backup"
-        print_info "Backed up existing $file to $backup"
+        if execute mv "$file" "$backup" 2>/dev/null; then
+            print_info "Backed up existing $file to $backup"
+        else
+            print_info "Retrying backup of $file with sudo..."
+            if execute_sudo mv "$file" "$backup"; then
+                print_info "Backed up existing $file to $backup"
+            else
+                print_error "Failed to back up $file. Skipping replacement."
+                return 1
+            fi
+        fi
     fi
 }
 
@@ -27,9 +38,9 @@ TARGET_FILE="$HOME/.functions"
 if [ -f "$FUNCTIONS_FILE" ]; then
     echo "Installing .functions..."
     backup_file "$TARGET_FILE"
-    # Create a symbolic link
-    ln -sf "$FUNCTIONS_FILE" "$TARGET_FILE"
-    print_success "Linked $FUNCTIONS_FILE to $TARGET_FILE"
+    if execute ln -sf "$FUNCTIONS_FILE" "$TARGET_FILE"; then
+        print_success "Linked $FUNCTIONS_FILE to $TARGET_FILE"
+    fi
 
     # Add source command to .zshrc if not present
     ZSHRC="$HOME/.zshrc"
@@ -38,14 +49,16 @@ if [ -f "$FUNCTIONS_FILE" ]; then
     fi
 
     if ! grep -q "source ~/.functions" "$ZSHRC"; then
-        echo "" >> "$ZSHRC"
-        echo "# Load custom functions" >> "$ZSHRC"
-        echo "[ -f ~/.functions ] && source ~/.functions" >> "$ZSHRC"
+        {
+            echo ""
+            echo "# Load custom functions"
+            echo "[ -f ~/.functions ] && source ~/.functions"
+        } >>"$ZSHRC"
         print_success "Added source command to $ZSHRC"
     else
         print_info ".functions already sourced in $ZSHRC"
     fi
-    
+
     # Check for dependencies used in .functions
     echo "Checking dependencies for .functions..."
     check_command "python3"
@@ -53,7 +66,7 @@ if [ -f "$FUNCTIONS_FILE" ]; then
     check_command "tree"
     check_command "pigz" || print_info "pigz is optional but recommended for 'targz'"
     check_command "zopfli" || print_info "zopfli is optional but recommended for 'targz'"
-    
+
 else
     print_error "Error: .functions file not found at $FUNCTIONS_FILE"
 fi
@@ -65,11 +78,12 @@ TARGET_ALIASES="$HOME/.aliases"
 if [ -f "$ALIASES_FILE" ]; then
     echo "Installing .aliases..."
     backup_file "$TARGET_ALIASES"
-    ln -sf "$ALIASES_FILE" "$TARGET_ALIASES"
-    print_success "Linked $ALIASES_FILE to $TARGET_ALIASES"
+    if execute ln -sf "$ALIASES_FILE" "$TARGET_ALIASES"; then
+        print_success "Linked $ALIASES_FILE to $TARGET_ALIASES"
+    fi
 
     if ! grep -q "source ~/.aliases" "$ZSHRC"; then
-        echo "[ -f ~/.aliases ] && source ~/.aliases" >> "$ZSHRC"
+        echo "[ -f ~/.aliases ] && source ~/.aliases" >>"$ZSHRC"
         print_success "Added source command for .aliases to $ZSHRC"
     else
         print_info ".aliases already sourced in $ZSHRC"
@@ -84,10 +98,10 @@ TARGET_GITIGNORE="$HOME/.gitignore_global"
 if [ -f "$GITIGNORE_FILE" ]; then
     echo "Installing .gitignore_global..."
     backup_file "$TARGET_GITIGNORE"
-    ln -sf "$GITIGNORE_FILE" "$TARGET_GITIGNORE"
-    print_success "Linked $GITIGNORE_FILE to $TARGET_GITIGNORE"
-    print_success "Linked $GITIGNORE_FILE to $TARGET_GITIGNORE"
-    
+    if execute ln -sf "$GITIGNORE_FILE" "$TARGET_GITIGNORE"; then
+        print_success "Linked $GITIGNORE_FILE to $TARGET_GITIGNORE"
+    fi
+
     echo "Configuring git to use global ignore file..."
     git config --global core.excludesfile "$TARGET_GITIGNORE"
     print_success "Git configured to use $TARGET_GITIGNORE"
@@ -97,17 +111,17 @@ fi
 
 # Install .nanorc
 NANORC_FILE="$ASSETS_DIR/.nanorc"
+TARGET_NANORC="$HOME/.nanorc"
 if [ -f "$NANORC_FILE" ]; then
     echo "Installing .nanorc..."
     backup_file "$TARGET_NANORC"
-    ln -sf "$NANORC_FILE" "$TARGET_NANORC"
-    print_success "Linked $NANORC_FILE to $TARGET_NANORC"
-    ln -sf "$NANORC_FILE" "$TARGET_NANORC"
-    print_success "Linked $NANORC_FILE to $TARGET_NANORC"
-    
+    if execute ln -sf "$NANORC_FILE" "$TARGET_NANORC"; then
+        print_success "Linked $NANORC_FILE to $TARGET_NANORC"
+    fi
+
     # Create nano backup directory
     if [ ! -d "$HOME/.nano-backups" ]; then
-        mkdir -p "$HOME/.nano-backups"
+        execute mkdir -p "$HOME/.nano-backups"
         print_success "Created nano backup directory at $HOME/.nano-backups"
     fi
 else

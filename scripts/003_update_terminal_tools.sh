@@ -4,13 +4,15 @@
 # Description: Update Terminal Tools
 # Author: supermarsx
 #
-echo "Updating Homebrew..."
-brew update
+source "$(dirname "$0")/utils.sh"
 
-echo "Upgrading installed Homebrew packages..."
-brew upgrade
+print_info "Updating Homebrew..."
+execute brew update
 
-echo "Cleaning up..."
-brew cleanup
+print_info "Upgrading installed Homebrew packages..."
+execute brew upgrade
 
-echo "Terminal tools updated."
+print_info "Cleaning up Homebrew caches..."
+execute brew cleanup
+
+print_success "Terminal tools updated."

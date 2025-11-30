@@ -6,21 +6,51 @@
 #
 source "$(dirname "$0")/utils.sh"
 
+function require_safari_full_disk_access() {
+    if [ "$DRY_RUN" = true ]; then
+        return 0
+    fi
+
+    local safari_dir="$HOME/Library/Safari"
+    local probe="$safari_dir/.machinit_fda_test"
+
+    mkdir -p "$safari_dir" 2>/dev/null || true
+    if touch "$probe" 2>/dev/null; then
+        rm -f "$probe"
+        return 0
+    fi
+
+    cat <<'EOF'
+Safari configuration requires Full Disk Access for the terminal executing MachInit.
+Open System Settings → Privacy & Security → Full Disk Access and add Terminal (or the app driving this install), then rerun with:
+    ./install.sh --start-from 045_configure_safari.sh
+Skipping Safari configuration for now.
+EOF
+    return 1
+}
+
 echo "Clearing Safari Favorites..."
 
 # Close Safari to ensure we can write to the file
 killall Safari 2>/dev/null
+
+if ! require_safari_full_disk_access; then
+    exit 0
+fi
 
 BOOKMARKS_FILE="$HOME/Library/Safari/Bookmarks.plist"
 BACKUP_FILE="$BOOKMARKS_FILE.bak"
 
 if [ -f "$BOOKMARKS_FILE" ]; then
     echo "Backing up Bookmarks.plist..."
-    cp "$BOOKMARKS_FILE" "$BACKUP_FILE"
+    if ! cp "$BOOKMARKS_FILE" "$BACKUP_FILE" 2>/dev/null; then
+        print_error "Unable to back up Safari bookmarks (Full Disk Access missing?)."
+        exit 0
+    fi
 
     # Python script to parse and modify plist
     # We use system python3 which should be available on macOS
-    python3 - <<EOF
+    if python3 - <<'EOF'; then
 import plistlib
 import os
 import sys
@@ -61,13 +91,13 @@ except Exception as e:
     print(f"Error processing plist: {e}")
     sys.exit(1)
 EOF
-
-    if [ $? -eq 0 ]; then
         echo "Safari favorites cleared successfully."
     else
         echo "Failed to clear Safari favorites."
         # Restore backup if failed
-        cp "$BACKUP_FILE" "$BOOKMARKS_FILE"
+        if ! cp "$BACKUP_FILE" "$BOOKMARKS_FILE" 2>/dev/null; then
+            print_error "Failed to restore Safari bookmarks from backup."
+        fi
     fi
 
 else
@@ -77,7 +107,13 @@ fi
 echo "Disabling Safari 'launched' notifications..."
 set_default com.apple.coreservices.uiagent CSUIHasSafariBeenLaunched bool YES
 # Date handling in set_default is tricky, using raw defaults write for date
-defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z
+if [ "$DRY_RUN" = true ]; then
+    echo "[DRY RUN] defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z"
+else
+    if ! defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z 2>/dev/null; then
+        print_error "Failed to postpone Safari recommendation notification."
+    fi
+fi
 
 echo "Configuring Safari Privacy and Security..."
 
@@ -136,16 +172,33 @@ echo "Clearing Safari History..."
 if [ "$DRY_RUN" = true ]; then
     echo "[DRY RUN] Would clear Safari History files."
 else
-    rm -rf ~/Library/Safari/History.db
-    rm -rf ~/Library/Safari/History.db-lock
-    rm -rf ~/Library/Safari/History.db-shm
-    rm -rf ~/Library/Safari/History.db-wal
-    rm -rf ~/Library/Safari/LastSession.plist
-    rm -rf ~/Library/Safari/RecentlyClosedTabs.plist
-    print_success "Safari History cleared."
+    HISTORY_FILES=(
+        "$HOME/Library/Safari/History.db"
+        "$HOME/Library/Safari/History.db-lock"
+        "$HOME/Library/Safari/History.db-shm"
+        "$HOME/Library/Safari/History.db-wal"
+        "$HOME/Library/Safari/LastSession.plist"
+        "$HOME/Library/Safari/RecentlyClosedTabs.plist"
+    )
+
+    history_errors=0
+    for file in "${HISTORY_FILES[@]}"; do
+        if [ -e "$file" ]; then
+            if ! rm -rf "$file" 2>/dev/null; then
+                history_errors=1
+                print_error "Failed to remove $file."
+            fi
+        fi
+    done
+
+    if [ $history_errors -eq 0 ]; then
+        print_success "Safari History cleared."
+    else
+        print_info "Some history items could not be removed. Confirm Full Disk Access is granted and rerun if necessary."
+    fi
 fi
 
 echo "Restarting Safari..."
-killall Safari &> /dev/null
+killall Safari &>/dev/null
 
 echo "Safari configuration complete."
