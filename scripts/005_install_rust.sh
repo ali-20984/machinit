@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing Rust via rustup..."
+print_install "Rust via rustup"
 
 RUSTUP_DIR="$ORIGINAL_HOME/.rustup"
 CARGO_DIR="$ORIGINAL_HOME/.cargo"

@@ -107,37 +107,12 @@ set_default com.apple.screencapture type string "png"
 # Disable shadow in screenshots
 set_default com.apple.screencapture disable-shadow bool true
 
-echo "Restarting affected applications..."
-for app in "Activity Monitor" \
-    "Address Book" \
-    "Calendar" \
-    "cfprefsd" \
-    "Contacts" \
-    "Dock" \
-    "Finder" \
-    "Google Chrome Canary" \
-    "Google Chrome" \
-    "Mail" \
-    "Messages" \
-    "Opera" \
-    "Photos" \
-    "Safari" \
-    "SizeUp" \
-    "Spectacle" \
-    "SystemUIServer" \
-    "Terminal" \
-    "Transmission" \
-    "Tweetbot" \
-    "Twitter" \
-    "iCal"; do
-    killall "${app}" &>/dev/null
-done
-
-echo "UI/UX configuration complete. Note: Some changes may require a logout/restart to take effect."
+# Enable debug menu in Disk Utility
 set_default com.apple.DiskUtility DUDebugMenuEnabled bool true
 set_default com.apple.DiskUtility advanced-image-options bool true
 
 echo "Restarting affected applications..."
+# Note: Terminal is intentionally excluded to avoid killing the installer
 for app in "Activity Monitor" \
     "Address Book" \
     "Calendar" \
@@ -155,12 +130,11 @@ for app in "Activity Monitor" \
     "SizeUp" \
     "Spectacle" \
     "SystemUIServer" \
-    "Terminal" \
     "Transmission" \
     "Tweetbot" \
     "Twitter" \
     "iCal"; do
-    killall "${app}" &>/dev/null
+    killall "${app}" &>/dev/null || true
 done
 
 echo "UI/UX configuration complete. Note: Some changes may require a logout/restart to take effect."

@@ -6,5 +6,5 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing PowerShell..."
+print_install "PowerShell"
 install_brew_package powershell "--cask"

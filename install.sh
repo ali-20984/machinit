@@ -13,15 +13,20 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Color codes for terminal output (cohesive muted palette)
-GREEN='\033[38;5;114m'   # Soft green for success
-YELLOW='\033[38;5;222m'  # Warm yellow for warnings/skips
-RED='\033[38;5;174m'     # Muted coral for errors
-BLUE='\033[38;5;111m'    # Soft blue for running/info
-CYAN='\033[38;5;116m'    # Teal for progress
-GRAY='\033[38;5;245m'    # Neutral gray for dim text
-WHITE='\033[38;5;255m'   # Bright white for emphasis
-NC='\033[0m'             # Reset
+# Color codes for terminal output (cohesive muted palette using 256-color mode)
+GREEN='\033[38;5;114m'    # Soft sage green for success
+YELLOW='\033[38;5;222m'   # Warm honey for warnings/skips
+RED='\033[38;5;174m'      # Muted coral for errors
+BLUE='\033[38;5;111m'     # Soft sky blue for script names
+CYAN='\033[38;5;116m'     # Soft teal for progress arrows
+GRAY='\033[38;5;245m'     # Neutral gray for secondary text
+WHITE='\033[38;5;255m'    # Bright white for emphasis
+PURPLE='\033[38;5;183m'   # Lavender for special highlights
+ORANGE='\033[38;5;216m'   # Soft peach for notices
+PINK='\033[38;5;218m'     # Soft pink for decorative elements
+DIM='\033[38;5;240m'      # Darker gray for timestamps
+BOLD='\033[1m'            # Bold text
+NC='\033[0m'              # Reset
 
 # Detect original user (works whether run with sudo or not)
 if [ -n "$SUDO_USER" ]; then
@@ -234,10 +239,10 @@ export DRY_RUN
 # ==============================================================================
 
 echo "" | tee -a "$LOG_FILE"
-printf "%b\n" "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "${CYAN}▶${NC} ${WHITE}Starting Mac initialization...${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "${GRAY}  $(date)${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${PINK}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${PURPLE}▶${NC} ${BOLD}${WHITE}Starting Mac initialization...${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${DIM}  $(date)${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${PINK}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
 
 # Request sudo permissions upfront (unless in dry-run mode)
 if [ "$DRY_RUN" = false ]; then
@@ -288,8 +293,8 @@ if [ ! -d "$SCRIPTS_DIR" ]; then
     exit 1
 fi
 
-# Count total scripts for progress tracking
-TOTAL_SCRIPTS=$(find "$SCRIPTS_DIR" -maxdepth 1 -name "*.sh" | wc -l | xargs)
+# Count total scripts for progress tracking (exclude utils.sh which is a library)
+TOTAL_SCRIPTS=$(find "$SCRIPTS_DIR" -maxdepth 1 -name "*.sh" ! -name "utils.sh" | wc -l | xargs)
 CURRENT_COUNT=0
 SUCCESS_COUNT=0
 SKIPPED_COUNT=0
@@ -307,6 +312,12 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     [ -e "$script" ] || continue
 
     script_name=$(basename "$script")
+    
+    # Skip utility/library files that aren't meant to be executed directly
+    if [[ "$script_name" == "utils.sh" ]]; then
+        continue
+    fi
+
     ((++CURRENT_COUNT))
 
     # --------------------------------------------------------------------------
@@ -315,9 +326,9 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     if [ "$SKIPPING_UNTIL_START" = true ]; then
         if [[ "$script_name" == *"$START_FROM"* ]]; then
             SKIPPING_UNTIL_START=false
-            echo "Found start script: $script_name. Resuming execution." | tee -a "$LOG_FILE"
+            printf "%b\n" "${ORANGE}○${NC} ${WHITE}Found start script: $script_name. Resuming execution.${NC}" | tee -a "$LOG_FILE"
         else
-            printf "%b\n" "${YELLOW}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (before start point)...${NC}" | tee -a "$LOG_FILE"
+            printf "%b\n" "${DIM}⊘${NC} ${GRAY}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (before start point)${NC}" | tee -a "$LOG_FILE"
             ((++SKIPPED_COUNT))
             continue
         fi
@@ -335,7 +346,7 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     fi
 
     if [ "$should_run" == "false" ]; then
-        printf "%b\n" "${YELLOW}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (disabled in config)...${NC}" | tee -a "$LOG_FILE"
+        printf "%b\n" "${DIM}⊘${NC} ${GRAY}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (disabled in config)${NC}" | tee -a "$LOG_FILE"
         ((++SKIPPED_COUNT))
         continue
     fi
@@ -343,8 +354,8 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     # --------------------------------------------------------------------------
     # Logic: Execute Script
     # --------------------------------------------------------------------------
-    printf "%b\n" "${GRAY}──────────────────────────────────────────────────${NC}" | tee -a "$LOG_FILE"
-    printf "%b\n" "${CYAN}▶${NC} ${WHITE}[$CURRENT_COUNT/$TOTAL_SCRIPTS]${NC} ${BLUE}$script_name${NC}" | tee -a "$LOG_FILE"
+    printf "%b\n" "${DIM}──────────────────────────────────────────────────${NC}" | tee -a "$LOG_FILE"
+    printf "%b\n" "${PURPLE}▶${NC} ${WHITE}[$CURRENT_COUNT/$TOTAL_SCRIPTS]${NC} ${BLUE}$script_name${NC}" | tee -a "$LOG_FILE"
 
     refresh_sudo_credentials
 
@@ -372,18 +383,18 @@ done
 # ==============================================================================
 
 echo "" | tee -a "$LOG_FILE"
-printf "%b\n" "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "${WHITE}Summary${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "  ${GRAY}Total:${NC}   ${WHITE}$TOTAL_SCRIPTS${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${PINK}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${BOLD}${WHITE}Summary${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${PINK}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "  ${DIM}Total:${NC}   ${WHITE}$TOTAL_SCRIPTS${NC}" | tee -a "$LOG_FILE"
 printf "%b\n" "  ${GREEN}✓${NC} ${GRAY}Success:${NC} ${GREEN}$SUCCESS_COUNT${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "  ${YELLOW}○${NC} ${GRAY}Skipped:${NC} ${YELLOW}$SKIPPED_COUNT${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "  ${ORANGE}⊘${NC} ${GRAY}Skipped:${NC} ${ORANGE}$SKIPPED_COUNT${NC}" | tee -a "$LOG_FILE"
 printf "%b\n" "  ${RED}✗${NC} ${GRAY}Failed:${NC}  ${RED}$FAILED_COUNT${NC}" | tee -a "$LOG_FILE"
-printf "%b\n" "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${PINK}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
 
 if [ "$FAILED_COUNT" -gt 0 ]; then
     printf "%b\n" "${RED}⚠${NC} ${YELLOW}Some scripts failed. Review above for details.${NC}" | tee -a "$LOG_FILE"
     exit 1
 fi
 
-printf "%b\n" "${GREEN}✓${NC} ${WHITE}Initialization complete!${NC}" | tee -a "$LOG_FILE"
+printf "%b\n" "${GREEN}✓${NC} ${BOLD}${WHITE}Initialization complete!${NC}" | tee -a "$LOG_FILE"

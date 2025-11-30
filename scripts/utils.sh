@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# Colors (cohesive muted palette)
-GREEN='\033[38;5;114m'   # Soft green for success
-RED='\033[38;5;174m'     # Muted coral for errors
-YELLOW='\033[38;5;222m'  # Warm yellow for warnings
-CYAN='\033[38;5;116m'    # Teal for info
-GRAY='\033[38;5;245m'    # Neutral gray for dry-run
-WHITE='\033[38;5;255m'   # Bright white for emphasis
+# Colors (cohesive muted palette using 256-color mode)
+GREEN='\033[38;5;114m'    # Soft sage green for success
+RED='\033[38;5;174m'      # Muted coral for errors
+YELLOW='\033[38;5;222m'   # Warm honey for warnings
+CYAN='\033[38;5;116m'     # Soft teal for info arrows
+GRAY='\033[38;5;245m'     # Neutral gray for secondary text
+WHITE='\033[38;5;255m'    # Bright white for emphasis
+BLUE='\033[38;5;111m'     # Soft sky blue for commands/actions
+PURPLE='\033[38;5;183m'   # Lavender for special highlights
+ORANGE='\033[38;5;216m'   # Soft peach for notices
+PINK='\033[38;5;218m'     # Soft pink for decorative elements
+DIM='\033[38;5;240m'      # Darker gray for timestamps/minor info
+BOLD='\033[1m'            # Bold text
 NC='\033[0m'              # Reset
 
 
@@ -58,7 +64,55 @@ function print_warning() {
 # Function: print_dry_run
 # Description: Make it obvious when a command is only simulated.
 function print_dry_run() {
-    echo -e "${GRAY}⋯ [DRY RUN]${NC} ${GRAY}$1${NC}"
+    echo -e "${DIM}⋯${NC} ${PURPLE}[DRY RUN]${NC} ${GRAY}$1${NC}"
+}
+
+# Function: print_step
+# Description: Highlight a major step or section in the installer.
+function print_step() {
+    echo -e "${BLUE}▸${NC} ${BOLD}${WHITE}$1${NC}"
+}
+
+# Function: print_notice
+# Description: Display a soft notice for non-critical information.
+function print_notice() {
+    echo -e "${ORANGE}○${NC} ${ORANGE}$1${NC}"
+}
+
+# Function: print_skip
+# Description: Indicate something was intentionally skipped.
+function print_skip() {
+    echo -e "${GRAY}⊘${NC} ${DIM}$1${NC}"
+}
+
+# Function: print_action
+# Description: Show an action being taken (installing, configuring, etc).
+function print_action() {
+    echo -e "${PURPLE}◆${NC} ${CYAN}$1${NC}"
+}
+
+# Function: print_install
+# Description: Highlight an installation action with a nice package icon.
+function print_install() {
+    echo -e "${BLUE}📦${NC} ${WHITE}Installing${NC} ${CYAN}$1${NC}${DIM}...${NC}"
+}
+
+# Function: print_config
+# Description: Highlight a configuration action.
+function print_config() {
+    echo -e "${PURPLE}⚙${NC}  ${WHITE}Configuring${NC} ${CYAN}$1${NC}${DIM}...${NC}"
+}
+
+# Function: print_divider
+# Description: Print a subtle divider line.
+function print_divider() {
+    echo -e "${DIM}─────────────────────────────────────────${NC}"
+}
+
+# Function: print_header
+# Description: Print a prominent section header.
+function print_header() {
+    echo -e "${PINK}━━━${NC} ${BOLD}${WHITE}$1${NC} ${PINK}━━━${NC}"
 }
 
 # Function: execute

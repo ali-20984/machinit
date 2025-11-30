@@ -6,6 +6,6 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-echo "Installing vcpkg..."
+print_install "vcpkg"
 install_brew_package vcpkg
-echo "vcpkg installed."
+print_success "vcpkg installed."

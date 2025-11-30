@@ -28,7 +28,7 @@ ensure_profile_ready() {
     fi
 }
 
-echo "Installing nvm..."
+print_install "nvm (Node Version Manager)"
 install_brew_package nvm
 
 NVM_DIR="$ORIGINAL_HOME/.nvm"
