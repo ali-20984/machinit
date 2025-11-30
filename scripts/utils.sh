@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Colors
-GREEN='\033[38;5;70m'
-RED='\033[38;5;167m'
-YELLOW='\033[38;5;179m'
-CYAN='\033[38;5;109m'
-GRAY='\033[38;5;246m'
-NC='\033[0m' # No Color
+# Colors (cohesive muted palette)
+GREEN='\033[38;5;114m'   # Soft green for success
+RED='\033[38;5;174m'     # Muted coral for errors
+YELLOW='\033[38;5;222m'  # Warm yellow for warnings
+CYAN='\033[38;5;116m'    # Teal for info
+GRAY='\033[38;5;245m'    # Neutral gray for dry-run
+WHITE='\033[38;5;255m'   # Bright white for emphasis
+NC='\033[0m'             # Reset
 
 # Configuration
 if [ -z "$CONFIG_FILE" ]; then
@@ -20,29 +21,33 @@ if [ -z "$DRY_RUN" ]; then
 fi
 
 # Function: print_success
-# Description: Emit a green checkmark prefix so success logs stand out even in
-#              verbose output from nested scripts.
+# Description: Emit a green checkmark prefix so success logs stand out.
 function print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
+    echo -e "${GREEN}✓${NC} ${WHITE}$1${NC}"
 }
 
 # Function: print_error
-# Description: Emit a red X prefix to highlight failures or missing tools.
+# Description: Emit a red X prefix to highlight failures.
 function print_error() {
-    echo -e "${RED}✗ $1${NC}"
+    echo -e "${RED}✗${NC} ${RED}$1${NC}"
 }
 
 # Function: print_info
-# Description: Emit a yellow info marker for neutral progress messages.
+# Description: Emit a teal info marker for progress messages.
 function print_info() {
-    echo -e "${CYAN}ℹ $1${NC}"
+    echo -e "${CYAN}→${NC} ${GRAY}$1${NC}"
+}
+
+# Function: print_warning
+# Description: Emit a yellow warning marker.
+function print_warning() {
+    echo -e "${YELLOW}⚠${NC} ${YELLOW}$1${NC}"
 }
 
 # Function: print_dry_run
-# Description: Make it obvious when a command is only simulated in DRY_RUN
-#              mode so the operator knows no system change occurred.
+# Description: Make it obvious when a command is only simulated.
 function print_dry_run() {
-    echo -e "${GRAY}[DRY RUN] $1${NC}"
+    echo -e "${GRAY}⋯ [DRY RUN]${NC} ${GRAY}$1${NC}"
 }
 
 # Function: execute

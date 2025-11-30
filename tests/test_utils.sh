@@ -13,9 +13,9 @@ echo "Testing utils.sh..."
 echo "Test 1: DRY_RUN=true execute()"
 export DRY_RUN=true
 OUTPUT=$(execute echo hello)
-# execute prints to stdout with color codes. We need to strip them or check for content.
-# print_dry_run outputs: [DRY RUN] echo hello (with colors)
-if [[ "$OUTPUT" == *"[DRY RUN] echo hello"* ]]; then
+# execute prints to stdout with color codes. Strip ANSI codes and check for content.
+STRIPPED=$(echo "$OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+if [[ "$STRIPPED" == *"[DRY RUN]"* ]] && [[ "$STRIPPED" == *"echo hello"* ]]; then
     echo "PASS: DRY_RUN execute"
 else
     echo "FAIL: DRY_RUN execute. Got: $OUTPUT"
