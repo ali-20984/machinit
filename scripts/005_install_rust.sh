@@ -8,9 +8,9 @@ source "$(dirname "$0")/utils.sh"
 
 echo "Installing Rust via rustup..."
 
-RUSTUP_DIR="$HOME/.rustup"
-CARGO_DIR="$HOME/.cargo"
-GROUP_NAME=$(id -gn "$USER")
+RUSTUP_DIR="$ORIGINAL_HOME/.rustup"
+CARGO_DIR="$ORIGINAL_HOME/.cargo"
+GROUP_NAME=$(id -gn "$ORIGINAL_USER")
 export RUSTUP_HOME="$RUSTUP_DIR"
 export CARGO_HOME="$CARGO_DIR"
 
@@ -29,13 +29,13 @@ function ensure_dir_permissions() {
     fi
 
     local ownership_issues=false
-    if find "$dir" \( ! -user "$USER" -o ! -group "$GROUP_NAME" \) -print -quit | grep -q . 2>/dev/null; then
+    if find "$dir" \( ! -user "$ORIGINAL_USER" -o ! -group "$GROUP_NAME" \) -print -quit | grep -q . 2>/dev/null; then
         ownership_issues=true
     fi
 
     if [ "$ownership_issues" = true ]; then
         print_info "Resetting ownership for $dir and its contents"
-        execute_sudo chown -R "$USER":"$GROUP_NAME" "$dir"
+        execute_sudo chown -R "$ORIGINAL_USER":"$GROUP_NAME" "$dir"
     fi
 
     if ! chmod -R u+rwX "$dir" 2>/dev/null; then
@@ -62,9 +62,9 @@ else
     fi
 fi
 
-if [ -f "$HOME/.cargo/env" ]; then
+if [ -f "$ORIGINAL_HOME/.cargo/env" ]; then
     # shellcheck disable=SC1090
-    source "$HOME/.cargo/env"
+    source "$ORIGINAL_HOME/.cargo/env"
 fi
 
 print_info "Ensuring stable toolchain is set as default..."

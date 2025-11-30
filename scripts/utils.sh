@@ -7,7 +7,18 @@ YELLOW='\033[38;5;222m'  # Warm yellow for warnings
 CYAN='\033[38;5;116m'    # Teal for info
 GRAY='\033[38;5;245m'    # Neutral gray for dry-run
 WHITE='\033[38;5;255m'   # Bright white for emphasis
-NC='\033[0m'             # Reset
+NC='\033[0m'              # Reset
+
+
+# Detect original user for commands that shouldn't run as root
+if [ -z "$ORIGINAL_USER" ]; then
+    if [ -n "$SUDO_USER" ]; then
+        ORIGINAL_USER="$SUDO_USER"
+    else
+        ORIGINAL_USER="$USER"
+    fi
+fi
+ORIGINAL_HOME=$(eval echo "~$ORIGINAL_USER")
 
 # Configuration
 if [ -z "$CONFIG_FILE" ]; then
@@ -86,12 +97,17 @@ function ensure_sudo() {
 }
 
 # Function: execute_sudo
-# Description: Same as execute but prefixes commands with sudo when applying
-#              real changes.
+# Description: Run command with sudo privileges.
 function execute_sudo() {
     if [ "$DRY_RUN" = true ]; then
         print_dry_run "sudo $*"
         return 0
+    fi
+
+    # If already root, just run it
+    if [ "$EUID" -eq 0 ]; then
+        "$@"
+        return
     fi
 
     if ! ensure_sudo; then
@@ -99,6 +115,22 @@ function execute_sudo() {
     fi
 
     sudo "$@"
+}
+
+# Function: execute_as_user
+# Description: Run command as the original user (useful for brew, npm, etc.)
+function execute_as_user() {
+    if [ "$DRY_RUN" = true ]; then
+        print_dry_run "(as $ORIGINAL_USER) $*"
+        return 0
+    fi
+
+    # If we're root, drop to original user
+    if [ "$EUID" -eq 0 ]; then
+        sudo -u "$ORIGINAL_USER" "$@"
+    else
+        "$@"
+    fi
 }
 
 # Function: get_config

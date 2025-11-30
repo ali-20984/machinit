@@ -6,7 +6,7 @@
 #
 source "$(dirname "$0")/utils.sh"
 
-USER_GROUP=$(id -gn "$USER")
+USER_GROUP=$(id -gn "$ORIGINAL_USER")
 
 ensure_profile_ready() {
     local profile_path="$1"
@@ -17,13 +17,13 @@ ensure_profile_ready() {
         else
             if ! touch "$profile_path" 2>/dev/null; then
                 execute_sudo install -m 644 /dev/null "$profile_path"
-                execute_sudo chown "$USER":"$USER_GROUP" "$profile_path"
+                execute_sudo chown "$ORIGINAL_USER":"$USER_GROUP" "$profile_path"
             fi
         fi
     fi
 
     if [ -e "$profile_path" ] && [ ! -w "$profile_path" ]; then
-        execute_sudo chown "$USER":"$USER_GROUP" "$profile_path"
+        execute_sudo chown "$ORIGINAL_USER":"$USER_GROUP" "$profile_path"
         execute_sudo chmod u+rw "$profile_path"
     fi
 }
@@ -31,10 +31,10 @@ ensure_profile_ready() {
 echo "Installing nvm..."
 install_brew_package nvm
 
-NVM_DIR="$HOME/.nvm"
+NVM_DIR="$ORIGINAL_HOME/.nvm"
 execute mkdir -p "$NVM_DIR"
 if [ ! -w "$NVM_DIR" ]; then
-    execute_sudo chown -R "$USER":"$USER_GROUP" "$NVM_DIR"
+    execute_sudo chown -R "$ORIGINAL_USER":"$USER_GROUP" "$NVM_DIR"
 fi
 execute chmod -R u+rwX "$NVM_DIR"
 
@@ -42,7 +42,7 @@ execute chmod -R u+rwX "$NVM_DIR"
 NVM_PREFIX=$(brew --prefix nvm)
 
 # Add nvm configuration to shell profile (zshrc and bash_profile)
-for profile in "$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc"; do
+for profile in "$ORIGINAL_HOME/.zshrc" "$ORIGINAL_HOME/.bash_profile" "$ORIGINAL_HOME/.bashrc"; do
     ensure_profile_ready "$profile"
     if ! grep -q "nvm.sh" "$profile"; then
         echo "Adding nvm to $profile..."

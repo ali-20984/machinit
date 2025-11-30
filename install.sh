@@ -23,6 +23,15 @@ GRAY='\033[38;5;245m'    # Neutral gray for dim text
 WHITE='\033[38;5;255m'   # Bright white for emphasis
 NC='\033[0m'             # Reset
 
+# Detect original user (works whether run with sudo or not)
+if [ -n "$SUDO_USER" ]; then
+    ORIGINAL_USER="$SUDO_USER"
+else
+    ORIGINAL_USER="$USER"
+fi
+export ORIGINAL_USER
+export ORIGINAL_HOME=$(eval echo "~$ORIGINAL_USER")
+
 # ==============================================================================
 # Configuration & Defaults
 # ==============================================================================
@@ -71,16 +80,21 @@ function show_help() {
 
 # Function: start_sudo_keepalive
 # Description: Authenticates once with sudo and launches a background loop
-#              to refresh credentials every 30 seconds so child scripts do
-#              not prompt repeatedly during long installs.
+#              to refresh credentials so child scripts never prompt again.
 function start_sudo_keepalive() {
+    # If already root, no need for keepalive
+    if [ "$EUID" -eq 0 ]; then
+        export MACHINIT_SUDO_KEEPALIVE_ACTIVE=true
+        return
+    fi
+    
     sudo -v
     export MACHINIT_SUDO_KEEPALIVE_ACTIVE=true
     (
         set +e
         while true; do
             sleep 50
-            sudo -n true 2>/dev/null || sudo -v 2>/dev/null || true
+            sudo -n true 2>/dev/null || true
         done
     ) &
     KEEPALIVE_PID=$!
