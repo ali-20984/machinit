@@ -19,8 +19,6 @@ if [ -z "$DRY_RUN" ]; then
     DRY_RUN=false
 fi
 
-SUDO_STATUS_MESSAGE_SHOWN=false
-
 # Function: print_success
 # Description: Emit a green checkmark prefix so success logs stand out even in
 #              verbose output from nested scripts.
@@ -67,14 +65,15 @@ function ensure_sudo() {
         return 0
     fi
 
+    # Installer's keep-alive loop handles sudo refresh
+    if [ "$MACHINIT_SUDO_KEEPALIVE_ACTIVE" = true ]; then
+        return 0
+    fi
+
     if sudo -n true 2>/dev/null; then
         return 0
     fi
 
-    if [ "$SUDO_STATUS_MESSAGE_SHOWN" != true ]; then
-        echo "Sudo access required. Please enter your password (if prompted)."
-        SUDO_STATUS_MESSAGE_SHOWN=true
-    fi
     if ! sudo -v; then
         print_error "Failed to refresh sudo credentials."
         return 1

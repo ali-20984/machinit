@@ -72,11 +72,12 @@ function show_help() {
 #              not prompt repeatedly during long installs.
 function start_sudo_keepalive() {
     sudo -v
+    export MACHINIT_SUDO_KEEPALIVE_ACTIVE=true
     (
         set +e
         while true; do
-            sleep 60
-            sudo -n true 2>/dev/null || true
+            sleep 50
+            sudo -n true 2>/dev/null || sudo -v 2>/dev/null || true
         done
     ) &
     KEEPALIVE_PID=$!
@@ -102,7 +103,6 @@ function refresh_sudo_credentials() {
     fi
 
     if ! sudo -n true 2>/dev/null; then
-        echo "Sudo session expired. Please re-enter your password to continue."
         sudo -v
     fi
 }
