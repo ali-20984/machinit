@@ -18,7 +18,7 @@ echo "Configuring Time Machine..."
 set_default com.apple.TimeMachine DoNotOfferNewDisksForBackup bool true
 # Disable local Time Machine backups
 if hash tmutil &>/dev/null; then
-    sudo tmutil disablelocal 2>/dev/null || echo "Note: 'tmutil disablelocal' might not be supported on this macOS version."
+    execute_sudo tmutil disablelocal 2>/dev/null || echo "Note: 'tmutil disablelocal' might not be supported on this macOS version."
 fi
 
 # Activity Monitor Settings

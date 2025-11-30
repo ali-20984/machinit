@@ -24,7 +24,7 @@ function check_status() {
 # Description: Applies the Spotlight defaults plist ordering and disables web
 #              suggestions before restarting the metadata server.
 function run_spotlight_configuration() {
-    sudo mdutil -i on /
+    execute_sudo mdutil -i on /
     defaults write com.apple.spotlight orderedItems -array \
         '{"enabled" = 1; "name" = "APPLICATIONS";}' \
         '{"enabled" = 0; "name" = "SYSTEM_PREFS";}' \
@@ -51,7 +51,7 @@ function run_spotlight_configuration() {
     defaults write com.apple.spotlight showQuerySuggestions -bool false
     defaults write com.apple.lookup.shared LookupSuggestionsDisabled -bool true
     defaults write com.apple.Siri SuggestionsSpotlightEnabled -bool false
-    sudo killall mds >/dev/null 2>&1 || true
+    execute_sudo killall mds >/dev/null 2>&1 || true
 }
 
 # Spotlight now only indexes Applications and will not surface online suggestions.

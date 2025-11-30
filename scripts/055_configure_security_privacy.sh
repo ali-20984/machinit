@@ -14,9 +14,9 @@ set_default com.apple.CrashReporter DialogType string "none"
 
 # Enable Firewall, Stealth Mode, and Block All Incoming Connections
 echo "Configuring Firewall..."
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall on
+execute_sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+execute_sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
+execute_sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall on
 
 # Disallow AirDrop (set to no one)
 echo "Disabling AirDrop..."

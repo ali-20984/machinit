@@ -25,7 +25,7 @@ function ensure_directory() {
     if [ "$DRY_RUN" = true ]; then
         print_dry_run "sudo mkdir -p \"$dir\""
     else
-        sudo mkdir -p "$dir"
+        execute_sudo mkdir -p "$dir"
     fi
     print_success "Ensured directory $dir exists."
 }
@@ -52,7 +52,7 @@ function move_app_to_directory() {
     if [ "$DRY_RUN" = true ]; then
         print_dry_run "sudo mv \"$source_path\" \"$destination_dir/\""
     else
-        sudo mv "$source_path" "$destination_dir/"
+        execute_sudo mv "$source_path" "$destination_dir/"
     fi
 
     print_success "Moved $app_name to $destination_dir."
@@ -76,8 +76,8 @@ function link_system_app_to_directory() {
     if [ "$DRY_RUN" = true ]; then
         print_dry_run "sudo ln -sf \"$source_path\" \"$link_path\""
     else
-        sudo rm -rf "$link_path"
-        sudo ln -sf "$source_path" "$link_path"
+        execute_sudo rm -rf "$link_path"
+        execute_sudo ln -sf "$source_path" "$link_path"
     fi
 
     print_success "Linked $app_name into $destination_dir."

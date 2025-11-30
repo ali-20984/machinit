@@ -82,28 +82,22 @@ function show_help() {
 # Description: Authenticates once with sudo and launches a background loop
 #              to refresh credentials so child scripts never prompt again.
 function start_sudo_keepalive() {
-    # If already root, no need for keepalive
-    if [ "$EUID" -eq 0 ]; then
-        export MACHINIT_SUDO_KEEPALIVE_ACTIVE=true
-        return
-    fi
-    
+    echo "Requesting administrator privileges (you'll only be asked once)..."
     sudo -v
-    export MACHINIT_SUDO_KEEPALIVE_ACTIVE=true
+    
+    # Start background loop to keep sudo alive
     (
-        set +e
         while true; do
+            sudo -n true 2>/dev/null
             sleep 50
-            sudo -n true 2>/dev/null || true
         done
     ) &
     KEEPALIVE_PID=$!
+    export MACHINIT_SUDO_KEEPALIVE_ACTIVE=true
 }
 
 # Function: stop_sudo_keepalive
-# Description: Cleans up the background refresh loop if it is running. This
-#              prevents runaway processes after install.sh exits early or
-#              completes normally.
+# Description: Cleans up the background refresh loop.
 function stop_sudo_keepalive() {
     if [ -n "$KEEPALIVE_PID" ] && kill -0 "$KEEPALIVE_PID" 2>/dev/null; then
         kill "$KEEPALIVE_PID" 2>/dev/null || true
@@ -111,17 +105,9 @@ function stop_sudo_keepalive() {
 }
 
 # Function: refresh_sudo_credentials
-# Description: Ensures the cached sudo timestamp remains valid. If sudo
-#              credentials expire (e.g., user paused for an extended period),
-#              prompt once to renew before running privileged steps.
+# Description: No-op since keepalive handles this.
 function refresh_sudo_credentials() {
-    if [ "$DRY_RUN" = true ]; then
-        return
-    fi
-
-    if ! sudo -n true 2>/dev/null; then
-        sudo -v
-    fi
+    return 0
 }
 
 # Function: normalize_hostname

@@ -132,6 +132,6 @@ else
 fi
 
 echo "Cleaning up Brew..."
-brew cleanup
+execute brew cleanup
 
 echo "Development tools installation complete."

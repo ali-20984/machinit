@@ -28,8 +28,8 @@ set_default com.apple.universalaccess reduceMotion int 1
 
 # Disable the sound effects on boot
 echo "Disabling boot sound effects..."
-sudo nvram SystemAudioVolume=" "
-sudo nvram StartupMute=%01
+execute_sudo nvram SystemAudioVolume=" "
+execute_sudo nvram StartupMute=%01
 
 # Menu bar: show battery percentage
 echo "Showing battery percentage..."
@@ -67,7 +67,7 @@ set_default com.apple.dashboard mcx-disabled bool true
 
 # Disable Sudden Motion Sensor
 echo "Disabling Sudden Motion Sensor..."
-sudo pmset -a sms 0
+execute_sudo pmset -a sms 0
 
 # Allow wallpaper tinting in windows
 echo "Allowing wallpaper tinting in windows..."
@@ -77,7 +77,7 @@ set_default NSGlobalDomain AppleReduceDesktopTinting bool false
 # Note: This might conflict with the manual HostName setting above if run repeatedly,
 # but ensures login window shows the correct name.
 echo "Setting HostName for Login Window..."
-sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
+execute_sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
 
 # Set measurement units
 echo "Setting measurement units to Centimeters..."
@@ -90,8 +90,8 @@ set_default NSGlobalDomain AppleLocale string "en_US@currency=EUR"
 
 # Set the time zone
 echo "Setting time zone to automatic..."
-sudo defaults write /Library/Preferences/com.apple.timezone.auto Active -bool YES
-sudo systemsetup -setusingnetworktime on
+execute_sudo defaults write /Library/Preferences/com.apple.timezone.auto Active -bool YES
+execute_sudo systemsetup -setusingnetworktime on
 
 # Require password 10 seconds after sleep or screen saver begins
 echo "Requiring password 10 seconds after sleep/screensaver..."

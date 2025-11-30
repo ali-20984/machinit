@@ -51,7 +51,7 @@ chflags nohidden ~/Library && xattr -d com.apple.FinderInfo ~/Library 2>/dev/nul
 
 # Show the /Volumes folder
 echo "Unhiding /Volumes..."
-sudo chflags nohidden /Volumes
+execute_sudo chflags nohidden /Volumes
 
 # Sidebar Configurations
 echo "Configuring Finder Sidebar..."

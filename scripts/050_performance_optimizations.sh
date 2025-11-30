@@ -30,14 +30,14 @@ echo "Optimizing SSD settings..."
 # It is commented out to prevent interrupting the script flow.
 # echo "y" | sudo trimforce enable
 
-sudo pmset -a hibernatemode 0
+execute_sudo pmset -a hibernatemode 0
 if [ -f /var/vm/sleepimage ]; then
-    sudo rm /var/vm/sleepimage
+    execute_sudo rm /var/vm/sleepimage
 fi
 check_status "SSD optimized"
 
 echo "Enabling HiDPI display modes..."
-sudo defaults write /Library/Preferences/com.apple.windowserver.plist DisplayResolutionEnabled -bool true
+execute_sudo defaults write /Library/Preferences/com.apple.windowserver.plist DisplayResolutionEnabled -bool true
 check_status "HiDPI display modes enabled"
 
 echo "Disabling background items (Best Effort)..."

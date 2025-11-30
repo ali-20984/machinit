@@ -46,6 +46,6 @@ set_default NSGlobalDomain NSAutomaticSpellingCorrectionEnabled bool false
 
 # Disable VoiceOver at login window
 echo "Disabling VoiceOver at login window..."
-sudo defaults write /Library/Preferences/com.apple.loginwindow VoiceOver -bool false
+execute_sudo defaults write /Library/Preferences/com.apple.loginwindow VoiceOver -bool false
 
 echo "Input devices configuration complete."
