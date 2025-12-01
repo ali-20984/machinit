@@ -16,33 +16,51 @@ if ! command -v dockutil &>/dev/null; then
 	exit 0
 fi
 
+# Function: find_app
+# Description: Find an app by name pattern in common locations
+find_app() {
+    local pattern="$1"
+    local app_path=""
+    
+    # Search in /Applications and /System/Applications
+    app_path=$(find /Applications /System/Applications /System/Applications/Utilities \
+        -maxdepth 2 -name "*.app" 2>/dev/null | grep -i "$pattern" | head -1)
+    
+    echo "$app_path"
+}
+
 echo "Clearing existing Dock items..."
 execute dockutil --remove all --no-restart
 
 echo "Adding apps to Dock..."
+
+# Define apps to add: "search pattern|display name"
 declare -a DOCK_APPS=(
-	"/Applications/Visual Studio Code.app|Visual Studio Code"
-	"/Applications/Firefox.app|Firefox"
-	"/System/Applications/Utilities/Terminal.app|Terminal"
-	"/Applications/Beeper.app|Beeper"
-	"/Applications/Bitwarden.app|Bitwarden"
-	"/Applications/GitHub Desktop.app|GitHub Desktop"
-	"/Applications/Microsoft Word.app|Microsoft Word"
-	"/Applications/Microsoft Excel.app|Microsoft Excel"
+    "Visual Studio Code|Visual Studio Code"
+    "Firefox|Firefox"
+    "Terminal.app|Terminal"
+    "Beeper|Beeper"
+    "Bitwarden|Bitwarden"
+    "GitHub Desktop|GitHub Desktop"
+    "Microsoft Word|Microsoft Word"
+    "Microsoft Excel|Microsoft Excel"
 )
 
 for entry in "${DOCK_APPS[@]}"; do
-	IFS='|' read -r app_path label <<<"$entry"
-	if [ ! -e "$app_path" ]; then
-		print_info "Skipping $label because $app_path was not found."
-		continue
-	fi
+    IFS='|' read -r pattern label <<< "$entry"
+    
+    app_path=$(find_app "$pattern")
+    
+    if [ -z "$app_path" ] || [ ! -e "$app_path" ]; then
+        print_skip "Skipping $label (not found)"
+        continue
+    fi
 
-	if execute dockutil --add "$app_path" --no-restart; then
-		print_success "Pinned $label to the Dock."
-	else
-		print_error "Failed to pin $label. Run 'dockutil --add \"$app_path\"' manually if needed."
-	fi
+    if execute dockutil --add "$app_path" --no-restart; then
+        print_success "Pinned $label to the Dock."
+    else
+        print_error "Failed to pin $label."
+    fi
 done
 
 # Restart Dock to apply changes

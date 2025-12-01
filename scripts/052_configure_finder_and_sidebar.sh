@@ -77,24 +77,83 @@ if [ ! -d "$HOME/Projects" ]; then
     echo "Symlinked ~/Documents/Projects to ~/Projects"
 fi
 
-# Add items to Sidebar Favorites (Best effort using sfltool)
-# Note: This is experimental and might not work on all macOS versions without 'mysides'
-if command -v sfltool &>/dev/null; then
-    echo "Attempting to add items to sidebar using sfltool..."
-    # Add Home
-    sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}"
-    # Add Computer
-    sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file:///"
-    # Add Projects
-    sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}/Projects"
-    # Add Photos (if exists)
-    if [ -d "${HOME}/Pictures/Photos Library.photoslibrary" ]; then
-        sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file://${HOME}/Pictures/Photos Library.photoslibrary"
-    elif [ -d "/System/Applications/Photos.app" ]; then
-        sfltool add-item com.apple.LSSharedFileList.FavoriteItems "file:///System/Applications/Photos.app"
+# Note: Adding Finder sidebar favorites programmatically is not reliably supported
+# Attempt automated sidebar additions. Prefer `mysides` if available, fall back
+# to an AppleScript UI automation (requires Accessibility permissions).
+
+add_sidebar_item() {
+    local name="$1"
+    local target="$2"
+
+    # Resolve to absolute path
+    target="$(cd "$(dirname "$target")" 2>/dev/null && pwd)/$(basename "$target")"
+
+    # Prefer Homebrew-installed mysides (may be in /usr/local or /opt/homebrew)
+    local mysides_bin=""
+    for p in "/usr/local/bin/mysides" "/opt/homebrew/bin/mysides" "/usr/bin/mysides"; do
+        if [ -x "$p" ]; then
+            mysides_bin="$p"
+            break
+        fi
+    done
+
+    if [ -n "$mysides_bin" ]; then
+        print_action "Adding '$name' to Finder sidebar using mysides..."
+        # Construct file:// URL (escape spaces/unsafe chars)
+        if command -v python3 >/dev/null 2>&1; then
+            fileurl="file://$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$target")"
+        else
+            # Fallback: naive space-escape
+            fileurl="file://$(echo "$target" | sed 's/ /%20/g')"
+        fi
+
+        # Try with file:// URL first, then raw path
+        if "$mysides_bin" add "$name" "$fileurl" >/dev/null 2>&1; then
+            print_success "Added '$name' (via mysides URL)."
+            return 0
+        elif "$mysides_bin" add "$name" "$target" >/dev/null 2>&1; then
+            print_success "Added '$name' (via mysides path)."
+            return 0
+        else
+            print_warning "mysides failed to add '$name' — falling back to AppleScript UI method."
+        fi
+    else
+        print_notice "mysides not found; will try AppleScript UI fallback."
     fi
-    # Trash is not typically added to Sidebar Favorites, usually in Dock.
-fi
+
+    # AppleScript fallback: select the folder in Finder and use the File > Add to Sidebar menu
+    print_action "Adding '$name' to Finder sidebar using AppleScript (requires Accessibility permission)..."
+    /usr/bin/osascript <<EOF
+tell application "Finder"
+    try
+        set targetFolder to (POSIX file "$target") as alias
+        -- Open the folder so Finder has a selection
+        open targetFolder
+        delay 0.2
+        set selection to targetFolder
+    on error errMsg
+        -- If folder not reachable, attempt to create or report
+    end try
+end tell
+tell application "System Events"
+    tell process "Finder"
+        try
+            click menu item "Add to Sidebar" of menu "File" of menu bar 1
+        on error
+            -- Some localizations or OS versions may not have this menu item
+        end try
+    end tell
+end tell
+EOF
+
+    # No reliable way to detect success programmatically from AppleScript here — assume best-effort
+    print_notice "AppleScript attempt complete. If nothing changed, grant Accessibility permission to Terminal/Installer and try again."
+}
+
+# Add the Projects folder created above to the sidebar (friendly name: Projects)
+print_action "Configuring Finder sidebar favorites..."
+add_sidebar_item "Projects" "$HOME/Documents/Projects"
+
 
 echo "Restarting Finder..."
 killall Finder
