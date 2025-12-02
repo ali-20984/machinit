@@ -49,3 +49,9 @@ for app in "${apps[@]}"; do
 done
 
 echo "Restart complete. Some changes might still need a logout/restart to fully apply."
+
+# Flush cfprefsd cache and restart Dock so dockutil changes are picked up
+# Ensure these run as the original (non-root) user so the right session is affected
+echo "Flushing preference cache and restarting Dock for user $ORIGINAL_USER..."
+execute_as_user killall cfprefsd &>/dev/null || true
+execute_as_user killall Dock &>/dev/null || true

@@ -79,6 +79,14 @@ for entry in "${DOCK_APPS[@]}"; do
     fi
 done
 
+# Verify preference was written and flush cfprefsd cache so the Dock picks up
+# the changes reliably when it next starts. cfprefsd caches preferences in
+# memory and can prevent the Dock reading the updated file until it is
+# restarted or the cache is flushed for the user session.
+print_info "Verifying Dock preferences and flushing cfprefsd for user $ORIGINAL_USER..."
+execute_as_user defaults read com.apple.dock persistent-apps >/dev/null 2>&1 || true
+execute_as_user killall cfprefsd &>/dev/null || true
+
 # Restarting UI components is deferred until the end of the full installer
 # We use --no-restart above so changes are collected and can be applied once
 # at the very end (see scripts/999_restart_apps.sh)
