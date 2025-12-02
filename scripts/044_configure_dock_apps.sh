@@ -21,16 +21,30 @@ fi
 find_app() {
     local pattern="$1"
     local app_path=""
-    
-    # Search in /Applications and /System/Applications
-    app_path=$(find /Applications /System/Applications /System/Applications/Utilities \
-        -maxdepth 2 -name "*.app" 2>/dev/null | grep -i "$pattern" | head -1)
-    
-    echo "$app_path"
+
+    # Search in common system locations plus the original user's ~/Applications
+    # (some users install apps into their home Applications folder)
+    local search_paths=(/Applications /System/Applications /System/Applications/Utilities "${ORIGINAL_HOME}/Applications")
+
+    # Use a loop so we can gracefully handle missing dirs and limit the number
+    # of results so head -1 is predictable.
+    for p in "${search_paths[@]}"; do
+        if [ -d "$p" ]; then
+            app_path=$(find "$p" -maxdepth 2 -name "*.app" 2>/dev/null | grep -i "$pattern" | head -1 || true)
+            if [ -n "$app_path" ]; then
+                echo "$app_path"
+                return 0
+            fi
+        fi
+    done
+
+    # Nothing found
+    echo ""
 }
 
 echo "Clearing existing Dock items..."
-execute dockutil --remove all --no-restart
+# dockutil must run as the non-root user so we modify the correct user's Dock.
+execute_as_user dockutil --remove all --no-restart
 
 echo "Adding apps to Dock..."
 
@@ -56,14 +70,17 @@ for entry in "${DOCK_APPS[@]}"; do
         continue
     fi
 
-    if execute dockutil --add "$app_path" --no-restart; then
+    # Ensure dockutil commands run in the original user's context so they apply
+    # to the correct Dock (install.sh may run as root with sudo).
+    if execute_as_user dockutil --add "$app_path" --no-restart; then
         print_success "Pinned $label to the Dock."
     else
         print_error "Failed to pin $label."
     fi
 done
 
-# Restart Dock to apply changes
-execute killall Dock
+# Restarting UI components is deferred until the end of the full installer
+# We use --no-restart above so changes are collected and can be applied once
+# at the very end (see scripts/999_restart_apps.sh)
 
 echo "Dock apps configured."

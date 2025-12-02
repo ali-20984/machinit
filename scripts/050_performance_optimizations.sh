@@ -60,5 +60,6 @@ for agent in "${agents_to_disable[@]}"; do
     fi
 done
 
-echo "Restarting Dock..."
-killall Dock
+# Restarting UI components is deferred until the end of the full installer
+# to avoid mid-run restarts which can interfere with later settings.
+# Use scripts/999_restart_apps.sh to restart apps when you finish the whole run.

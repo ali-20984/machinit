@@ -111,30 +111,12 @@ set_default com.apple.screencapture disable-shadow bool true
 set_default com.apple.DiskUtility DUDebugMenuEnabled bool true
 set_default com.apple.DiskUtility advanced-image-options bool true
 
-echo "Restarting affected applications..."
-# Note: Terminal is intentionally excluded to avoid killing the installer
-for app in "Activity Monitor" \
-    "Address Book" \
-    "Calendar" \
-    "cfprefsd" \
-    "Contacts" \
-    "Dock" \
-    "Finder" \
-    "Google Chrome Canary" \
-    "Google Chrome" \
-    "Mail" \
-    "Messages" \
-    "Opera" \
-    "Photos" \
-    "Safari" \
-    "SizeUp" \
-    "Spectacle" \
-    "SystemUIServer" \
-    "Transmission" \
-    "Tweetbot" \
-    "Twitter" \
-    "iCal"; do
-    killall "${app}" &>/dev/null || true
-done
+# NOTE: restarting applications is intentionally deferred.
+# Previously we restarted several processes here which caused mid-run
+# restarts and could interfere with other scripts (e.g. Dock changes).
+# To avoid clobbering UI settings and pinned Dock entries, we now defer
+# all app restarts until the end of the full install. Run
+# scripts/999_restart_apps.sh once the installer is finished (or run it
+# manually) to restart affected applications.
 
 echo "UI/UX configuration complete. Note: Some changes may require a logout/restart to take effect."

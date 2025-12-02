@@ -56,7 +56,8 @@ set_default com.apple.dock showhidden bool true
 echo "Hiding recent apps from Dock..."
 set_default com.apple.dock show-recents bool false
 
-# Restart Dock to apply changes
-killall Dock
+# Restarting UI components is deferred until the end of the full installer
+# to avoid mid-run restarts (see scripts/999_restart_apps.sh)
+# (killall Dock removed)
 
 echo "Dock size updated."
