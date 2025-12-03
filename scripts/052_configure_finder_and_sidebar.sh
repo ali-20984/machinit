@@ -6,6 +6,22 @@
 #
 source "$(dirname "$0")/utils.sh"
 
+# Support a CLI flag --reset-view to explicitly request removal of per-folder
+# .DS_Store files. Also honor the environment variable RESET_FINDER_VIEW
+# (useful when the script is invoked from install.sh).
+RESET_FINDER_VIEW=${RESET_FINDER_VIEW:-false}
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --reset-view)
+            RESET_FINDER_VIEW=true
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
 print_config "Finder"
 
 # Allow quitting via ⌘ + Q; doing so will also hide desktop icons
@@ -50,11 +66,15 @@ set_default com.apple.finder FXPreferredViewStyle string "Nlsv"
 # Per-user preference so the original user's Finder uses List view
 set_user_default com.apple.finder FXPreferredViewStyle string "Nlsv" || true
 
-# Remove per-folder .DS_Store files under the user's home so the global/default
-# preference takes effect instead of persisted per-folder view settings.
-echo "Removing per-folder .DS_Store files in ${ORIGINAL_HOME} (this may take a while on large home directories)..."
-# Use execute_as_user so dry-run mode and permission context are respected
-execute_as_user find "${ORIGINAL_HOME}" -name ".DS_Store" -type f -print -delete 2>/dev/null || true
+if [ "$RESET_FINDER_VIEW" = true ]; then
+    # Remove per-folder .DS_Store files under the user's home so the global/default
+    # preference takes effect instead of persisted per-folder view settings.
+    echo "Removing per-folder .DS_Store files in ${ORIGINAL_HOME} (this may take a while on large home directories)..."
+    # Use execute_as_user so dry-run mode and permission context are respected
+    execute_as_user find "${ORIGINAL_HOME}" -name ".DS_Store" -type f -print -delete 2>/dev/null || true
+else
+    print_info "Skipping .DS_Store cleanup (RESET_FINDER_VIEW not enabled)."
+fi
 
 # Show the ~/Library folder
 echo "Unhiding ~/Library..."

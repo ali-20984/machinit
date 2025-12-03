@@ -62,6 +62,7 @@ RESUME_FAILURE=false # If true, resume from last failure recorded in logs/last_f
 EXIT_NOW=false       # If true, exit immediately (no-op)
 RESTART_UI=false     # If true, run final UI restart script at the end (non-interactive)
 UPDATE_SHELL=false   # If true, update only aliases and functions and exit
+RESET_FINDER_VIEW=false # If true, remove per-folder .DS_Store and reset Finder view behavior
 
 # State variables
 START_FROM=""        # Script name to resume execution from
@@ -89,6 +90,7 @@ function show_help() {
     echo "  --run-only <N>          Run only the script with 1-based index N from the scripts list."
     echo "  --restart-ui             Run the final UI restart (equivalent to scripts/999_restart_apps.sh --yes) when the run completes."
     echo "  --update-shell           Update only \`.aliases\` and \`.functions\` (link into home) and exit."
+    echo "  --reset-finder-view      Remove per-folder .DS_Store and apply Finder List-view defaults across folders."
     echo "  --computer-name <name>  Set computer name non-interactively."
     echo "  --help, -h              Show this help message."
     echo ""
@@ -212,6 +214,16 @@ while [[ $# -gt 0 ]]; do
             UPDATE_SHELL=true
             shift
             ;;
+        --reset-finder-view)
+            # Accept an optional value (yes/true), otherwise treat as enable
+            if [[ "$2" =~ ^(yes|true|1)$ ]]; then
+                RESET_FINDER_VIEW=true
+                shift 2
+            else
+                RESET_FINDER_VIEW=true
+                shift
+            fi
+            ;;
         --run-only)
             RUN_ONLY_INDEX="$2"
             shift 2
@@ -236,6 +248,9 @@ done
 if [ "$VERBOSE" = true ]; then
     set -x
 fi
+
+# Export the reset-finder-view flag so child scripts can respond to it
+export RESET_FINDER_VIEW
 
 # Set up logging
 LOG_DIR="./logs"

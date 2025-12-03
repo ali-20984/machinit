@@ -179,6 +179,15 @@ else
     FAILED=1
 fi
 
+# Test 19: Finder script supports reset flag or env var for .DS_Store cleanup
+echo "Test 19: Finder script supports .DS_Store cleanup via flag/env"
+if grep -Fq 'find "${ORIGINAL_HOME}"' "$FINDER_SCRIPT" && grep -Fq '.DS_Store' "$FINDER_SCRIPT"; then
+    echo "PASS: Finder script contains .DS_Store cleanup logic"
+else
+    echo "FAIL: Finder script missing .DS_Store cleanup logic"
+    FAILED=1
+fi
+
 # Test 13b: myip supports --ipv6/-6 flag
 echo "Test 13b: myip supports --ipv6 or -6"
 if grep -q -- "--ipv6" "$ALIASES_FILE" || grep -q -- "-6" "$ALIASES_FILE"; then
