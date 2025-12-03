@@ -43,9 +43,18 @@ echo "Preventing .DS_Store creation on network/USB volumes..."
 set_default com.apple.desktopservices DSDontWriteNetworkStores bool true
 set_default com.apple.desktopservices DSDontWriteUSBStores bool true
 
-# Use list view in all Finder windows by default
-echo "Setting default view style to List View..."
+# Use list view in all Finder windows by default and clear per-folder overrides
+echo "Setting default view style to List View (global + per-user) and cleaning per-folder overrides..."
+# Global default (system-level)
 set_default com.apple.finder FXPreferredViewStyle string "Nlsv"
+# Per-user preference so the original user's Finder uses List view
+set_user_default com.apple.finder FXPreferredViewStyle string "Nlsv" || true
+
+# Remove per-folder .DS_Store files under the user's home so the global/default
+# preference takes effect instead of persisted per-folder view settings.
+echo "Removing per-folder .DS_Store files in ${ORIGINAL_HOME} (this may take a while on large home directories)..."
+# Use execute_as_user so dry-run mode and permission context are respected
+execute_as_user find "${ORIGINAL_HOME}" -name ".DS_Store" -type f -print -delete 2>/dev/null || true
 
 # Show the ~/Library folder
 echo "Unhiding ~/Library..."

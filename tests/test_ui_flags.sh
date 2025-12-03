@@ -170,6 +170,15 @@ else
     FAILED=1
 fi
 
+# Test 18: Finder script ensures List view preference is configured
+echo "Test 18: Finder script sets FXPreferredViewStyle to Nlsv (List view)"
+if grep -q "FXPreferredViewStyle.*Nlsv" "$FINDER_SCRIPT" || grep -q "FXPreferredViewStyle string \"Nlsv\"" "$FINDER_SCRIPT"; then
+    echo "PASS: Finder script sets FXPreferredViewStyle to Nlsv"
+else
+    echo "FAIL: Finder script did not set FXPreferredViewStyle to Nlsv"
+    FAILED=1
+fi
+
 # Test 13b: myip supports --ipv6/-6 flag
 echo "Test 13b: myip supports --ipv6 or -6"
 if grep -q -- "--ipv6" "$ALIASES_FILE" || grep -q -- "-6" "$ALIASES_FILE"; then
