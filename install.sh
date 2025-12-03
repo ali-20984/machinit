@@ -354,7 +354,8 @@ fi
 # If resume-on-failure requested, read last_failed
 if [ "$RESUME_FAILURE" = true ]; then
     if [ -f "$LOG_DIR/last_failed" ]; then
-        LF=$(cat "$LOG_DIR/last_failed" | tr -d "\n")
+        # Avoid useless use of cat (SC2002) by redirecting the file into tr
+        LF=$(tr -d '\n' <"$LOG_DIR/last_failed")
         if [ -n "$LF" ]; then
             echo "Resuming from last failed script: $LF" | tee -a "$LOG_FILE"
             START_FROM="$LF"

@@ -16,6 +16,7 @@ source "$UTILS"
 # Clean up at exit
 # shellcheck disable=SC2329
 cleanup() {
+    # shellcheck disable=SC2317
     defaults delete "$DOMAIN" 2>/dev/null || true
 }
 trap cleanup EXIT

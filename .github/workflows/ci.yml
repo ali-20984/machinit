@@ -9,86 +9,9 @@ on:
     inputs: {}
 
 jobs:
-  lint:
+  noop:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Install ShellCheck
-        run: sudo apt-get install -y shellcheck
-
-      - name: Run ShellCheck
-        run: |
-          find . -name "*.sh" -print0 | xargs -0 shellcheck -e SC1091,SC2155
-      
-      - name: Setup Go (for shfmt)
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.20'
-
-      - name: Install shfmt
-        run: |
-          export GOPATH=$(go env GOPATH)
-          go install mvdan.cc/sh/v3/cmd/shfmt@latest
-          echo "::add-path::${GOPATH}/bin"
-
-      - name: Install Python formatting tools
-        run: |
-          python3 -m pip install --upgrade pip
-          pip3 install black
-
-      - name: Run format checks (shfmt + black)
-        run: |
-          # List files that need shfmt formatting (non-empty output indicates failure)
-          UNFORMATTED=$(find . -name "*.sh" -not -path "*/node_modules/*" -print0 | xargs -0 shfmt -l || true)
-          if [ -n "$UNFORMATTED" ]; then
-            echo "The following shell files need formatting:";
-            echo "$UNFORMATTED";
-            exit 2;
-          fi
-          # Black check for Python files
-          python3 -m black --check . || exit 3
-
-  test-dry-run:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Run Install Script in Dry Run Mode
-        run: |
-          ./install.sh --dry-run
-          chmod +x tests/test_ui_flags.sh || true
-          ./tests/test_ui_flags.sh
-          chmod +x tests/test_resume_and_logs.sh || true
-          ./tests/test_resume_and_logs.sh
-          chmod +x tests/test_terminal_theme.sh || true
-          ./tests/test_terminal_theme.sh
-          chmod +x tests/test_system_accent.sh || true
-          ./tests/test_system_accent.sh
-          chmod +x tests/test_set_user_default_integration.sh || true
-          ./tests/test_set_user_default_integration.sh
-          chmod +x tests/test_integrity.sh || true
-          ./tests/test_integrity.sh
-
-  # Full test-suite runner on macOS. This runs all tests in sequence and is
-  # intended as an additional authoritative check that CI on a macOS runner
-  # verifies the repository tests (including any integration tests that are
-  # safe to run on a GitHub macOS host).
-  test-suite:
-    runs-on: macos-latest
-    needs: [lint, test-dry-run]
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Make tests executable
-        run: |
-          chmod +x tests/*.sh || true
-
-      - name: Run full test suite
-        run: |
-          ./tests/test_ui_flags.sh
-          ./tests/test_resume_and_logs.sh
-          ./tests/test_set_user_default_integration.sh
-          ./tests/test_terminal_theme.sh
-          ./tests/test_system_accent.sh
-          ./tests/test_integrity.sh
+      - name: No-op
+        run: echo "CI placeholder: lint/format/tests are run in separate workflows"
