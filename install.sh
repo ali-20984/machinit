@@ -55,6 +55,10 @@ DRY_RUN=false # If true, commands are printed but not executed
 UPDATE=false  # If true, the script updates itself via git and exits
 NO_LOG=false  # If true, logging to file is disabled
 VERBOSE=false # If true, enables shell debug mode (set -x)
+CLEAR_LOGS=false # If true, delete logs directory and exit
+RESUME_FAILURE=false # If true, resume from last failure recorded in logs/last_failed
+EXIT_NOW=false # If true, exit immediately (no-op)
+RESTART_UI=false # If true, run final UI restart script at the end (non-interactive)
 RESTART_UI=false # If true, run final UI restart script at the end (non-interactive)
 
 # State variables
@@ -185,6 +189,22 @@ while [[ $# -gt 0 ]]; do
             START_FROM="$2"
             shift 2
             ;;
+        --clear-logs)
+            CLEAR_LOGS=true
+            shift
+            ;;
+        --resume-failure)
+            RESUME_FAILURE=true
+            shift
+            ;;
+        --exit)
+            EXIT_NOW=true
+            shift
+            ;;
+        --restart-ui)
+            RESTART_UI=true
+            shift
+            ;;
         --restart-ui)
             RESTART_UI=true
             shift
@@ -215,10 +235,27 @@ if [ "$VERBOSE" = true ]; then
 fi
 
 # Set up logging
+LOG_DIR="./logs"
+mkdir -p "$LOG_DIR"
+
 if [ "$NO_LOG" = true ]; then
     LOG_FILE="/dev/null"
 else
-    LOG_FILE="./install_$(date +"%Y-%m-%d_%H-%M-%S").log"
+    LOG_FILE="$LOG_DIR/install_$(date +"%Y-%m-%d_%H-%M-%S").log"
+fi
+
+# Handle clear-logs early
+if [ "$CLEAR_LOGS" = true ]; then
+    echo "Clearing logs in $LOG_DIR..."
+    rm -rf "$LOG_DIR" || true
+    echo "Logs cleared. Exiting." 
+    exit 0
+fi
+
+# Handle immediate exit flag (no-op)
+if [ "$EXIT_NOW" = true ]; then
+    echo "--exit was passed; exiting now without running scripts."
+    exit 0
 fi
 
 # ==============================================================================
@@ -317,6 +354,20 @@ if [ -n "$START_FROM" ]; then
     SKIPPING_UNTIL_START=true
 fi
 
+# If resume-on-failure requested, read last_failed
+if [ "$RESUME_FAILURE" = true ]; then
+    if [ -f "$LOG_DIR/last_failed" ]; then
+        LF=$(cat "$LOG_DIR/last_failed" | tr -d "\n")
+        if [ -n "$LF" ]; then
+            echo "Resuming from last failed script: $LF" | tee -a "$LOG_FILE"
+            START_FROM="$LF"
+            SKIPPING_UNTIL_START=true
+        fi
+    else
+        echo "No last_failed entry found in $LOG_DIR; cannot resume." | tee -a "$LOG_FILE"
+    fi
+fi
+
 # Iterate through all .sh files in the scripts directory
 for script in "$SCRIPTS_DIR"/*.sh; do
     # Check if file exists (in case glob matches nothing)
@@ -397,6 +448,11 @@ for script in "$SCRIPTS_DIR"/*.sh; do
         ((++SUCCESS_COUNT))
             set +o pipefail
     else
+        # Record the first failed script so the user can resume later
+        if [ ! -f "$LOG_DIR/last_failed" ]; then
+            echo "$script_name" > "$LOG_DIR/last_failed"
+            echo "Wrote last failed script: $script_name" | tee -a "$LOG_FILE"
+        fi
         printf "%b\n" "${RED}✗${NC} ${WHITE}$script_name${NC} ${RED}failed${NC}" | tee -a "$LOG_FILE"
         ((++FAILED_COUNT))
         set +o pipefail

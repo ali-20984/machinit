@@ -1,0 +1,10 @@
+# Local logs should not be committed
+logs/
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+
+# Node/npm
+node_modules/

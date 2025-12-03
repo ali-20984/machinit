@@ -63,6 +63,26 @@ else
     FAILED=1
 fi
 
+# Test 6: set_user_default supports array values (DRY_RUN)
+echo "Test 6: set_user_default handles array type in DRY_RUN"
+OUT3=$(DRY_RUN=true bash -c 'source "$PWD/scripts/utils.sh"; set_user_default com.example.test Test array one two three' 2>&1 || true)
+if echo "$OUT3" | grep -q "\[DRY RUN\]"; then
+    echo "PASS: set_user_default printed DRY RUN for array write"
+else
+    echo "FAIL: set_user_default did not behave as DRY_RUN for array (output below):"
+    echo "$OUT3"
+    FAILED=1
+fi
+
+# Test 7: Finder script sets collapsed key for iCloud when configured
+echo "Test 7: Finder script attempts to set SidebarICloudDriveCollapsed"
+if grep -q "SidebarICloudDriveCollapsed" "$FINDER_SCRIPT"; then
+    echo "PASS: Finder script includes SidebarICloudDriveCollapsed handling"
+else
+    echo "FAIL: Finder script does not handle SidebarICloudDriveCollapsed"
+    FAILED=1
+fi
+
 if [ $FAILED -eq 0 ]; then
     echo "All UI/flags CI tests passed."
     exit 0

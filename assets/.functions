@@ -192,3 +192,14 @@ function generate_git_key() {
     # Adding your SSH key to your GitHub account
     echo "run 'pbcopy < ~/.ssh/id_ed25519.pub' and paste that into GitHub"
 }
+
+## findPid: find out the pid of a specified process
+## -----------------------------------------------------
+## Note that the command name can be specified via a regex
+## E.g. findPid '/d$/' finds pids of all processes with names ending in 'd'
+## Without the 'sudo' it will only find processes of the current user
+## -----------------------------------------------------
+findPid () { lsof -t -c "$@" ; }
+
+# lsock: Display open sockets (requires sudo)
+alias lsock='sudo lsof -i -P'

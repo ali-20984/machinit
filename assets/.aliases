@@ -18,6 +18,16 @@ alias c="clear"
 alias h="history"
 alias o="open ."
 
+# Quick zsh editing
+alias zshconf="nano ~/.zshrc"
+
+# Project navigation shortcuts
+alias projects="cd ~/Projects"
+alias repos="cd ~/Projects/repos"
+
+# Quick find wrapper (name search)
+alias qfind='find . -name'
+
 # Network
 alias ping_test="ping 1.1.1.1"
 alias myip="curl ifconfig.me"

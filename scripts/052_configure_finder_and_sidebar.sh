@@ -74,6 +74,17 @@ set_user_default com.apple.finder NewWindowTargetPath string "file://${ORIGINAL_
 # Hide iCloud Drive
 set_user_default com.apple.finder SidebarICloudDrive bool false || true
 
+# If iCloud Drive is left visible (true) for some reason, attempt to collapse
+# that section by default so it doesn't expand in Finder. This is a best-effort
+# preference write — macOS stores more complex sidebar state in com.apple.sidebarlists
+# and may ignore this key on some versions, but writing it is harmless and useful
+# where supported.
+current_icloud=$(execute_as_user defaults read com.apple.finder SidebarICloudDrive 2>/dev/null || true)
+if [ "$current_icloud" = "1" ] || [ "$current_icloud" = "true" ]; then
+    print_info "iCloud Drive is visible — setting collapsed preference (best-effort)."
+    set_user_default com.apple.finder SidebarICloudDriveCollapsed bool true || true
+fi
+
 # Hide Shared Section (Bonjour)
 set_user_default com.apple.finder SidebarBonjourBrowser bool false || true
 

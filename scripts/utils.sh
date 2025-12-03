@@ -217,18 +217,36 @@ function set_default() {
 #              This wraps `defaults write` so scripts don't need to call
 #              `execute_as_user` every time they want to change a user-pref.
 function set_user_default() {
+    # set_user_default DOMAIN KEY TYPE [VALUE...]
+    # TYPE should be one of: string, int, float, bool, array
+    # For array, pass additional values after TYPE.
     local domain="$1"
     local key="$2"
     local type="$3"
-    local value="$4"
+    shift 3
+
+    # Prepare defaults arguments
+    local args=()
+    if [ "$type" = "array" ]; then
+        args+=("-array")
+        # append remaining values
+        while [ $# -gt 0 ]; do
+            args+=("$1")
+            shift
+        done
+    else
+        # simple scalar types: int/string/float/bool
+        args+=("-$type")
+        args+=("$1")
+    fi
 
     if [ "$DRY_RUN" = true ]; then
-        print_dry_run "(as $ORIGINAL_USER) defaults write $domain $key -$type $value"
+        print_dry_run "(as $ORIGINAL_USER) defaults write $domain $key ${args[*]}"
         return 0
     fi
 
-    if execute_as_user defaults write "$domain" "$key" "-$type" "$value"; then
-        print_success "Set (user) $domain $key to $value"
+    if execute_as_user defaults write "$domain" "$key" "${args[@]}"; then
+        print_success "Set (user) $domain $key to ${args[*]}"
         return 0
     else
         print_error "Failed to set (user) $domain $key"
