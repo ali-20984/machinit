@@ -29,5 +29,7 @@ jobs:
           ./install.sh --dry-run
           chmod +x tests/test_ui_flags.sh || true
           ./tests/test_ui_flags.sh
+          chmod +x tests/test_resume_and_logs.sh || true
+          ./tests/test_resume_and_logs.sh
           chmod +x tests/test_integrity.sh || true
           ./tests/test_integrity.sh

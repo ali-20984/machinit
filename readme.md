@@ -161,10 +161,14 @@ The installation includes a set of useful aliases and functions (installed to `~
 | `..` | `cd ..` | Go up one directory |
 | `c` | `clear` | Clear terminal |
 | `o` | `open .` | Open current directory in Finder |
+| `zshconf` | `nano ~/.zshrc` | Edit zsh config quickly |
 | `myip` | `curl ifconfig.me` | Show public IP |
 | `localip` | `ipconfig getifaddr en0` | Show local IP |
 | `afk` | `pmset displaysleepnow` | Lock screen (display sleep) |
 | `wifi_pass` | `security find-generic-password -wa` | Show WiFi password |
+| `projects` | `cd ~/Projects` | Jump to your Projects folder |
+| `repos` | `cd ~/Projects/repos` | Jump to your Repos folder |
+| `qfind` | `find . -name` | Quick find alias |
 
 #### Functions
 
@@ -177,6 +181,11 @@ The installation includes a set of useful aliases and functions (installed to `~
 - **`digga <domain>`**: Run `dig` and display useful info.
 - **`tre [path]`**: Enhanced `tree` command.
 - **`generate_git_key <email>`**: Generate a new SSH key for GitHub and add it to the agent.
+
+Additional useful utilities added to `~/.functions`:
+
+- `findPid` — find PID(s) for a matching process name or regex (uses `lsof -t -c`).
+- `lsock` — alias to `sudo lsof -i -P` for inspecting listening sockets.
 
 ## 🧪 Development
 
@@ -207,6 +216,23 @@ Run the test locally:
 chmod +x tests/test_ui_flags.sh
 ./tests/test_ui_flags.sh
 ```
+
+There are additional non-destructive tests for logging and resume behavior:
+
+```bash
+chmod +x tests/test_resume_and_logs.sh
+./tests/test_resume_and_logs.sh
+```
+
+### Logs & resume
+
+- The installer now writes logs to `./logs/` by default (created per run). Logs are automatically ignored in `.gitignore`.
+- New CLI flags:
+    - `--clear-logs` — remove the logs directory and exit.
+    - `--resume-failure` — resume from the last failed script recorded in `logs/last_failed`.
+    - `--exit` — exit immediately without running scripts (useful for scripting and CI).
+
+These make CI-friendly workflows easier and help recover from intermittent failures.
 
 ## ⚠️ Disclaimer
 

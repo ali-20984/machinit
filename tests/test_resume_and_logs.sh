@@ -21,7 +21,19 @@ fi
 echo "Test B: resume-failure reads last_failed and sets START_FROM"
 mkdir -p "$LOG_DIR"
 echo "052_configure_finder_and_sidebar.sh" > "$LOG_DIR/last_failed"
-OUT2=$("$INSTALL" --resume-failure --dry-run 2>&1 || true)
+# Determine the index of the resume script so we run only that script and avoid interactive restarts
+all_scripts=("$PROJECT_ROOT"/scripts/*.sh)
+target="${PROJECT_ROOT}/scripts/052_configure_finder_and_sidebar.sh"
+index=0
+for s in "${all_scripts[@]}"; do
+    index=$((index+1))
+    if [ "$s" = "$target" ]; then
+        script_index=$index
+        break
+    fi
+done
+
+OUT2=$("$INSTALL" --resume-failure --dry-run --run-only "$script_index" 2>&1 || true)
 if echo "$OUT2" | grep -q "Resuming from last failed script"; then
     echo "PASS: --resume-failure detected and reported last_failed"
 else
@@ -44,7 +56,7 @@ fi
 # Test D: --exit exits quickly and does not create logs
 rm -rf "$LOG_DIR" || true
 OUT4=$("$INSTALL" --exit 2>&1 || true)
-if echo "$OUT4" | grep -q "--exit was passed; exiting now"; then
+if echo "$OUT4" | grep -F -- "--exit was passed; exiting now"; then
     echo "PASS: --exit returned immediately"
 else
     echo "FAIL: --exit did not behave as expected"
