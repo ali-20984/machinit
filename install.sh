@@ -55,6 +55,7 @@ DRY_RUN=false # If true, commands are printed but not executed
 UPDATE=false  # If true, the script updates itself via git and exits
 NO_LOG=false  # If true, logging to file is disabled
 VERBOSE=false # If true, enables shell debug mode (set -x)
+RESTART_UI=false # If true, run final UI restart script at the end (non-interactive)
 
 # State variables
 START_FROM=""        # Script name to resume execution from
@@ -79,6 +80,8 @@ function show_help() {
     echo "  --no-log                Disable logging to file."
     echo "  --verbose, -v           Enable verbose output (set -x)."
     echo "  --start-from <script>   Resume execution from a specific script."
+    echo "  --run-only <N>          Run only the script with 1-based index N from the scripts list."
+    echo "  --restart-ui             Run the final UI restart (equivalent to scripts/999_restart_apps.sh --yes) when the run completes."
     echo "  --computer-name <name>  Set computer name non-interactively."
     echo "  --help, -h              Show this help message."
     echo ""
@@ -181,6 +184,10 @@ while [[ $# -gt 0 ]]; do
         --start-from)
             START_FROM="$2"
             shift 2
+            ;;
+        --restart-ui)
+            RESTART_UI=true
+            shift
             ;;
             --run-only)
                 RUN_ONLY_INDEX="$2"
@@ -416,3 +423,9 @@ if [ "$FAILED_COUNT" -gt 0 ]; then
 fi
 
 printf "%b\n" "${GREEN}✓${NC} ${BOLD}${WHITE}Initialization complete!${NC}" | tee -a "$LOG_FILE"
+
+# Optionally restart UI (Dock/Finder/etc) after a successful run
+if [ "$RESTART_UI" = true ]; then
+    printf "%b\n" "${CYAN}→${NC} ${WHITE}--restart-ui requested: running scripts/999_restart_apps.sh --yes${NC}" | tee -a "$LOG_FILE"
+    ./scripts/999_restart_apps.sh --yes 2>&1 | tee -a "$LOG_FILE" || true
+fi

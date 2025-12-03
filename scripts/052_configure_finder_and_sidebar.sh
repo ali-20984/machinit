@@ -176,3 +176,43 @@ execute_as_user killall cfprefsd &>/dev/null || true
 print_notice "Finder restarts are deferred until the final restart step. Run scripts/999_restart_apps.sh when the full run is complete to restart Finder and apply changes."
 
 echo "Finder configuration complete."
+
+## Verification: ensure per-user settings were written
+print_config "Verify Finder settings"
+verify_ok=true
+
+# Verify NewWindowTarget
+nw_target=$(execute_as_user defaults read com.apple.finder NewWindowTarget 2>/dev/null || true)
+if [ "$nw_target" = "PfDe" ]; then
+    print_success "NewWindowTarget correctly set to PfDe"
+else
+    print_error "NewWindowTarget not set (observed: ${nw_target:-<empty>})"
+    verify_ok=false
+fi
+
+# Verify NewWindowTargetPath
+nw_path=$(execute_as_user defaults read com.apple.finder NewWindowTargetPath 2>/dev/null || true)
+expected_path="file://${ORIGINAL_HOME}/Desktop/"
+if [ "$nw_path" = "$expected_path" ]; then
+    print_success "NewWindowTargetPath correctly points to Desktop"
+else
+    print_error "NewWindowTargetPath not set as expected (observed: ${nw_path:-<empty>})"
+    verify_ok=false
+fi
+
+# Verify sidebar short settings
+for key in SidebarICloudDrive SidebarBonjourBrowser ShowRecentTags; do
+    val=$(execute_as_user defaults read com.apple.finder "$key" 2>/dev/null || true)
+    if [ "$val" = "0" ] || [ "$val" = "false" ]; then
+        print_success "$key = false"
+    else
+        print_error "$key not false (observed: ${val:-<empty>})"
+        verify_ok=false
+    fi
+done
+
+if [ "$verify_ok" = true ]; then
+    print_success "Finder sidebar configuration verified (user: ${ORIGINAL_USER})."
+else
+    print_warning "Finder sidebar verification failed in some checks. You may need to run scripts/999_restart_apps.sh to pick up changes, or check TCC/MDM policies."
+fi
