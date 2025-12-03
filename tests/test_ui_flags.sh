@@ -122,7 +122,7 @@ fi
 
 # Test 11b: recent() supports indices, -n and pattern matching (dry-run check in source)
 echo "Test 11b: recent() supports numeric index and pattern"
-if grep -q "stat -f%mt" "$FUNCTIONS_FILE" && grep -q "-n" "$FUNCTIONS_FILE" && grep -q "basename" "$FUNCTIONS_FILE"; then
+if grep -q "stat -f%mt" "$FUNCTIONS_FILE" && grep -q -- "-n" "$FUNCTIONS_FILE" && grep -q "basename" "$FUNCTIONS_FILE"; then
     echo "PASS: recent() appears to support numeric indices and pattern matching"
 else
     echo "FAIL: recent() doesn't look like it supports indices/patterns"

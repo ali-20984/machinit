@@ -136,9 +136,11 @@ There are a couple of utilities and workflow improvements to make per-user UI ch
 
 These two changes are designed to avoid race conditions and permission problems when the installer is invoked with `sudo`.
 
-### Terminal Theme: Shades of Fire
+### Terminal Theme: Shades of Fire (configurable)
 
-I added a new "Shades of Fire" Terminal profile which applies a warm, fiery palette to Terminal.app (dark charcoal background with ember/orange/yellow text accents). The installer will also add a `Shades of Fire` prompt block to `~/.zshrc` (user name, arrow, and current folder styled in fiery 256-color codes) when `scripts/046_configure_terminal.sh` runs.
+Terminal theming is now configurable via `config.toml` under the `[appearance]` section. The default value is `shades_of_fire`, which applies the warm, ember palette to Terminal.app and adds a matching prompt block to `~/.zshrc`.
+
+Additionally, a minimal iTerm2 theme-import script and two small color presets are included under `assets/themes/` (`shades_of_fire.itermcolors` and `charcoal.itermcolors`). The installer `scripts/046_configure_iterm2.sh` will open the chosen `.itermcolors` file (or dry-run) and allow iTerm2 to register the preset when iTerm2 is installed.
 
 The prompt block looks like:
 
