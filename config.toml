@@ -74,6 +74,7 @@ settings = [
 "044_configure_dock_apps.sh" = true
 "045_configure_safari.sh" = true
 "046_configure_terminal.sh" = true
+"046_configure_iterm2.sh" = true
 "047_configure_login_screen.sh" = true
 "050_performance_optimizations.sh" = true
 "051_configure_system_ui_ux.sh" = true
@@ -84,3 +85,9 @@ settings = [
 "056_configure_system_apps.sh" = true
 "099_set_wallpaper.sh" = true
 "999_cleanup.sh" = true
+
+[appearance]
+# Choose which terminal theme to apply. Supported values:
+# - "shades_of_fire" (default) — the warm ember palette we added earlier
+# - "charcoal" — a darker, more neutral charcoal theme
+terminal_theme = "shades_of_fire"

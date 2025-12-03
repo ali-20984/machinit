@@ -8,6 +8,12 @@ source "$(dirname "$0")/utils.sh"
 
 print_config "Terminal Theme"
 
+# Determine theme choice from config (fall back to 'shades_of_fire')
+THEME_NAME=$(get_config "appearance.terminal_theme")
+if [ -z "$THEME_NAME" ]; then
+    THEME_NAME="shades_of_fire"
+fi
+
 # Only use UTF-8 in Terminal.app
 # -array is complex for set_default, using raw defaults write
 defaults write com.apple.terminal StringEncodings -array 4
@@ -30,16 +36,26 @@ tell application "Terminal"
         set defaultSettings to default settings
         
         tell defaultSettings
-            -- Shades of Fire palette (warm dark background + fiery accents)
-            -- background: deep charcoal
-            set background color to {2500, 1500, 800}
-            -- regular text: whiteish (bright, for clear contrast in Shades of Fire)
-            set normal text color to {62000, 62000, 63000}
-            -- bold text: bright orange / flame
-            set bold text color to {65535, 36000, 14000}
-            -- cursor: bright ember
-            set cursor color to {65535, 43000, 20000}
-            set transparency to 0.03 -- 97% opacity
+            -- Configure palette for the currently selected THEME_NAME
+            if ("${THEME_NAME}" = "shades_of_fire") then
+                -- Shades of Fire palette (warm dark background + fiery accents)
+                -- background: deep charcoal
+                set background color to {2500, 1500, 800}
+                -- regular text: whiteish (bright, for clear contrast in Shades of Fire)
+                set normal text color to {62000, 62000, 63000}
+                -- bold text: bright orange / flame
+                set bold text color to {65535, 36000, 14000}
+                -- cursor: bright ember
+                set cursor color to {65535, 43000, 20000}
+                set transparency to 0.03 -- 97% opacity
+            else
+                -- Charcoal (neutral darker background) fallback
+                set background color to {2000, 2000, 2000}
+                set normal text color to {62000, 62000, 62000}
+                set bold text color to {62000, 62000, 62000}
+                set cursor color to {52000, 52000, 52000}
+                set transparency to 0.00
+            end if
             
             -- Set Font (Fantasque Sans Mono)
             -- Note: The font must be installed for this to work.
@@ -62,7 +78,23 @@ EOD
 ZSHRC="$HOME/.zshrc"
 if [ -f "$ZSHRC" ]; then
     # Insert a clearly marked block so it's easy to find/replace later
-    if ! grep -q "# Shades of Fire prompt" "$ZSHRC"; then
+    if [ "${THEME_NAME}" = "shades_of_fire" ]; then
+        if ! grep -q "# Shades of Fire prompt" "$ZSHRC"; then
+            cat >>"$ZSHRC" <<'EOF'
+    # Shades of Fire prompt (user/folder in warm ember tones)
+    # Username: bright orange; arrow: red; current dir: warm yellow
+    export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
+    EOF
+        fi
+    else
+        # Charcoal prompt (neutral tone)
+        if ! grep -q "# Charcoal prompt" "$ZSHRC"; then
+            cat >>"$ZSHRC" <<'EOF'
+    # Charcoal prompt (neutral minimal prompt)
+    export PROMPT='%n %F{250}➜%f %~ '
+    EOF
+        fi
+    fi
         cat >>"$ZSHRC" <<'EOF'
 # Shades of Fire prompt (user/folder in warm ember tones)
 # Username: bright orange; arrow: red; current dir: warm yellow
@@ -71,4 +103,4 @@ EOF
     fi
 fi
 
-echo "Terminal theme configured."
+echo "Terminal theme configured (${THEME_NAME})."

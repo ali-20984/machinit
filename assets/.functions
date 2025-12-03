@@ -205,17 +205,73 @@ findPid () { lsof -t -c "$@" ; }
 
 # recent: cd to the most recently modified project directory under ~/Projects
 recent() {
-	local p="$HOME/Projects"
-	if [ ! -d "$p" ]; then
-		echo "Projects directory not found: $p"
+	# Support a few useful invocation modes:
+	#  - recent            -> cd to most recently modified project
+	#  - recent 2          -> cd to the 2nd most recent project
+	#  - recent -n 3       -> cd to the 3rd most recent project
+	#  - recent myproj     -> cd to the first project whose name contains 'myproj' (case-sensitive)
+
+	local candidates=()
+	local roots=("$HOME/Projects" "$HOME/Documents/Projects")
+
+	for r in "${roots[@]}"; do
+		if [ -d "$r" ]; then
+			while IFS= read -r -d '' d; do
+				# skip the root itself
+				[ "$d" = "$r" ] && continue
+				candidates+=("$d")
+			done < <(find "$r" -maxdepth 1 -type d -print0 2>/dev/null)
+		fi
+	done
+
+	if [ ${#candidates[@]} -eq 0 ]; then
+		echo "No project directories found in ${roots[*]}"
 		return 1
 	fi
-	# pick most recently modified directory under ~/Projects
-	local dir
-	dir=$(ls -1dt "$p"/*/ 2>/dev/null | head -n1 || true)
-	if [ -z "$dir" ]; then
-		echo "No project directories found in $p"
-		return 1
+
+	# sort by mtime (newest first)
+	IFS=$'\n' sorted=( $(for d in "${candidates[@]}"; do printf '%s\t%s\n' "$(stat -f%mt "$d")" "$d"; done | sort -r -n | awk -F"\t" '{ print $2 }') )
+
+	# No args -> go to most recent
+	if [ $# -eq 0 ]; then
+		cd "${sorted[0]}" || return 1
+		return 0
 	fi
-	cd "$dir" || return 1
+
+	# Numeric argument (1-based index)
+	if [[ "$1" =~ ^[0-9]+$ ]]; then
+		idx=$(( $1 - 1 ))
+		if [ $idx -ge 0 ] && [ $idx -lt ${#sorted[@]} ]; then
+			cd "${sorted[$idx]}" || return 1
+			return 0
+		else
+			echo "Index out of range: $1"
+			return 1
+		fi
+	fi
+
+	# -n N form
+	if [ "$1" = "-n" ] && [[ "$2" =~ ^[0-9]+$ ]]; then
+		idx=$(( $2 - 1 ))
+		if [ $idx -ge 0 ] && [ $idx -lt ${#sorted[@]} ]; then
+			cd "${sorted[$idx]}" || return 1
+			return 0
+		else
+			echo "Index out of range: $2"
+			return 1
+		fi
+	fi
+
+	# Otherwise treat all args as a pattern and match by directory name
+	local pattern="$*"
+	for d in "${sorted[@]}"; do
+		name=$(basename "$d")
+		if [[ "$name" == *"$pattern"* ]]; then
+			cd "$d" || return 1
+			return 0
+		fi
+	done
+
+	echo "No matching project found for '$pattern'"
+	return 1
 }
