@@ -149,6 +149,24 @@ else
     FAILED=1
 fi
 
+# Test 13: myip function exists and references multiple fallbacks
+echo "Test 13: myip() present and checks multiple services"
+if grep -q "myip()" "$ALIASES_FILE" && (grep -q "icanhazip" "$ALIASES_FILE" || grep -q "checkip.amazonaws.com" "$ALIASES_FILE"); then
+    echo "PASS: myip function exists and contains public-IP fallbacks"
+else
+    echo "FAIL: myip function missing or lacks known services (icanhazip/checkip.amazonaws.com)"
+    FAILED=1
+fi
+
+# Test 14: ni alias exists for npm install
+echo "Test 14: ni alias present"
+if grep -q '^alias ni="npm install"' "$ALIASES_FILE"; then
+    echo "PASS: ni alias exists"
+else
+    echo "FAIL: ni alias missing"
+    FAILED=1
+fi
+
 if grep -q "/opt/homebrew/opt/coreutils/libexec/gnubin/ls" "$ALIASES_FILE"; then
     echo "FAIL: ll uses a hard-coded Homebrew gnubin path"
     FAILED=1

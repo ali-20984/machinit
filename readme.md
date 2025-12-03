@@ -170,6 +170,7 @@ The installation includes a set of useful aliases and functions (installed to `~
 | `bup` | `brew update && brew upgrade && brew cleanup` | Update Homebrew and cleanup |
 | `shrug` | `echo '¯\_(ツ)_/¯' \| pbcopy` | Copy shrug kaomoji to clipboard |
 | `ll` | robust wrapper (prefers GNU ls from Homebrew/gls, falls back to system ls) | Enhanced list view |
+| `ni` | `npm install` | Short alias for quick npm installs |
 | `reloaddns` | `dscacheutil -flushcache ...` | Flush DNS cache |
 | `dnsreload` | `dscacheutil -flushcache ...` | Flush DNS cache (alias) |
 | `jsrefresh` | `rm -rf node_modules ...` | Reinstall npm dependencies |
@@ -178,6 +179,8 @@ The installation includes a set of useful aliases and functions (installed to `~
 | `o` | `open .` | Open current directory in Finder |
 | `zshconf` | `nano ~/.zshrc` | Edit zsh config quickly |
 | `myip` | `curl ifconfig.me` | Show public IP |
+
+Note: `myip` is now a robust helper that queries multiple public IP services (e.g. icanhazip.com, checkip.amazonaws.com, ifconfig.me, ident.me, ipinfo.io) and returns the first successful result. This makes it more reliable across environments.
 | `localip` | `ipconfig getifaddr en0` | Show local IP |
 | `afk` | `pmset displaysleepnow` | Lock screen (display sleep) |
 | `wifi_pass` | `security find-generic-password -wa` | Show WiFi password |
@@ -261,4 +264,12 @@ This script modifies system settings, installs software, and changes configurati
 
 ## 📄 License
 
-[MIT](LICENSE.md)
+### License & included assets
+
+The code in this repository (scripts, helper utilities, tests, and documentation) is released under the **MIT License** — see `license.md` for the full text.
+
+Third-party assets bundled or referenced by the installer (for example fonts like *Fantasque Sans Mono*, Terminal/iTerm2 color presets, or other vendor packages) may be distributed under different licenses. Those assets will either include a license in their upstream distribution, or they are explicitly noted in this README where helpful. When the installer installs third-party software, those packages retain their original licenses — check the vendor/package documentation for exact licensing terms.
+
+Commands and helper snippets included as part of the dotfiles (for example `~/.aliases` and `~/.functions`) are part of this repository and are covered by this MIT license unless explicitly stated otherwise. Color themes and presets included in `assets/themes/` are bundled for convenience and use; they are also distributed under the MIT license unless the theme file explicitly declares a different license.
+
+If you plan to redistribute parts of this repository (or use the assets in a commercial product), please verify the upstream licenses of any third-party package or media (fonts, icons, images) the installer pulls in. If you'd like me to add license attributions for particular bundled assets, tell me which ones and I'll add explicit attributions to the README.

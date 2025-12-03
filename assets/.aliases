@@ -53,8 +53,36 @@ alias lsock='sudo lsof -i -P'
 
 # Network
 alias ping_test="ping 1.1.1.1"
-alias myip="curl ifconfig.me"
+
+# myip: robust public IPv4 lookup using multiple public endpoints (tries each in order)
+myip() {
+	# Quietly query multiple endpoints and print the first non-empty result
+	local services=("https://icanhazip.com" "https://checkip.amazonaws.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip")
+	for s in "${services[@]}"; do
+		if command -v curl >/dev/null 2>&1; then
+			out=$(curl -s --max-time 3 "$s" || true)
+		elif command -v wget >/dev/null 2>&1; then
+			out=$(wget -qO- --timeout=3 "$s" || true)
+		else
+			echo "No HTTP client (curl|wget) found to fetch public IP"
+			return 1
+		fi
+
+		out=$(echo "$out" | tr -d '\r' | tr -d '\n' | xargs || true)
+		if [ -n "$out" ]; then
+			echo "$out"
+			return 0
+		fi
+	done
+
+	echo "Could not determine public IP from known services"
+	return 1
+}
 alias localip="ipconfig getifaddr en0"
+
+# npm short install alias
+alias ni="npm install"
+ 
 
 # System
 alias path='echo -e ${PATH//:/\\n}'
