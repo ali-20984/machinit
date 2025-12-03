@@ -1,5 +1,12 @@
 # MachInit: Hands-off Mac Initialization
 
+[![CI](https://img.shields.io/github/actions/workflow/status/supermarsx/machinit/ci.yml?branch=main&style=flat-square)](https://github.com/supermarsx/machinit/actions)
+[![GitHub stars](https://img.shields.io/github/stars/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/network/members)
+[![GitHub watchers](https://img.shields.io/github/watchers/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/watchers)
+[![GitHub issues](https://img.shields.io/github/issues/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/issues)
+[![Made with Shell & Tears](https://img.shields.io/badge/made%20with-Shell%20%26%20Tears-ff69b4?style=flat-square)](https://github.com/supermarsx/machinit)
+
 MachInit is an automated, "hands-off" initialization script for macOS. It sets up a fresh Mac with a curated list of applications, development tools, system preferences, and customizations in a sequential, migration-style manner.
 
 ## 🚀 Getting Started
