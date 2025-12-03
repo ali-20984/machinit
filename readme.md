@@ -9,7 +9,7 @@
 
 MachInit is an automated, "hands-off" initialization script for macOS. It sets up a fresh Mac with a curated list of applications, development tools, system preferences, and customizations in a sequential, migration-style manner.
 
-## 🚀 Getting Started
+<h2 id="getting-started">🚀 Getting Started</h2>
 
 ### Prerequisites
 
@@ -48,7 +48,7 @@ You can customize the installation process by editing `config.toml`. This file a
 - Applications to install (Homebrew Formulae and Casks)
 - macOS Defaults (Dock settings, UI tweaks)
 
-## 📚 Index
+<h2 id="index">📚 Index</h2>
 
 - [🚀 Getting Started](#getting-started)
 - [🛠️ What it Does](#what-it-does)
@@ -64,11 +64,11 @@ You can customize the installation process by editing `config.toml`. This file a
 - [📄 License](#license)
 
 
-## 🛠️ What it Does
+<h2 id="what-it-does">🛠️ What it Does</h2>
 
 The script executes a series of ordered scripts located in the `scripts/` directory.
 
-### Scripts Reference
+<h3 id="scripts-reference">Scripts Reference</h3>
 
 | Script | Description |
 |--------|-------------|
@@ -119,7 +119,7 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 | `099_set_wallpaper.sh` | Set Wallpaper |
 | `999_cleanup.sh` | Cleanup |
 
-### 🖥️ System & Environment
+<h3 id="system-environment">🖥️ System & Environment</h3>
 
 - **Homebrew**: Installs Homebrew and updates packages.
 - **Shell**: Installs PowerShell, updates terminal tools (coreutils), and configures `nvm` (Node.js) and `pyenv` (Python).
@@ -127,7 +127,7 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Telemetry**: Disables macOS telemetry, crash reporting, and personalized ads.
 - **Privacy**: Disables Siri, hides iCloud Drive, enables Firewall and Stealth Mode.
 
-### 📦 Applications
+<h3 id="applications">📦 Applications</h3>
 
 - **Browsers**: Firefox (with extensions), Google Chrome.
 - **Development**: VS Code (with extensions), Codex, OpenCode, Chrome DevTools MCP, iTerm2, Mark Text, Standard Notes.
@@ -135,12 +135,12 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Productivity**: Microsoft Office 365 (Word, Excel, PowerPoint), Adobe Acrobat Reader, Nextcloud, Bitwarden, KeePassXC.
 - **Utilities**: GitHub Desktop, OpenVPN Connect, vcpkg, Glances, pgcli.
 
-### 🧰 Development Stack
+<h3 id="development-stack">🧰 Development Stack</h3>
  
 - **Languages**: Rust, Node.js, Python, C++ (gcc, llvm, cmake, ninja).
 - **Tools**: Git, Yarn, pnpm, Poetry, jq, httpie, ripgrep, fd, fzf.
 
-### 🎨 Customization & UI
+<h3 id="customization-ui">🎨 Customization & UI</h3>
 
 - **Wallpaper**: Sets a custom wallpaper centered on a black background.
 - **Dock**: Configures Dock size, removes default apps, and pins selected apps.
@@ -150,7 +150,7 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Safari**: Clears favorites, history, and suppresses "launched" notifications.
 - **Dotfiles**: Installs `.aliases`, `.functions`, `.nanorc`, and `.gitignore_global`.
 
-### ⚙️ Advanced UI helpers
+<h3 id="advanced-ui-helpers">⚙️ Advanced UI helpers</h3>
 
 There are a couple of utilities and workflow improvements to make per-user UI changes safer and easier:
 
@@ -160,7 +160,7 @@ There are a couple of utilities and workflow improvements to make per-user UI ch
 
 These two changes are designed to avoid race conditions and permission problems when the installer is invoked with `sudo`.
 
-### 🔥 Terminal Theme: Shades of Fire (configurable)
+<h3 id="terminal-theme">🔥 Terminal Theme: Shades of Fire (configurable)</h3>
 
 Terminal theming is now configurable via `config.toml` under the `[appearance]` section. The default value is `shades_of_fire`, which applies the warm, ember palette to Terminal.app and adds a matching prompt block to `~/.zshrc`.
 
@@ -175,7 +175,7 @@ export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
 ```
 
 
-### ⚡ Performance Optimizations
+<h3 id="performance-optimizations">⚡ Performance Optimizations</h3>
 
 - **Spotlight**: Disables indexing for better performance.
 - **Animations**: Reduces motion, transparency, and disables window animations.
@@ -183,7 +183,7 @@ export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
 - **HiDPI**: Enables HiDPI display modes.
 - **Power Management**: Enables Low Power Mode (Always) and disables sleep while charging.
 
-### 💡 Included Shell Enhancements
+<h3 id="included-shell-enhancements">💡 Included Shell Enhancements</h3>
 
 The installation includes a set of useful aliases and functions (installed to `~/.aliases` and `~/.functions`).
 
@@ -247,7 +247,7 @@ Additional useful utilities added to `~/.functions`:
 
 - `recent` — function to cd into the most recently-modified project under `~/Projects` (useful shortcut when frequently switching between projects).
 
-## 🧪 Development
+<h2 id="development">🧪 Development</h2>
 
 ### Linting
 
@@ -302,6 +302,6 @@ This script modifies system settings, installs software, and changes configurati
 - **Backup your data** if running on a machine with important files.
 - The performance optimizations (especially disabling Spotlight and hibernation) are aggressive.
 
-## 📄 License
+<h2 id="license">📄 License</h2>
 
 Released under the MIT License — see `license.md` for details.

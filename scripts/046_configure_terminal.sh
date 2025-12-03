@@ -30,7 +30,10 @@ set_default com.googlecode.iterm2 PromptOnQuit bool false
 # Black: {0, 0, 0}
 # Pale Red: {65535, 30000, 30000} (approx)
 
-osascript <<EOD
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "Run AppleScript to set Terminal theme (skipped in dry run)"
+else
+    osascript <<EOD
 tell application "Terminal"
     try
         set defaultSettings to default settings
@@ -73,6 +76,7 @@ tell application "Terminal"
     end try
 end tell
 EOD
+fi
 
 # Configure shell prompt (Zsh) for a 'Shades of Fire' look
 ZSHRC="$HOME/.zshrc"
