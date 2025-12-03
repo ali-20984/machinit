@@ -80,26 +80,20 @@ if [ -f "$ZSHRC" ]; then
     # Insert a clearly marked block so it's easy to find/replace later
     if [ "${THEME_NAME}" = "shades_of_fire" ]; then
         if ! grep -q "# Shades of Fire prompt" "$ZSHRC"; then
-            cat >>"$ZSHRC" <<'EOF'
-    # Shades of Fire prompt (user/folder in warm ember tones)
-    # Username: bright orange; arrow: red; current dir: warm yellow
-    export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
-    EOF
+                    cat >>"$ZSHRC" <<'EOF'
+                    # Shades of Fire prompt (user/folder in warm ember tones)
+                    # Username: bright orange; arrow: red; current dir: warm yellow
+                    export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
+EOF
         fi
     else
         # Charcoal prompt (neutral tone)
         if ! grep -q "# Charcoal prompt" "$ZSHRC"; then
-            cat >>"$ZSHRC" <<'EOF'
-    # Charcoal prompt (neutral minimal prompt)
-    export PROMPT='%n %F{250}➜%f %~ '
-    EOF
-        fi
-    fi
-        cat >>"$ZSHRC" <<'EOF'
-# Shades of Fire prompt (user/folder in warm ember tones)
-# Username: bright orange; arrow: red; current dir: warm yellow
-export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
+                    cat >>"$ZSHRC" <<'EOF'
+                    # Charcoal prompt (neutral minimal prompt)
+                    export PROMPT='%n %F{250}➜%f %~ '
 EOF
+        fi
     fi
 fi
 
