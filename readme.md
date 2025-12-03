@@ -167,7 +167,7 @@ The installation includes a set of useful aliases and functions (installed to `~
 | `afk` | `pmset displaysleepnow` | Lock screen (display sleep) |
 | `wifi_pass` | `security find-generic-password -wa` | Show WiFi password |
 | `projects` | `cd ~/Projects` | Jump to your Projects folder |
-| `repos` | `cd ~/Projects/repos` | Jump to your Repos folder |
+| `repos` | `cd ~/Projects` | Same as `projects` (recommended location: `~/Projects` which may be symlinked to `~/Documents/Projects`) |
 | `qfind` | `find . -name` | Quick find alias |
 
 #### Functions
@@ -186,6 +186,8 @@ Additional useful utilities added to `~/.functions`:
 
 - `findPid` — find PID(s) for a matching process name or regex (uses `lsof -t -c`).
 - `lsock` — alias to `sudo lsof -i -P` for inspecting listening sockets.
+
+- `recent` — function to cd into the most recently-modified project under `~/Projects` (useful shortcut when frequently switching between projects).
 
 ## 🧪 Development
 

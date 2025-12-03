@@ -25,7 +25,7 @@ alias zshconf="nano ~/.zshrc"
 
 # Project navigation shortcuts
 alias projects="cd ~/Projects"
-alias repos="cd ~/Projects/repos"
+alias repos="cd ~/Projects"  # same as projects (Projects lives in ~/Projects -> often symlink to ~/Documents/Projects)
 
 # Quick find wrapper (name search)
 alias qfind='find . -name'

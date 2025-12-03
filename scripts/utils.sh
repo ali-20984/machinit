@@ -217,27 +217,68 @@ function set_default() {
 #              This wraps `defaults write` so scripts don't need to call
 #              `execute_as_user` every time they want to change a user-pref.
 function set_user_default() {
-    # set_user_default DOMAIN KEY TYPE [VALUE...]
-    # TYPE should be one of: string, int, float, bool, array
-    # For array, pass additional values after TYPE.
-    local domain="$1"
-    local key="$2"
-    local type="$3"
-    shift 3
+    # Usage: set_user_default DOMAIN KEY TYPE [VALUE...]
+    # TYPE may be one of: string, int, float, bool, array, delete
+    # You may also omit TYPE and pass a single VALUE; the function will attempt to infer the type.
+    local domain="$1"; local key="$2"; shift 2
 
-    # Prepare defaults arguments
-    local args=()
+    if [ $# -lt 1 ]; then
+        print_error "set_user_default: missing type/value for $domain $key"
+        return 1
+    fi
+
+    local type="$1"; local args=(); shift 1
+
+    # If the provided type isn't a recognized type, infer the type instead
+    case "$type" in
+        string|int|float|bool|array|delete)
+            ;;
+        *)
+            # Not a recognised type -> treat original value(s) as input and infer
+            # Put the first value back to the args list
+            args=("$type" "$@")
+            # If there are multiple values, assume array
+            if [ ${#args[@]} -gt 1 ]; then
+                type="array"
+            else
+                # single value -> try to infer
+                val="${args[0]}"
+                if [ "$val" = "true" ] || [ "$val" = "false" ]; then
+                    type="bool"
+                elif [[ "$val" =~ ^-?[0-9]+$ ]]; then
+                    type="int"
+                elif [[ "$val" =~ ^-?[0-9]+\.[0-9]+$ ]]; then
+                    type="float"
+                else
+                    type="string"
+                fi
+            fi
+            ;;
+    esac
+
+    # Prepare final arguments for defaults
+    if [ "$type" = "delete" ]; then
+        if [ "$DRY_RUN" = true ]; then
+            print_dry_run "(as $ORIGINAL_USER) defaults delete $domain $key"
+            return 0
+        fi
+        if execute_as_user defaults delete "$domain" "$key"; then
+            print_success "Deleted (user) $domain $key"
+            return 0
+        else
+            print_error "Failed to delete (user) $domain $key"
+            return 1
+        fi
+    fi
+
     if [ "$type" = "array" ]; then
-        args+=("-array")
-        # append remaining values
+        args=("-array")
         while [ $# -gt 0 ]; do
             args+=("$1")
             shift
         done
     else
-        # simple scalar types: int/string/float/bool
-        args+=("-$type")
-        args+=("$1")
+        args=("-$type" "$1")
     fi
 
     if [ "$DRY_RUN" = true ]; then

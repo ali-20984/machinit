@@ -202,3 +202,20 @@ function generate_git_key() {
 findPid () { lsof -t -c "$@" ; }
 
 # lsock is defined in .aliases intentionally to keep aliases centralized
+
+# recent: cd to the most recently modified project directory under ~/Projects
+recent() {
+	local p="$HOME/Projects"
+	if [ ! -d "$p" ]; then
+		echo "Projects directory not found: $p"
+		return 1
+	fi
+	# pick most recently modified directory under ~/Projects
+	local dir
+	dir=$(ls -1dt "$p"/*/ 2>/dev/null | head -n1 || true)
+	if [ -z "$dir" ]; then
+		echo "No project directories found in $p"
+		return 1
+	fi
+	cd "$dir" || return 1
+}

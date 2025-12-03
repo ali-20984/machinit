@@ -31,5 +31,7 @@ jobs:
           ./tests/test_ui_flags.sh
           chmod +x tests/test_resume_and_logs.sh || true
           ./tests/test_resume_and_logs.sh
+          chmod +x tests/test_set_user_default_integration.sh || true
+          ./tests/test_set_user_default_integration.sh
           chmod +x tests/test_integrity.sh || true
           ./tests/test_integrity.sh

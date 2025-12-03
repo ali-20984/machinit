@@ -102,6 +102,24 @@ for a in zshconf projects repos qfind lsock cd.. '.....'; do
     fi
 done
 
+# Verify repos alias matches projects
+echo "Test 10: repos alias equals projects"
+if grep -q '^alias projects="cd ~/Projects"' "$ALIASES_FILE" && grep -q '^alias repos="cd ~/Projects"' "$ALIASES_FILE"; then
+    echo "PASS: repos equals projects"
+else
+    echo "FAIL: repos and projects aliases differ"
+    FAILED=1
+fi
+
+# Test 11: recent() function exists in .functions
+echo "Test 11: recent() present"
+if grep -q "recent()" "$FUNCTIONS_FILE"; then
+    echo "PASS: recent function found in .functions"
+else
+    echo "FAIL: recent function missing in .functions"
+    FAILED=1
+fi
+
 # Test 9: install.sh contains a single RESTART_UI definition
 echo "Test 9: install.sh single RESTART_UI check"
 count=$(grep -o "RESTART_UI=false" "$INSTALL" | wc -l | xargs)
