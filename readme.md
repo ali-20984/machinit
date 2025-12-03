@@ -108,11 +108,8 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 
 - **Browsers**: Firefox (with extensions), Google Chrome.
 - **Development**: VS Code (with extensions), Codex, OpenCode, Chrome DevTools MCP, iTerm2, Mark Text, Standard Notes.
-- **Communication**: Beeper, Outlook.
-- **Productivity**: Microsoft Office 365 (Word, Excel, PowerPoint), Adobe Acrobat Reader, Nextcloud, Bitwarden, KeePassXC.
-- **Utilities**: GitHub Desktop, OpenVPN Connect, vcpkg, Glances, pgcli.
 
-### Development Stack
+## 🛠️ What it Does
 
 - **Languages**: Rust, Node.js, Python, C++ (gcc, llvm, cmake, ninja).
 - **Tools**: Git, Yarn, pnpm, Poetry, jq, httpie, ripgrep, fd, fzf.
@@ -164,12 +161,10 @@ export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
 The installation includes a set of useful aliases and functions (installed to `~/.aliases` and `~/.functions`).
 
 #### Aliases
-
+ `Charcoal` — neutral fallback
 | Alias | Command | Description |
 |-------|---------|-------------|
-| `bup` | `brew update && brew upgrade && brew cleanup` | Update Homebrew and cleanup |
 | `shrug` | `echo '¯\_(ツ)_/¯' \| pbcopy` | Copy shrug kaomoji to clipboard |
-| `ll` | robust wrapper (prefers GNU ls from Homebrew/gls, falls back to system ls) | Enhanced list view |
 | `ni` | `npm install` | Short alias for quick npm installs |
 | `reloaddns` | `dscacheutil -flushcache ...` | Flush DNS cache |
 | `dnsreload` | `dscacheutil -flushcache ...` | Flush DNS cache (alias) |
@@ -178,13 +173,29 @@ The installation includes a set of useful aliases and functions (installed to `~
 | `c` | `clear` | Clear terminal |
 | `o` | `open .` | Open current directory in Finder |
 | `zshconf` | `nano ~/.zshrc` | Edit zsh config quickly |
-| `myip` | `curl ifconfig.me` | Show public IP |
-
+| `myip` | function — queries multiple public-IP services and returns the first result (default: `https://checkip.amazonaws.com`). Supports `--service <url>` and `--ipv6`/`-6`. | Show public IP |
 Note: `myip` is now a robust helper that queries multiple public IP services (e.g. icanhazip.com, checkip.amazonaws.com, ifconfig.me, ident.me, ipinfo.io) and returns the first successful result. This makes it more reliable across environments.
+
+Usage examples:
+```bash
+# Default (uses Amazon checkip first):
+myip
+myip --ipv6
+
+# Use a specific service:
+myip --service https://icanhazip.com
+
+# Short form for IPv6:
+myip -6
+```
+
+- aws — https://checkip.amazonaws.com (default)
+- icanhazip — https://icanhazip.com
+- ident — https://ident.me
+- ipinfo — https://ipinfo.io/ip
 | `localip` | `ipconfig getifaddr en0` | Show local IP |
 | `afk` | `pmset displaysleepnow` | Lock screen (display sleep) |
 | `wifi_pass` | `security find-generic-password -wa` | Show WiFi password |
-| `projects` | `cd ~/Projects` | Jump to your Projects folder |
 | `repos` | `cd ~/Projects` | Same as `projects` (recommended location: `~/Projects` which may be symlinked to `~/Documents/Projects`) |
 | `qfind` | `find . -name` | Quick find alias |
 
@@ -214,12 +225,10 @@ Additional useful utilities added to `~/.functions`:
 To check the scripts for syntax errors and best practices:
 
 ```bash
-./dev_scripts/lint.sh
 ```
 
 ### CI/CD
 
-This project uses GitHub Actions for Continuous Integration. The pipeline runs `shellcheck` on all scripts and executes a dry-run test on macOS runners to ensure stability.
 
 #### New UI/flags CI checks
 

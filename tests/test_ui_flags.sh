@@ -149,12 +149,21 @@ else
     FAILED=1
 fi
 
-# Test 13: myip function exists and references multiple fallbacks
-echo "Test 13: myip() present and checks multiple services"
-if grep -q "myip()" "$ALIASES_FILE" && (grep -q "icanhazip" "$ALIASES_FILE" || grep -q "checkip.amazonaws.com" "$ALIASES_FILE"); then
-    echo "PASS: myip function exists and contains public-IP fallbacks"
+# Test 13: myip function exists and references multiple fallbacks (defaults to Amazon checkip)
+echo "Test 13: myip() present and checks multiple services (default prefers Amazon)"
+if grep -q "myip()" "$ALIASES_FILE" && grep -q "checkip.amazonaws.com" "$ALIASES_FILE"; then
+    echo "PASS: myip function exists and prefers checkip.amazonaws.com by default"
 else
-    echo "FAIL: myip function missing or lacks known services (icanhazip/checkip.amazonaws.com)"
+    echo "FAIL: myip function missing or does not prefer checkip.amazonaws.com"
+    FAILED=1
+fi
+
+# Test 13b: myip supports --ipv6/-6 flag
+echo "Test 13b: myip supports --ipv6 or -6"
+if grep -q -- "--ipv6" "$ALIASES_FILE" || grep -q -- "-6" "$ALIASES_FILE"; then
+    echo "PASS: myip supports IPv6 flag"
+else
+    echo "FAIL: myip lacks --ipv6/-6 support"
     FAILED=1
 fi
 
@@ -164,6 +173,24 @@ if grep -q '^alias ni="npm install"' "$ALIASES_FILE"; then
     echo "PASS: ni alias exists"
 else
     echo "FAIL: ni alias missing"
+    FAILED=1
+fi
+
+# Test 15: myip includes named shorthands (aws, icanhazip)
+echo "Test 15: myip supports named services such as 'aws' and 'icanhazip'"
+if grep -q "SERVICE_MAP\[aws\]" "$ALIASES_FILE" && grep -q "SERVICE_MAP\[icanhazip\]" "$ALIASES_FILE" && grep -q "SERVICE_MAP\[ican\]" "$ALIASES_FILE"; then
+    echo "PASS: myip supports named services (aws, icanhazip, ican)"
+else
+    echo "FAIL: myip does not include named service mappings (aws/icanhazip)"
+    FAILED=1
+fi
+
+# Test 16: myip help exists
+echo "Test 16: myip has a help message (--help)"
+if grep -q -- "--help" "$ALIASES_FILE" || grep -q -- "Usage: myip" "$ALIASES_FILE"; then
+    echo "PASS: myip help exists"
+else
+    echo "FAIL: myip help missing"
     FAILED=1
 fi
 

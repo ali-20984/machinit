@@ -56,13 +56,78 @@ alias ping_test="ping 1.1.1.1"
 
 # myip: robust public IPv4 lookup using multiple public endpoints (tries each in order)
 myip() {
-	# Quietly query multiple endpoints and print the first non-empty result
-	local services=("https://icanhazip.com" "https://checkip.amazonaws.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip")
+	# Usage: myip [--service <url>] [--ipv6|-6]
+	# Default: use Amazon checkip (https://checkip.amazonaws.com) first, then fallbacks
+	local service=""
+	local prefer_v6=false
+
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			--service)
+				shift
+				service="$1"
+				shift
+				;;
+			--ipv6|-6)
+				prefer_v6=true
+				shift
+				;;
+			--help|-h)
+				echo "Usage: myip [--service <url|name>] [--ipv6|-6]";
+				echo "Named services: aws, icanhazip, ifconfig, ident, ipinfo";
+				echo "Examples:";
+				echo "  myip                  # default (AWS checkip)";
+				echo "  myip --service aws    # use named aws service (checkip.amazonaws.com)";
+				echo "  myip icanhazip        # shorthand for icanhazip service";
+				echo "  myip --ipv6           # prefer IPv6 lookups";
+				return 0
+				;;
+			*)
+				# allow single positional to be treated as service url/name
+				if [ -z "$service" ]; then
+					service="$1"
+				fi
+				shift
+				;;
+		esac
+	done
+
+	# Support named shorthands and a prioritized list of endpoints. If --service
+	# provided, try that first (the service may be a name like 'aws' or a full URL).
+	declare -A SERVICE_MAP
+	SERVICE_MAP[aws]="https://checkip.amazonaws.com"
+	SERVICE_MAP[icanhazip]="https://icanhazip.com"
+	SERVICE_MAP[ican]="https://icanhazip.com"
+	SERVICE_MAP[ifconfig]="https://ifconfig.me"
+	SERVICE_MAP[ident]="https://ident.me"
+	SERVICE_MAP[ipinfo]="https://ipinfo.io/ip"
+
+	# If the caller provided a named service, translate to URL.
+	if [ -n "$service" ] && [[ "${SERVICE_MAP[$service]+_}" ]]; then
+		service="${SERVICE_MAP[$service]}"
+	fi
+
+	local services=("https://checkip.amazonaws.com" "https://icanhazip.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip")
+	if [ -n "$service" ]; then
+		services=("$service" "https://checkip.amazonaws.com" "https://icanhazip.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip")
+	fi
+
+	local curl_opts="-s --max-time 3"
+	if [ "$prefer_v6" = true ]; then
+		curl_opts="$curl_opts -6"
+	else
+		curl_opts="$curl_opts -4"
+	fi
+
 	for s in "${services[@]}"; do
 		if command -v curl >/dev/null 2>&1; then
-			out=$(curl -s --max-time 3 "$s" || true)
+			out=$(curl $curl_opts "$s" 2>/dev/null || true)
 		elif command -v wget >/dev/null 2>&1; then
-			out=$(wget -qO- --timeout=3 "$s" || true)
+			if [ "$prefer_v6" = true ]; then
+				out=$(wget -qO- --timeout=3 -6 "$s" 2>/dev/null || true)
+			else
+				out=$(wget -qO- --timeout=3 "$s" 2>/dev/null || true)
+			fi
 		else
 			echo "No HTTP client (curl|wget) found to fetch public IP"
 			return 1

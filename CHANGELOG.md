@@ -11,6 +11,9 @@ All notable changes to this project are documented here.
 - `myip()` function: robust public IP lookup that cycles through multiple external services (`icanhazip.com`, `checkip.amazonaws.com`, `ifconfig.me`, `ident.me`, `ipinfo.io/ip`).
 - `ni` alias: short alias for `npm install` added to `assets/.aliases`.
 - `recent()` improvements: `recent` now supports numeric indices, `-n N` syntax, and name pattern matching; searches `~/Projects` and `~/Documents/Projects`.
+ - `myip()` enhanced: support `--service <url>` flag and `--ipv6`/`-6` for IPv6 lookups; default remains Amazon `checkip.amazonaws.com`.
+ - `myip()` added named shorthands: `aws`, `icanhazip`, `ifconfig`, `ident`, `ipinfo` and a `--help` message.
+ - `myip()` added named shorthands: `aws`, `icanhazip` (also `ican`), `ifconfig`, `ident`, `ipinfo` and a `--help` message.
 
 ### Changed
 - README: improved license section detailing how bundled third-party assets are handled and added docs about theming and iTerm2 support.
