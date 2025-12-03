@@ -30,10 +30,15 @@ tell application "Terminal"
         set defaultSettings to default settings
         
         tell defaultSettings
-            set background color to {2000, 2000, 2000}
-            set normal text color to {48000, 47000, 47000}
-            set bold text color to {65535, 28000, 24000}
-            set cursor color to {56000, 20000, 18000}
+            -- Shades of Fire palette (warm dark background + fiery accents)
+            -- background: deep charcoal
+            set background color to {2500, 1500, 800}
+            -- regular text: whiteish (bright, for clear contrast in Shades of Fire)
+            set normal text color to {62000, 62000, 63000}
+            -- bold text: bright orange / flame
+            set bold text color to {65535, 36000, 14000}
+            -- cursor: bright ember
+            set cursor color to {65535, 43000, 20000}
             set transparency to 0.03 -- 97% opacity
             
             -- Set Font (Fantasque Sans Mono)
@@ -53,17 +58,16 @@ tell application "Terminal"
 end tell
 EOD
 
-# Configure shell prompt (PS1) for zsh
-# Hide user and host, orange introduction
+# Configure shell prompt (Zsh) for a 'Shades of Fire' look
 ZSHRC="$HOME/.zshrc"
 if [ -f "$ZSHRC" ]; then
-    if ! grep -q "PROMPT=" "$ZSHRC"; then
-        {
-            echo ""
-            echo "# Custom Prompt: Muted palette"
-            echo "export PROMPT='%F{72}%n%f %F{180}➜%f %F{109}%~%f '"
-        } >>"$ZSHRC"
-        # %n = user, %~ = current dir; colors reference xterm palette indexes
+    # Insert a clearly marked block so it's easy to find/replace later
+    if ! grep -q "# Shades of Fire prompt" "$ZSHRC"; then
+        cat >>"$ZSHRC" <<'EOF'
+# Shades of Fire prompt (user/folder in warm ember tones)
+# Username: bright orange; arrow: red; current dir: warm yellow
+export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
+EOF
     fi
 fi
 

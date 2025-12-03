@@ -1,6 +1,24 @@
 alias bup="brew update && brew upgrade && brew cleanup"
 alias shrug="echo '¯\_(ツ)_/¯' | pbcopy"
-alias ll="/opt/homebrew/opt/coreutils/libexec/gnubin/ls -AhlFo --color --group-directories-first"
+## Robust ll: prefer GNU 'ls' from Homebrew (gnubin path) or 'gls' if present,
+## otherwise fall back to system 'ls'. This avoids hard failures when coreutils
+## is not installed in the Homebrew prefix used during development.
+ll() {
+	# Accept arbitrary args
+	if command -v gls >/dev/null 2>&1; then
+		gls -AhlFo --color --group-directories-first "$@"
+	elif ls --color >/dev/null 2>&1; then
+		# system ls supports --color (likely GNU), use colorized listing
+		ls -AhlFo --color --group-directories-first "$@" 2>/dev/null || ls -AhlFo "$@"
+	elif command -v gls >/dev/null 2>&1; then
+		gls -AhlFo --color --group-directories-first "$@"
+	elif command -v ls >/dev/null 2>&1; then
+		# BSD ls lacks --color; don't pass unknown options
+		ls -AhlFo --group-directories-first "$@" 2>/dev/null || ls -AhlFo "$@"
+	else
+		/bin/ls -AhlF "$@"
+	fi
+}
 alias reloaddns="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
 alias dnsreload="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
 alias timestamp="date +%s"

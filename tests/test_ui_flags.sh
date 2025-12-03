@@ -130,6 +130,23 @@ else
     FAILED=1
 fi
 
+# Test 12: ll implementation is robust (no hard-coded homebrew gnubin path)
+echo "Test 12: ll is defined and does not hard-code a gnubin path"
+ALIASES_FILE="$PROJECT_ROOT/assets/.aliases"
+if grep -q "ll()" "$ALIASES_FILE" || grep -q "alias ll=" "$ALIASES_FILE"; then
+    echo "PASS: ll is defined in .aliases"
+else
+    echo "FAIL: ll is not defined in .aliases"
+    FAILED=1
+fi
+
+if grep -q "/opt/homebrew/opt/coreutils/libexec/gnubin/ls" "$ALIASES_FILE"; then
+    echo "FAIL: ll uses a hard-coded Homebrew gnubin path"
+    FAILED=1
+else
+    echo "PASS: ll does not hard-code Homebrew gnubin path"
+fi
+
 if [ $FAILED -eq 0 ]; then
     echo "All UI/flags CI tests passed."
     exit 0

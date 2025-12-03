@@ -5,6 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch: # allow manual runs from the Actions UI
+    inputs: {}
 
 jobs:
   lint:
@@ -31,7 +33,34 @@ jobs:
           ./tests/test_ui_flags.sh
           chmod +x tests/test_resume_and_logs.sh || true
           ./tests/test_resume_and_logs.sh
+          chmod +x tests/test_terminal_theme.sh || true
+          ./tests/test_terminal_theme.sh
+          chmod +x tests/test_system_accent.sh || true
+          ./tests/test_system_accent.sh
           chmod +x tests/test_set_user_default_integration.sh || true
           ./tests/test_set_user_default_integration.sh
           chmod +x tests/test_integrity.sh || true
+          ./tests/test_integrity.sh
+
+  # Full test-suite runner on macOS. This runs all tests in sequence and is
+  # intended as an additional authoritative check that CI on a macOS runner
+  # verifies the repository tests (including any integration tests that are
+  # safe to run on a GitHub macOS host).
+  test-suite:
+    runs-on: macos-latest
+    needs: [lint, test-dry-run]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Make tests executable
+        run: |
+          chmod +x tests/*.sh || true
+
+      - name: Run full test suite
+        run: |
+          ./tests/test_ui_flags.sh
+          ./tests/test_resume_and_logs.sh
+          ./tests/test_set_user_default_integration.sh
+          ./tests/test_terminal_theme.sh
+          ./tests/test_system_accent.sh
           ./tests/test_integrity.sh

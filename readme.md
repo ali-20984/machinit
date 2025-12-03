@@ -136,6 +136,19 @@ There are a couple of utilities and workflow improvements to make per-user UI ch
 
 These two changes are designed to avoid race conditions and permission problems when the installer is invoked with `sudo`.
 
+### Terminal Theme: Shades of Fire
+
+I added a new "Shades of Fire" Terminal profile which applies a warm, fiery palette to Terminal.app (dark charcoal background with ember/orange/yellow text accents). The installer will also add a `Shades of Fire` prompt block to `~/.zshrc` (user name, arrow, and current folder styled in fiery 256-color codes) when `scripts/046_configure_terminal.sh` runs.
+
+The prompt block looks like:
+
+```text
+# Shades of Fire prompt (user/folder in warm ember tones)
+# Username: bright orange; arrow: red; current dir: warm yellow
+export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
+```
+
+
 ### Performance Optimizations
 
 - **Spotlight**: Disables indexing for better performance.
@@ -154,7 +167,7 @@ The installation includes a set of useful aliases and functions (installed to `~
 |-------|---------|-------------|
 | `bup` | `brew update && brew upgrade && brew cleanup` | Update Homebrew and cleanup |
 | `shrug` | `echo '¯\_(ツ)_/¯' \| pbcopy` | Copy shrug kaomoji to clipboard |
-| `ll` | `ls -AhlFo ...` | Enhanced list view |
+| `ll` | robust wrapper (prefers GNU ls from Homebrew/gls, falls back to system ls) | Enhanced list view |
 | `reloaddns` | `dscacheutil -flushcache ...` | Flush DNS cache |
 | `dnsreload` | `dscacheutil -flushcache ...` | Flush DNS cache (alias) |
 | `jsrefresh` | `rm -rf node_modules ...` | Reinstall npm dependencies |
