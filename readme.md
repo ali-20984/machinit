@@ -297,12 +297,4 @@ This script modifies system settings, installs software, and changes configurati
 
 ## 📄 License
 
-### License & included assets
-
-The code in this repository (scripts, helper utilities, tests, and documentation) is released under the **MIT License** — see `license.md` for the full text.
-
-Third-party assets bundled or referenced by the installer (for example fonts like *Fantasque Sans Mono*, Terminal/iTerm2 color presets, or other vendor packages) may be distributed under different licenses. Those assets will either include a license in their upstream distribution, or they are explicitly noted in this README where helpful. When the installer installs third-party software, those packages retain their original licenses — check the vendor/package documentation for exact licensing terms.
-
-Commands and helper snippets included as part of the dotfiles (for example `~/.aliases` and `~/.functions`) are part of this repository and are covered by this MIT license unless explicitly stated otherwise. Color themes and presets included in `assets/themes/` are bundled for convenience and use; they are also distributed under the MIT license unless the theme file explicitly declares a different license.
-
-If you plan to redistribute parts of this repository (or use the assets in a commercial product), please verify the upstream licenses of any third-party package or media (fonts, icons, images) the installer pulls in. If you'd like me to add license attributions for particular bundled assets, tell me which ones and I'll add explicit attributions to the README.
+Released under the MIT License — see `license.md` for details.
