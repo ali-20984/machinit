@@ -75,6 +75,18 @@ else
     FAILED=1
 fi
 
+# Test 20: install.sh --reset-finder-view --dry-run should run finder reset only
+echo "Test 20: install.sh --reset-finder-view --dry-run runs Finder reset and exits"
+OUT5=$("$INSTALL" --reset-finder-view --dry-run 2>&1 || true)
+if echo "$OUT5" | grep -q "Resetting Finder view only" && echo "$OUT5" | grep -q "Removing per-folder \.DS_Store files"; then
+    echo "PASS: install.sh --reset-finder-view attempted Finder reset (dry-run)"
+else
+    echo "FAIL: install.sh --reset-finder-view behavior not detected"
+    echo "--- output ---"
+    echo "$OUT5"
+    FAILED=1
+fi
+
 # Test 6: set_user_default supports array values (DRY_RUN)
 echo "Test 6: set_user_default handles array type in DRY_RUN"
 OUT3=$(DRY_RUN=true bash -c 'source "$PWD/scripts/utils.sh"; set_user_default com.example.test Test array one two three' 2>&1 || true)

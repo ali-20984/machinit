@@ -334,6 +334,23 @@ if [ "$UPDATE_SHELL" = true ]; then
     fi
 fi
 
+# If user requested only Finder reset, run just that script then exit.
+if [ "$RESET_FINDER_VIEW" = true ]; then
+    echo "Resetting Finder view only..."
+    if [ -x "$SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" ]; then
+        if "$SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" --reset-view; then
+            echo "Finder reset complete. Exiting."
+            exit 0
+        else
+            echo "Finder reset failed." | tee -a "$LOG_FILE"
+            exit 1
+        fi
+    else
+        echo "Finder script not found or not executable: $SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" | tee -a "$LOG_FILE"
+        exit 1
+    fi
+fi
+
 # ==============================================================================
 # System Configuration (Computer Name)
 # ==============================================================================
