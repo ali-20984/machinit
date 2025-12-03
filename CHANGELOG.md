@@ -14,6 +14,7 @@ All notable changes to this project are documented here.
  - `myip()` enhanced: support `--service <url>` flag and `--ipv6`/`-6` for IPv6 lookups; default remains Amazon `checkip.amazonaws.com`.
  - `myip()` added named shorthands: `aws`, `icanhazip`, `ifconfig`, `ident`, `ipinfo` and a `--help` message.
  - `myip()` added named shorthands: `aws`, `icanhazip` (also `ican`), `ifconfig`, `ident`, `ipinfo` and a `--help` message.
+ - Global macOS accent color changed to a charcoal/graphite style by default (scripts/051_configure_system_ui_ux.sh) — highlight color set to a charcoal RGB value.
 
 ### Changed
 - README: improved license section detailing how bundled third-party assets are handled and added docs about theming and iTerm2 support.

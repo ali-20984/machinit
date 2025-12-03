@@ -94,9 +94,11 @@ set_default NSGlobalDomain AppleLocale string "en_US@currency=EUR"
 # color. This is a best-effort preference change to nudge the system toward
 # a warm "fire" accent. If you prefer graphite/charcoal, replace with
 # AppleAccentColor int -1 or choose the desired index.
-echo "Setting system accent and highlight colors (Shades of Fire)..."
-set_user_default NSGlobalDomain AppleAccentColor int 6 || true
-set_user_default NSGlobalDomain AppleHighlightColor string "1.000000 0.400000 0.150000" || true
+echo "Setting system accent and highlight colors (charcoalish accent by default)..."
+# Use Graphite/charcoal-like accent (-1 signals Graphite in some macOS versions)
+set_user_default NSGlobalDomain AppleAccentColor int -1 || true
+# Use a charcoal-ish highlight (normalized RGB values 0.0-1.0)
+set_user_default NSGlobalDomain AppleHighlightColor string "0.120000 0.120000 0.120000" || true
 
 # Set the time zone
 echo "Setting time zone to automatic..."

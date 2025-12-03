@@ -41,6 +41,22 @@ You can customize the installation process by editing `config.toml`. This file a
 - Applications to install (Homebrew Formulae and Casks)
 - macOS Defaults (Dock settings, UI tweaks)
 
+## 📚 Index
+
+- [🚀 Getting Started](#getting-started)
+- [🛠️ What it Does](#what-it-does)
+- [🖥️ System & Environment](#system-environment)
+- [📦 Applications](#applications)
+- [🧰 Development Stack](#development-stack)
+- [🎨 Customization & UI](#customization-ui)
+- [⚙️ Advanced UI helpers](#advanced-ui-helpers)
+- [🔥 Terminal Theme](#terminal-theme)
+- [⚡ Performance Optimizations](#performance-optimizations)
+- [💡 Included Shell Enhancements](#included-shell-enhancements)
+- [🧪 Development (Linting & CI)](#development)
+- [📄 License](#license)
+
+
 ## 🛠️ What it Does
 
 The script executes a series of ordered scripts located in the `scripts/` directory.
@@ -96,7 +112,7 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 | `099_set_wallpaper.sh` | Set Wallpaper |
 | `999_cleanup.sh` | Cleanup |
 
-### System & Environment
+### 🖥️ System & Environment
 
 - **Homebrew**: Installs Homebrew and updates packages.
 - **Shell**: Installs PowerShell, updates terminal tools (coreutils), and configures `nvm` (Node.js) and `pyenv` (Python).
@@ -104,26 +120,30 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Telemetry**: Disables macOS telemetry, crash reporting, and personalized ads.
 - **Privacy**: Disables Siri, hides iCloud Drive, enables Firewall and Stealth Mode.
 
-### Applications
+### 📦 Applications
 
 - **Browsers**: Firefox (with extensions), Google Chrome.
 - **Development**: VS Code (with extensions), Codex, OpenCode, Chrome DevTools MCP, iTerm2, Mark Text, Standard Notes.
+- **Communication**: Beeper, Outlook.
+- **Productivity**: Microsoft Office 365 (Word, Excel, PowerPoint), Adobe Acrobat Reader, Nextcloud, Bitwarden, KeePassXC.
+- **Utilities**: GitHub Desktop, OpenVPN Connect, vcpkg, Glances, pgcli.
 
-## 🛠️ What it Does
-
+### 🧰 Development Stack
+ 
 - **Languages**: Rust, Node.js, Python, C++ (gcc, llvm, cmake, ninja).
 - **Tools**: Git, Yarn, pnpm, Poetry, jq, httpie, ripgrep, fd, fzf.
 
-### Customization & UI
+### 🎨 Customization & UI
 
 - **Wallpaper**: Sets a custom wallpaper centered on a black background.
 - **Dock**: Configures Dock size, removes default apps, and pins selected apps.
-- **Terminal**: Sets a custom "Matrix Red" theme for Terminal.app.
+- **Terminal**: Sets a custom "Shades of Fire" theme for Terminal.app.
+- **System accent**: The global macOS accent color is set to a neutral charcoal/graphite tone by default to keep the UI unobtrusive.
 - **Login Screen**: Configures a "Console-style" login screen.
 - **Safari**: Clears favorites, history, and suppresses "launched" notifications.
 - **Dotfiles**: Installs `.aliases`, `.functions`, `.nanorc`, and `.gitignore_global`.
 
-### Advanced UI helpers
+### ⚙️ Advanced UI helpers
 
 There are a couple of utilities and workflow improvements to make per-user UI changes safer and easier:
 
@@ -133,7 +153,7 @@ There are a couple of utilities and workflow improvements to make per-user UI ch
 
 These two changes are designed to avoid race conditions and permission problems when the installer is invoked with `sudo`.
 
-### Terminal Theme: Shades of Fire (configurable)
+### 🔥 Terminal Theme: Shades of Fire (configurable)
 
 Terminal theming is now configurable via `config.toml` under the `[appearance]` section. The default value is `shades_of_fire`, which applies the warm, ember palette to Terminal.app and adds a matching prompt block to `~/.zshrc`.
 
@@ -148,7 +168,7 @@ export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
 ```
 
 
-### Performance Optimizations
+### ⚡ Performance Optimizations
 
 - **Spotlight**: Disables indexing for better performance.
 - **Animations**: Reduces motion, transparency, and disables window animations.
@@ -156,15 +176,17 @@ export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
 - **HiDPI**: Enables HiDPI display modes.
 - **Power Management**: Enables Low Power Mode (Always) and disables sleep while charging.
 
-### Included Shell Enhancements
+### 💡 Included Shell Enhancements
 
 The installation includes a set of useful aliases and functions (installed to `~/.aliases` and `~/.functions`).
 
 #### Aliases
- `Charcoal` — neutral fallback
+
 | Alias | Command | Description |
 |-------|---------|-------------|
+| `bup` | `brew update && brew upgrade && brew cleanup` | Update Homebrew and cleanup |
 | `shrug` | `echo '¯\_(ツ)_/¯' \| pbcopy` | Copy shrug kaomoji to clipboard |
+| `ll` | robust wrapper (prefers GNU ls from Homebrew/gls, falls back to system ls) | Enhanced list view |
 | `ni` | `npm install` | Short alias for quick npm installs |
 | `reloaddns` | `dscacheutil -flushcache ...` | Flush DNS cache |
 | `dnsreload` | `dscacheutil -flushcache ...` | Flush DNS cache (alias) |
@@ -174,12 +196,16 @@ The installation includes a set of useful aliases and functions (installed to `~
 | `o` | `open .` | Open current directory in Finder |
 | `zshconf` | `nano ~/.zshrc` | Edit zsh config quickly |
 | `myip` | function — queries multiple public-IP services and returns the first result (default: `https://checkip.amazonaws.com`). Supports `--service <url>` and `--ipv6`/`-6`. | Show public IP |
+
 Note: `myip` is now a robust helper that queries multiple public IP services (e.g. icanhazip.com, checkip.amazonaws.com, ifconfig.me, ident.me, ipinfo.io) and returns the first successful result. This makes it more reliable across environments.
 
 Usage examples:
+
 ```bash
 # Default (uses Amazon checkip first):
 myip
+
+# Force IPv6 lookup (tries same service list over IPv6):
 myip --ipv6
 
 # Use a specific service:
@@ -188,14 +214,10 @@ myip --service https://icanhazip.com
 # Short form for IPv6:
 myip -6
 ```
-
-- aws — https://checkip.amazonaws.com (default)
-- icanhazip — https://icanhazip.com
-- ident — https://ident.me
-- ipinfo — https://ipinfo.io/ip
 | `localip` | `ipconfig getifaddr en0` | Show local IP |
 | `afk` | `pmset displaysleepnow` | Lock screen (display sleep) |
 | `wifi_pass` | `security find-generic-password -wa` | Show WiFi password |
+| `projects` | `cd ~/Projects` | Jump to your Projects folder |
 | `repos` | `cd ~/Projects` | Same as `projects` (recommended location: `~/Projects` which may be symlinked to `~/Documents/Projects`) |
 | `qfind` | `find . -name` | Quick find alias |
 
@@ -225,10 +247,12 @@ Additional useful utilities added to `~/.functions`:
 To check the scripts for syntax errors and best practices:
 
 ```bash
+./dev_scripts/lint.sh
 ```
 
 ### CI/CD
 
+This project uses GitHub Actions for Continuous Integration. The pipeline runs `shellcheck` on all scripts and executes a dry-run test on macOS runners to ensure stability.
 
 #### New UI/flags CI checks
 
