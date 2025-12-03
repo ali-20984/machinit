@@ -14,4 +14,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: No-op
-        run: echo "CI placeholder: lint/format/tests are run in separate workflows"
+        run: |
+          echo "CI placeholder: lint/format/tests are run in separate workflows"
