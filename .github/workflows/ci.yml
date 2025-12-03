@@ -20,6 +20,34 @@ jobs:
       - name: Run ShellCheck
         run: |
           find . -name "*.sh" -print0 | xargs -0 shellcheck -e SC1091,SC2155
+      
+      - name: Setup Go (for shfmt)
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install shfmt
+        run: |
+          export GOPATH=$(go env GOPATH)
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          echo "::add-path::${GOPATH}/bin"
+
+      - name: Install Python formatting tools
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install black
+
+      - name: Run format checks (shfmt + black)
+        run: |
+          # List files that need shfmt formatting (non-empty output indicates failure)
+          UNFORMATTED=$(find . -name "*.sh" -not -path "*/node_modules/*" -print0 | xargs -0 shfmt -l || true)
+          if [ -n "$UNFORMATTED" ]; then
+            echo "The following shell files need formatting:";
+            echo "$UNFORMATTED";
+            exit 2;
+          fi
+          # Black check for Python files
+          python3 -m black --check . || exit 3
 
   test-dry-run:
     runs-on: macos-latest

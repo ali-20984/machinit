@@ -14,19 +14,19 @@
 set -e
 
 # Color codes for terminal output (cohesive muted palette using 256-color mode)
-GREEN='\033[38;5;114m'    # Soft sage green for success
-YELLOW='\033[38;5;222m'   # Warm honey for warnings/skips
-RED='\033[38;5;174m'      # Muted coral for errors
-BLUE='\033[38;5;111m'     # Soft sky blue for script names
-CYAN='\033[38;5;116m'     # Soft teal for progress arrows
-GRAY='\033[38;5;245m'     # Neutral gray for secondary text
-WHITE='\033[38;5;255m'    # Bright white for emphasis
-PURPLE='\033[38;5;183m'   # Lavender for special highlights
-ORANGE='\033[38;5;216m'   # Soft peach for notices
-PINK='\033[38;5;218m'     # Soft pink for decorative elements
-DIM='\033[38;5;240m'      # Darker gray for timestamps
-BOLD='\033[1m'            # Bold text
-NC='\033[0m'              # Reset
+GREEN='\033[38;5;114m'  # Soft sage green for success
+YELLOW='\033[38;5;222m' # Warm honey for warnings/skips
+RED='\033[38;5;174m'    # Muted coral for errors
+BLUE='\033[38;5;111m'   # Soft sky blue for script names
+CYAN='\033[38;5;116m'   # Soft teal for progress arrows
+GRAY='\033[38;5;245m'   # Neutral gray for secondary text
+WHITE='\033[38;5;255m'  # Bright white for emphasis
+PURPLE='\033[38;5;183m' # Lavender for special highlights
+ORANGE='\033[38;5;216m' # Soft peach for notices
+PINK='\033[38;5;218m'   # Soft pink for decorative elements
+DIM='\033[38;5;240m'    # Darker gray for timestamps
+BOLD='\033[1m'          # Bold text
+NC='\033[0m'            # Reset
 
 # Detect original user (works whether run with sudo or not)
 if [ -n "$SUDO_USER" ]; then
@@ -35,6 +35,8 @@ else
     ORIGINAL_USER="$USER"
 fi
 export ORIGINAL_USER
+## shellcheck disable=SC2034
+# Mark ORIGINAL_HOME as intentionally present for scripts that run as the original user
 export ORIGINAL_HOME=$(eval echo "~$ORIGINAL_USER")
 
 # ==============================================================================
@@ -51,14 +53,14 @@ CONFIG_FILE=""
 PARSER_SCRIPT="./scripts/lib/config_parser.py"
 
 # Flags
-DRY_RUN=false # If true, commands are printed but not executed
-UPDATE=false  # If true, the script updates itself via git and exits
-NO_LOG=false  # If true, logging to file is disabled
-VERBOSE=false # If true, enables shell debug mode (set -x)
-CLEAR_LOGS=false # If true, delete logs directory and exit
+DRY_RUN=false        # If true, commands are printed but not executed
+UPDATE=false         # If true, the script updates itself via git and exits
+NO_LOG=false         # If true, logging to file is disabled
+VERBOSE=false        # If true, enables shell debug mode (set -x)
+CLEAR_LOGS=false     # If true, delete logs directory and exit
 RESUME_FAILURE=false # If true, resume from last failure recorded in logs/last_failed
-EXIT_NOW=false # If true, exit immediately (no-op)
-RESTART_UI=false # If true, run final UI restart script at the end (non-interactive)
+EXIT_NOW=false       # If true, exit immediately (no-op)
+RESTART_UI=false     # If true, run final UI restart script at the end (non-interactive)
 
 # State variables
 START_FROM=""        # Script name to resume execution from
@@ -96,7 +98,7 @@ function show_help() {
 function start_sudo_keepalive() {
     echo "Requesting administrator privileges (you'll only be asked once)..."
     sudo -v
-    
+
     # Start background loop to keep sudo alive
     # The loop runs sudo -v to refresh the timestamp (not sudo -n which just checks)
     while true; do
@@ -243,7 +245,7 @@ fi
 if [ "$CLEAR_LOGS" = true ]; then
     echo "Clearing logs in $LOG_DIR..."
     rm -rf "$LOG_DIR" || true
-    echo "Logs cleared. Exiting." 
+    echo "Logs cleared. Exiting."
     exit 0
 fi
 
@@ -369,7 +371,7 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     [ -e "$script" ] || continue
 
     script_name=$(basename "$script")
-    
+
     # Skip utility/library files that aren't meant to be executed directly
     if [[ "$script_name" == "utils.sh" ]]; then
         continue
@@ -441,11 +443,11 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     if "$script" 2>&1 | tee -a "$LOG_FILE"; then
         printf "%b\n" "${GREEN}✓${NC} ${WHITE}$script_name${NC} ${GREEN}completed${NC}" | tee -a "$LOG_FILE"
         ((++SUCCESS_COUNT))
-            set +o pipefail
+        set +o pipefail
     else
         # Record the first failed script so the user can resume later
         if [ ! -f "$LOG_DIR/last_failed" ]; then
-            echo "$script_name" > "$LOG_DIR/last_failed"
+            echo "$script_name" >"$LOG_DIR/last_failed"
             echo "Wrote last failed script: $script_name" | tee -a "$LOG_FILE"
         fi
         printf "%b\n" "${RED}✗${NC} ${WHITE}$script_name${NC} ${RED}failed${NC}" | tee -a "$LOG_FILE"

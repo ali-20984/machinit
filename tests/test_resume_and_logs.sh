@@ -10,6 +10,7 @@ chmod +x "$INSTALL" || true
 echo "Test A: clear logs removes logs directory"
 mkdir -p "$LOG_DIR"
 touch "$LOG_DIR/dummy.log"
+# shellcheck disable=SC2034
 OUT=$("$INSTALL" --clear-logs 2>&1 || true)
 if [ -d "$LOG_DIR" ]; then
     echo "FAIL: logs directory still exists after --clear-logs"
@@ -20,13 +21,13 @@ fi
 
 echo "Test B: resume-failure reads last_failed and sets START_FROM"
 mkdir -p "$LOG_DIR"
-echo "052_configure_finder_and_sidebar.sh" > "$LOG_DIR/last_failed"
+echo "052_configure_finder_and_sidebar.sh" >"$LOG_DIR/last_failed"
 # Determine the index of the resume script so we run only that script and avoid interactive restarts
 all_scripts=("$PROJECT_ROOT"/scripts/*.sh)
 target="${PROJECT_ROOT}/scripts/052_configure_finder_and_sidebar.sh"
 index=0
 for s in "${all_scripts[@]}"; do
-    index=$((index+1))
+    index=$((index + 1))
     if [ "$s" = "$target" ]; then
         script_index=$index
         break
@@ -45,6 +46,7 @@ fi
 
 # Test C: install writes logs into logs/ when not NO_LOG
 rm -rf "$LOG_DIR" || true
+# shellcheck disable=SC2034
 OUT3=$("$INSTALL" --start-from 001_env_setup.sh --run-only 1 --dry-run 2>&1 || true)
 if ls "$PROJECT_ROOT"/logs/* >/dev/null 2>&1; then
     echo "PASS: install.sh wrote logs into logs/"

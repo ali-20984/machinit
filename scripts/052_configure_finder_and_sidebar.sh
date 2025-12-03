@@ -126,7 +126,9 @@ add_sidebar_item() {
             fileurl="file://$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$target")"
         else
             # Fallback: naive space-escape
-            fileurl="file://$(echo "$target" | sed 's/ /%20/g')"
+            # URL-encode spaces in path using parameter expansion (faster, avoids sed)
+            enc_target="${target// /%20}"
+            fileurl="file://$enc_target"
         fi
 
         # Try with file:// URL first, then raw path

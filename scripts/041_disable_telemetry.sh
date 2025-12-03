@@ -11,28 +11,28 @@ print_info "Disabling macOS telemetry and analytics..."
 CURRENT_UID=$(id -u)
 
 function disable_launch_item() {
-	local scope="$1"
-	local plist="$2"
-	local description="$3"
-	local target
+    local scope="$1"
+    local plist="$2"
+    local description="$3"
+    local target
 
-	if [ "$scope" = "gui" ]; then
-		target="gui/$CURRENT_UID"
-	else
-		target="system"
-	fi
+    if [ "$scope" = "gui" ]; then
+        target="gui/$CURRENT_UID"
+    else
+        target="system"
+    fi
 
-	if execute_sudo launchctl bootout "$target" "$plist"; then
-		print_success "$description disabled via launchctl bootout."
-		return 0
-	fi
+    if execute_sudo launchctl bootout "$target" "$plist"; then
+        print_success "$description disabled via launchctl bootout."
+        return 0
+    fi
 
-	print_info "bootout failed for $description. Trying legacy unload..."
-	if execute_sudo launchctl unload -w "$plist"; then
-		print_success "$description disabled via legacy unload."
-	else
-		print_error "Failed to disable $description."
-	fi
+    print_info "bootout failed for $description. Trying legacy unload..."
+    if execute_sudo launchctl unload -w "$plist"; then
+        print_success "$description disabled via legacy unload."
+    else
+        print_error "Failed to disable $description."
+    fi
 }
 
 # Disable Crash Reporter dialogs and crash submissions

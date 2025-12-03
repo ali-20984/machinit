@@ -1,20 +1,19 @@
 #!/bin/bash
 
 # Colors (cohesive muted palette using 256-color mode)
-GREEN='\033[38;5;114m'    # Soft sage green for success
-RED='\033[38;5;174m'      # Muted coral for errors
-YELLOW='\033[38;5;222m'   # Warm honey for warnings
-CYAN='\033[38;5;116m'     # Soft teal for info arrows
-GRAY='\033[38;5;245m'     # Neutral gray for secondary text
-WHITE='\033[38;5;255m'    # Bright white for emphasis
-BLUE='\033[38;5;111m'     # Soft sky blue for commands/actions
-PURPLE='\033[38;5;183m'   # Lavender for special highlights
-ORANGE='\033[38;5;216m'   # Soft peach for notices
-PINK='\033[38;5;218m'     # Soft pink for decorative elements
-DIM='\033[38;5;240m'      # Darker gray for timestamps/minor info
-BOLD='\033[1m'            # Bold text
-NC='\033[0m'              # Reset
-
+GREEN='\033[38;5;114m'  # Soft sage green for success
+RED='\033[38;5;174m'    # Muted coral for errors
+YELLOW='\033[38;5;222m' # Warm honey for warnings
+CYAN='\033[38;5;116m'   # Soft teal for info arrows
+GRAY='\033[38;5;245m'   # Neutral gray for secondary text
+WHITE='\033[38;5;255m'  # Bright white for emphasis
+BLUE='\033[38;5;111m'   # Soft sky blue for commands/actions
+PURPLE='\033[38;5;183m' # Lavender for special highlights
+ORANGE='\033[38;5;216m' # Soft peach for notices
+PINK='\033[38;5;218m'   # Soft pink for decorative elements
+DIM='\033[38;5;240m'    # Darker gray for timestamps/minor info
+BOLD='\033[1m'          # Bold text
+NC='\033[0m'            # Reset
 
 # Detect original user for commands that shouldn't run as root
 if [ -z "$ORIGINAL_USER" ]; then
@@ -24,6 +23,9 @@ if [ -z "$ORIGINAL_USER" ]; then
         ORIGINAL_USER="$USER"
     fi
 fi
+# Some tools (and tests) reference ORIGINAL_HOME; mark as intentionally used to
+# satisfy ShellCheck about unused variables in test contexts.
+# shellcheck disable=SC2034
 ORIGINAL_HOME=$(eval echo "~$ORIGINAL_USER")
 
 # Configuration
@@ -220,19 +222,22 @@ function set_user_default() {
     # Usage: set_user_default DOMAIN KEY TYPE [VALUE...]
     # TYPE may be one of: string, int, float, bool, array, delete
     # You may also omit TYPE and pass a single VALUE; the function will attempt to infer the type.
-    local domain="$1"; local key="$2"; shift 2
+    local domain="$1"
+    local key="$2"
+    shift 2
 
     if [ $# -lt 1 ]; then
         print_error "set_user_default: missing type/value for $domain $key"
         return 1
     fi
 
-    local type="$1"; local args=(); shift 1
+    local type="$1"
+    local args=()
+    shift 1
 
     # If the provided type isn't a recognized type, infer the type instead
     case "$type" in
-        string|int|float|bool|array|delete)
-            ;;
+        string | int | float | bool | array | delete) ;;
         *)
             # Not a recognised type -> treat original value(s) as input and infer
             # Put the first value back to the args list

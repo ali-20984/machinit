@@ -14,7 +14,13 @@ echo "Test 1: DRY_RUN=true execute()"
 export DRY_RUN=true
 OUTPUT=$(execute echo hello)
 # execute prints to stdout with color codes. Strip ANSI codes and check for content.
-STRIPPED=$(echo "$OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+# Remove ANSI color codes using parameter expansion if supported, otherwise fall back to sed
+if [[ "$OUTPUT" == *$'\x1b['* ]]; then
+    # shellcheck disable=SC2001
+    STRIPPED=$(echo "$OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+else
+    STRIPPED="$OUTPUT"
+fi
 if [[ "$STRIPPED" == *"[DRY RUN]"* ]] && [[ "$STRIPPED" == *"echo hello"* ]]; then
     echo "PASS: DRY_RUN execute"
 else

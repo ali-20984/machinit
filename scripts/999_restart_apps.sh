@@ -44,7 +44,8 @@ apps=(
 
 echo "About to restart the following UI processes: ${apps[*]}"
 if [ "$YES" = false ]; then
-    read -p "Proceed? [y/N] " answer
+    # Use -r to avoid backslash interpretation (ShellCheck SC2162)
+    read -r -p "Proceed? [y/N] " answer
     if [[ ! "$answer" =~ ^([yY][eE][sS]|[yY])$ ]]; then
         echo "Aborting — no applications were restarted."
         exit 0

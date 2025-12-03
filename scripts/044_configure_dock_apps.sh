@@ -12,8 +12,8 @@ echo "Ensuring dockutil is installed..."
 install_brew_package dockutil
 
 if ! command -v dockutil &>/dev/null; then
-	print_error "dockutil not found even after attempted installation. Skipping Dock configuration."
-	exit 0
+    print_error "dockutil not found even after attempted installation. Skipping Dock configuration."
+    exit 0
 fi
 
 # Function: find_app
@@ -61,10 +61,10 @@ declare -a DOCK_APPS=(
 )
 
 for entry in "${DOCK_APPS[@]}"; do
-    IFS='|' read -r pattern label <<< "$entry"
-    
+    IFS='|' read -r pattern label <<<"$entry"
+
     app_path=$(find_app "$pattern")
-    
+
     if [ -z "$app_path" ] || [ ! -e "$app_path" ]; then
         print_skip "Skipping $label (not found)"
         continue
