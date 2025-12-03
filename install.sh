@@ -61,6 +61,7 @@ CLEAR_LOGS=false     # If true, delete logs directory and exit
 RESUME_FAILURE=false # If true, resume from last failure recorded in logs/last_failed
 EXIT_NOW=false       # If true, exit immediately (no-op)
 RESTART_UI=false     # If true, run final UI restart script at the end (non-interactive)
+UPDATE_SHELL=false   # If true, update only aliases and functions and exit
 
 # State variables
 START_FROM=""        # Script name to resume execution from
@@ -87,6 +88,7 @@ function show_help() {
     echo "  --start-from <script>   Resume execution from a specific script."
     echo "  --run-only <N>          Run only the script with 1-based index N from the scripts list."
     echo "  --restart-ui             Run the final UI restart (equivalent to scripts/999_restart_apps.sh --yes) when the run completes."
+    echo "  --update-shell           Update only \`.aliases\` and \`.functions\` (link into home) and exit."
     echo "  --computer-name <name>  Set computer name non-interactively."
     echo "  --help, -h              Show this help message."
     echo ""
@@ -206,6 +208,10 @@ while [[ $# -gt 0 ]]; do
             RESTART_UI=true
             shift
             ;;
+        --update-shell)
+            UPDATE_SHELL=true
+            shift
+            ;;
         --run-only)
             RUN_ONLY_INDEX="$2"
             shift 2
@@ -293,6 +299,24 @@ printf "%b\n" "${PINK}━━━━━━━━━━━━━━━━━━━�
 if [ "$DRY_RUN" = false ]; then
     start_sudo_keepalive
     refresh_sudo_credentials
+fi
+
+# If user asked to update only aliases/functions, run the dotfiles installer in
+# restricted mode (exit after completion) so we don't run the entire installer.
+if [ "$UPDATE_SHELL" = true ]; then
+    echo "Updating aliases and functions only..."
+    if [ -x "$SCRIPTS_DIR/011_install_dotfiles.sh" ]; then
+        if "$SCRIPTS_DIR/011_install_dotfiles.sh" --only-shell; then
+            echo "Aliases and functions updated successfully. Exiting."
+            exit 0
+        else
+            echo "Failed to update aliases/functions." | tee -a "$LOG_FILE"
+            exit 1
+        fi
+    else
+        echo "Dotfiles installer script not found or not executable: $SCRIPTS_DIR/011_install_dotfiles.sh" | tee -a "$LOG_FILE"
+        exit 1
+    fi
 fi
 
 # ==============================================================================

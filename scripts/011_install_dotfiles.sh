@@ -6,6 +6,21 @@
 #
 source "$(dirname "$0")/utils.sh"
 
+# Allow restricted mode: only install aliases and functions then quit
+ONLY_SHELL=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --only-shell)
+            ONLY_SHELL=true
+            shift
+            ;;
+        *)
+            # Ignore unknown flags to keep behavior stable when called from install.sh
+            shift
+            ;;
+    esac
+done
+
 print_header "Dotfiles"
 
 # Get the absolute path to the assets directory
@@ -90,6 +105,11 @@ if [ -f "$ALIASES_FILE" ]; then
     fi
 else
     print_error "Error: .aliases file not found at $ALIASES_FILE"
+fi
+
+if [ "$ONLY_SHELL" = true ]; then
+    print_info "--only-shell specified: finished updating aliases and functions."
+    exit 0
 fi
 
 # Install .gitignore_global

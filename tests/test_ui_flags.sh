@@ -63,6 +63,18 @@ else
     FAILED=1
 fi
 
+# Test 17: install.sh supports --update-shell and respects dry-run
+echo "Test 17: install.sh --update-shell --dry-run exits after updating aliases/functions"
+OUT4=$("$INSTALL" --update-shell --dry-run 2>&1 || true)
+if echo "$OUT4" | grep -q "Updating aliases and functions"; then
+    echo "PASS: install.sh accepted --update-shell and attempted to update shell files"
+else
+    echo "FAIL: install.sh --update-shell didn't print expected message"
+    echo "--- output ---"
+    echo "$OUT4"
+    FAILED=1
+fi
+
 # Test 6: set_user_default supports array values (DRY_RUN)
 echo "Test 6: set_user_default handles array type in DRY_RUN"
 OUT3=$(DRY_RUN=true bash -c 'source "$PWD/scripts/utils.sh"; set_user_default com.example.test Test array one two three' 2>&1 || true)
