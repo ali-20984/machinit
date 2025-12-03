@@ -59,7 +59,6 @@ CLEAR_LOGS=false # If true, delete logs directory and exit
 RESUME_FAILURE=false # If true, resume from last failure recorded in logs/last_failed
 EXIT_NOW=false # If true, exit immediately (no-op)
 RESTART_UI=false # If true, run final UI restart script at the end (non-interactive)
-RESTART_UI=false # If true, run final UI restart script at the end (non-interactive)
 
 # State variables
 START_FROM=""        # Script name to resume execution from
@@ -205,14 +204,10 @@ while [[ $# -gt 0 ]]; do
             RESTART_UI=true
             shift
             ;;
-        --restart-ui)
-            RESTART_UI=true
-            shift
+        --run-only)
+            RUN_ONLY_INDEX="$2"
+            shift 2
             ;;
-            --run-only)
-                RUN_ONLY_INDEX="$2"
-                shift 2
-                ;;
         --computer-name)
             SET_COMPUTER_NAME="$2"
             shift 2

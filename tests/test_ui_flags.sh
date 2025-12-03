@@ -83,6 +83,35 @@ else
     FAILED=1
 fi
 
+# Test 8: aliases are present only in assets/.aliases
+echo "Test 8: alias placement checks"
+ALIASES_FILE="$PROJECT_ROOT/assets/.aliases"
+FUNCTIONS_FILE="$PROJECT_ROOT/assets/.functions"
+for a in zshconf projects repos qfind lsock cd.. '.....'; do
+    if grep -q "alias $a" "$ALIASES_FILE"; then
+        echo "PASS: alias $a present in .aliases"
+    else
+        echo "FAIL: alias $a missing from .aliases"
+        FAILED=1
+    fi
+    if grep -q "alias $a" "$FUNCTIONS_FILE"; then
+        echo "FAIL: alias $a wrongly present in .functions"
+        FAILED=1
+    else
+        echo "PASS: alias $a not in .functions"
+    fi
+done
+
+# Test 9: install.sh contains a single RESTART_UI definition
+echo "Test 9: install.sh single RESTART_UI check"
+count=$(grep -o "RESTART_UI=false" "$INSTALL" | wc -l | xargs)
+if [ "$count" -eq 1 ]; then
+    echo "PASS: single RESTART_UI definition found"
+else
+    echo "FAIL: expected 1 RESTART_UI definition, found $count"
+    FAILED=1
+fi
+
 if [ $FAILED -eq 0 ]; then
     echo "All UI/flags CI tests passed."
     exit 0

@@ -8,8 +8,10 @@ alias jsrefresh="rm -rf node_modules/ package-lock.json && npm install"
 
 # Navigation
 alias ..="cd .."
-alias ...="cd ../.."
-alias ....="cd ../../.."
+alias ...="cd ../../.."
+alias ....="cd ../../../../"
+alias .....="cd ../../../../"
+alias cd..="cd .."
 alias ~="cd ~"
 alias -- -="cd -"
 
@@ -27,6 +29,9 @@ alias repos="cd ~/Projects/repos"
 
 # Quick find wrapper (name search)
 alias qfind='find . -name'
+
+# Sockets: requires sudo
+alias lsock='sudo lsof -i -P'
 
 # Network
 alias ping_test="ping 1.1.1.1"

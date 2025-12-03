@@ -120,3 +120,13 @@ set_default com.apple.DiskUtility advanced-image-options bool true
 # manually) to restart affected applications.
 
 echo "UI/UX configuration complete. Note: Some changes may require a logout/restart to take effect."
+
+# Disable Tips and related onboarding suggestions (best-effort)
+# These are per-user; write as original user and kill Tips process if present.
+print_info "Disabling Tips and onboarding hints for ${ORIGINAL_USER}..."
+set_user_default com.apple.Tips UserHasDeclinedEnable bool true || true
+set_user_default com.apple.Tips ShowHelpOnStartup bool false || true
+execute_as_user killall Tips &>/dev/null || true
+
+# Flush user cfprefsd so Finder/Dock/other apps pick up changes
+execute_as_user killall cfprefsd &>/dev/null || true

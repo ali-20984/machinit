@@ -201,5 +201,4 @@ function generate_git_key() {
 ## -----------------------------------------------------
 findPid () { lsof -t -c "$@" ; }
 
-# lsock: Display open sockets (requires sudo)
-alias lsock='sudo lsof -i -P'
+# lsock is defined in .aliases intentionally to keep aliases centralized
