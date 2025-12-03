@@ -395,11 +395,17 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     if "$script" 2>&1 | tee -a "$LOG_FILE"; then
         printf "%b\n" "${GREEN}✓${NC} ${WHITE}$script_name${NC} ${GREEN}completed${NC}" | tee -a "$LOG_FILE"
         ((++SUCCESS_COUNT))
-        set +o pipefail
+            set +o pipefail
     else
         printf "%b\n" "${RED}✗${NC} ${WHITE}$script_name${NC} ${RED}failed${NC}" | tee -a "$LOG_FILE"
         ((++FAILED_COUNT))
         set +o pipefail
+    fi
+
+    # If running only a single selected script, exit early after it completes
+    if [ -n "$RUN_ONLY_INDEX" ] && [ "$CURRENT_COUNT" -eq "$RUN_ONLY_INDEX" ]; then
+        printf "%b\n" "${GREEN}✓${NC} ${WHITE}Completed run-only script at index $RUN_ONLY_INDEX — exiting early.${NC}" | tee -a "$LOG_FILE"
+        break
     fi
 done
 

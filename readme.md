@@ -126,6 +126,16 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 - **Safari**: Clears favorites, history, and suppresses "launched" notifications.
 - **Dotfiles**: Installs `.aliases`, `.functions`, `.nanorc`, and `.gitignore_global`.
 
+### Advanced UI helpers
+
+There are a couple of utilities and workflow improvements to make per-user UI changes safer and easier:
+
+- `scripts/999_restart_apps.sh` — Final, single-shot restart script that safely restarts UI services (Dock, Finder, cfprefsd, SystemUIServer, etc.) for the original user. It supports a non-interactive mode via `--yes` / `-y`.
+
+- `set_user_default` — A new helper in `scripts/utils.sh` which wraps `defaults write` and ensures per-user preferences are written as the original user (not root). Scripts that modify Finder, Dock and other per-user settings use this helper to avoid silently writing root preferences.
+
+These two changes are designed to avoid race conditions and permission problems when the installer is invoked with `sudo`.
+
 ### Performance Optimizations
 
 - **Spotlight**: Disables indexing for better performance.
@@ -181,6 +191,22 @@ To check the scripts for syntax errors and best practices:
 ### CI/CD
 
 This project uses GitHub Actions for Continuous Integration. The pipeline runs `shellcheck` on all scripts and executes a dry-run test on macOS runners to ensure stability.
+
+#### New UI/flags CI checks
+
+I added a new lightweight CI test to validate UI helper scripts and flags without making system changes:
+
+- `tests/test_ui_flags.sh` — non-destructive checks (runs in `DRY_RUN`) which:
+    - Confirm `set_user_default` helper exists,
+    - Validate `scripts/999_restart_apps.sh` accepts `--yes`/`-y` in non-interactive mode,
+    - Verify `install.sh` supports `--run-only <N>` and `--restart-ui` signalling,
+    - Ensure `scripts/052_configure_finder_and_sidebar.sh` includes verification code and uses `set_user_default`.
+
+Run the test locally:
+```bash
+chmod +x tests/test_ui_flags.sh
+./tests/test_ui_flags.sh
+```
 
 ## ⚠️ Disclaimer
 
