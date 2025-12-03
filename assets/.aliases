@@ -107,7 +107,8 @@ myip() {
 		service="${SERVICE_MAP[$service]}"
 	fi
 
-	local services=("https://checkip.amazonaws.com" "https://icanhazip.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip")
+	# Add a couple more small endpoints which generally return only the IP in plaintext
+	local services=("https://checkip.amazonaws.com" "https://icanhazip.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip" "https://api.ipify.org" "https://ifconfig.co/ip")
 	if [ -n "$service" ]; then
 		services=("$service" "https://checkip.amazonaws.com" "https://icanhazip.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip")
 	fi
@@ -131,13 +132,31 @@ myip() {
 	extract_ip() {
 		local text="$1"
 		local ip=""
-		if [ "$prefer_v6" = true ]; then
-			ip=$(printf "%s" "$text" | grep -Eo '([0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}' | head -n1 || true)
-			[ -n "$ip" ] && printf "%s" "$ip" && return 0
-			# fallback to IPv4 if no IPv6 found
+
+		# Try JSON-style: "ip": "1.2.3.4" (common for some APIs)
+		ip=$(printf "%s" "$text" | grep -Eo '"ip"[[:space:]]*:[[:space:]]*"[^"]+"' | sed -E 's/.*"ip"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/' | head -n1 || true)
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
 		fi
+
+		# Try strict IPv4 (0-255 per octet)
+		ip=$(printf "%s" "$text" | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])' | head -n1 || true)
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
+		fi
+
+		# Try IPv6-ish tokens (relaxed matching, capture common patterns)
+		ip=$(printf "%s" "$text" | grep -Eo '([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{1,4}|::|([0-9a-fA-F:]+::[0-9a-fA-F:]*)' | head -n1 || true)
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
+		fi
+
+		# Fallback: any token that looks like an IPv4-ish pattern (more permissive)
 		ip=$(printf "%s" "$text" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n1 || true)
-		[ -n "$ip" ] && printf "%s" "$ip" && return 0
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
+		fi
+
 		return 1
 	}
 
@@ -166,6 +185,21 @@ myip() {
 			return 0
 		fi
 	done
+
+	# Try DNS-based fallback (OpenDNS resolver) — often reliable in restricted
+	# environments where HTTP endpoints are blocked or return HTML.
+	if command -v dig >/dev/null 2>&1; then
+		if [ "$prefer_v6" = true ]; then
+			dns_out=$(dig -6 +short myip.opendns.com @resolver1.opendns.com 2>/dev/null || true)
+		else
+			dns_out=$(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null || true)
+		fi
+		dns_out=$(echo "$dns_out" | tr -d '\r' | tr -d '\n' || true)
+		if [ -n "$dns_out" ] && extract_ip "$dns_out" >/dev/null 2>&1; then
+			echo "$dns_out"
+			return 0
+		fi
+	fi
 
 	echo "Could not determine public IP from known services"
 	return 1
