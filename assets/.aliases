@@ -119,9 +119,32 @@ myip() {
 		curl_opts="$curl_opts -4"
 	fi
 
+	# helper: check whether a string looks like an IPv4 or IPv6 address
+	looks_like_ipv4() {
+		[[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]
+	}
+
+	looks_like_ipv6() {
+		[[ "$1" == *":"* ]] && [[ "$1" =~ ^[0-9a-fA-F:\.]+$ ]]
+	}
+
+	extract_ip() {
+		local text="$1"
+		local ip=""
+		if [ "$prefer_v6" = true ]; then
+			ip=$(printf "%s" "$text" | grep -Eo '([0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}' | head -n1 || true)
+			[ -n "$ip" ] && printf "%s" "$ip" && return 0
+			# fallback to IPv4 if no IPv6 found
+		fi
+		ip=$(printf "%s" "$text" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n1 || true)
+		[ -n "$ip" ] && printf "%s" "$ip" && return 0
+		return 1
+	}
+
 	for s in "${services[@]}"; do
 		if command -v curl >/dev/null 2>&1; then
-			out=$(curl $curl_opts "$s" 2>/dev/null || true)
+			# use a short user-agent and fail fast on HTTP errors
+			out=$(curl $curl_opts -A "machinit/myip" --retry 1 --retry-connrefused --retry-delay 1 "$s" 2>/dev/null || true)
 		elif command -v wget >/dev/null 2>&1; then
 			if [ "$prefer_v6" = true ]; then
 				out=$(wget -qO- --timeout=3 -6 "$s" 2>/dev/null || true)
@@ -133,9 +156,13 @@ myip() {
 			return 1
 		fi
 
-		out=$(echo "$out" | tr -d '\r' | tr -d '\n' | xargs || true)
-		if [ -n "$out" ]; then
-			echo "$out"
+		# Normalize whitespace/newlines and try to extract an IP-looking value
+		out=$(echo "$out" | tr -d '\r' || true)
+		# Try to extract a visible IP address from the output
+		ip=""
+		ip=$(extract_ip "$out" || true)
+		if [ -n "$ip" ]; then
+			echo "$ip"
 			return 0
 		fi
 	done
