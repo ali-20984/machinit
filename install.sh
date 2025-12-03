@@ -58,6 +58,7 @@ VERBOSE=false # If true, enables shell debug mode (set -x)
 
 # State variables
 START_FROM=""        # Script name to resume execution from
+RUN_ONLY_INDEX=""    # If non-empty, run only this 1-based script index
 SET_COMPUTER_NAME="" # Computer name passed via argument
 KEEPALIVE_PID=""     # PID of the sudo keep-alive loop
 
@@ -181,6 +182,10 @@ while [[ $# -gt 0 ]]; do
             START_FROM="$2"
             shift 2
             ;;
+            --run-only)
+                RUN_ONLY_INDEX="$2"
+                shift 2
+                ;;
         --computer-name)
             SET_COMPUTER_NAME="$2"
             shift 2
@@ -318,6 +323,20 @@ for script in "$SCRIPTS_DIR"/*.sh; do
     fi
 
     ((++CURRENT_COUNT))
+
+    # If user requested --run-only, skip everything except the chosen index
+    if [ -n "$RUN_ONLY_INDEX" ]; then
+        if ! [[ "$RUN_ONLY_INDEX" =~ ^[0-9]+$ ]]; then
+            echo "Error: --run-only expects a numeric 1-based index." | tee -a "$LOG_FILE"
+            exit 1
+        fi
+        if [ "$CURRENT_COUNT" -ne "$RUN_ONLY_INDEX" ]; then
+            printf "%b
+" "${DIM}⊘${NC} ${GRAY}[$CURRENT_COUNT/$TOTAL_SCRIPTS] Skipping $script_name (not selected by --run-only)${NC}" | tee -a "$LOG_FILE"
+            ((++SKIPPED_COUNT))
+            continue
+        fi
+    fi
 
     # --------------------------------------------------------------------------
     # Logic: Resume from specific script

@@ -60,17 +60,25 @@ print_config "Finder Sidebar"
 
 # Set sidebar icon size to Medium
 echo "Setting sidebar icon size to Medium..."
-# Write as the original user so the per-user Finder prefs are modified
-execute_as_user defaults write NSGlobalDomain NSTableViewDefaultSizeMode -int 2 || true
+# Write per-user preference using helper
+set_user_default NSGlobalDomain NSTableViewDefaultSizeMode int 2 || true
+
+# Ensure new Finder windows open at the user's Desktop
+echo "Setting Finder default new-window location to Desktop..."
+# Ensure Desktop exists in the original user's home
+execute_as_user mkdir -p "${ORIGINAL_HOME}/Desktop" || true
+# Set Finder to open new windows to Desktop (PfDe) and point the path to the user's Desktop
+set_user_default com.apple.finder NewWindowTarget string PfDe || true
+set_user_default com.apple.finder NewWindowTargetPath string "file://${ORIGINAL_HOME}/Desktop/" || true
 
 # Hide iCloud Drive
-execute_as_user defaults write com.apple.finder SidebarICloudDrive -bool false || true
+set_user_default com.apple.finder SidebarICloudDrive bool false || true
 
 # Hide Shared Section (Bonjour)
-execute_as_user defaults write com.apple.finder SidebarBonjourBrowser -bool false || true
+set_user_default com.apple.finder SidebarBonjourBrowser bool false || true
 
 # Hide Tags
-execute_as_user defaults write com.apple.finder ShowRecentTags -bool false || true
+set_user_default com.apple.finder ShowRecentTags bool false || true
 
 # Create Projects folder and symlink
 echo "Setting up Projects folder in user home..."

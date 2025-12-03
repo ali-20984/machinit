@@ -212,6 +212,30 @@ function set_default() {
     fi
 }
 
+# Function: set_user_default
+# Description: Write a per-user preference as the original (non-root) user.
+#              This wraps `defaults write` so scripts don't need to call
+#              `execute_as_user` every time they want to change a user-pref.
+function set_user_default() {
+    local domain="$1"
+    local key="$2"
+    local type="$3"
+    local value="$4"
+
+    if [ "$DRY_RUN" = true ]; then
+        print_dry_run "(as $ORIGINAL_USER) defaults write $domain $key -$type $value"
+        return 0
+    fi
+
+    if execute_as_user defaults write "$domain" "$key" "-$type" "$value"; then
+        print_success "Set (user) $domain $key to $value"
+        return 0
+    else
+        print_error "Failed to set (user) $domain $key"
+        return 1
+    fi
+}
+
 # Function: install_brew_package
 # Description: Installs either formulae or casks if missing, emitting helpful
 #              logs and supporting DRY_RUN-friendly output.

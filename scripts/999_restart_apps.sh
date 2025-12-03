@@ -6,6 +6,12 @@
 #
 source "$(dirname "$0")/utils.sh"
 
+# Default: require confirmation. Set YES=true when --yes or -y is passed.
+YES=false
+if [ "$1" = "--yes" ] || [ "$1" = "-y" ]; then
+    YES=true
+fi
+
 print_config "Final: Restart UI / Dock / Finder & related apps"
 
 echo "This script restarts a small list of UI processes so changes made by the
@@ -37,10 +43,14 @@ apps=(
 )
 
 echo "About to restart the following UI processes: ${apps[*]}"
-read -p "Proceed? [y/N] " answer
-if [[ ! "$answer" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-    echo "Aborting — no applications were restarted."
-    exit 0
+if [ "$YES" = false ]; then
+    read -p "Proceed? [y/N] " answer
+    if [[ ! "$answer" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        echo "Aborting — no applications were restarted."
+        exit 0
+    fi
+else
+    echo "--yes detected: proceeding non-interactively."
 fi
 
 for app in "${apps[@]}"; do
