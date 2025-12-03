@@ -17,4 +17,4 @@ repos:
 # To install pre-commit and enable hooks:
 #   python3 -m pip install --upgrade pre-commit
 #   pre-commit install
-# Or run the helper script: `scripts/install-precommit.sh`
+# Or run the helper script: `dev_scripts/install-precommit.sh`
