@@ -13,21 +13,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Go
+      - name: Setup Go 1.23 and install shfmt
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: '1.23'
 
-      - name: Install shfmt
+      - name: Install shfmt via go
         run: |
+          set -euo pipefail
           export GOPATH=$(go env GOPATH)
+          export GOBIN="$GOPATH/bin"
+          echo "GOPATH=$GOPATH GOBIN=$GOBIN"
           go install mvdan.cc/sh/v3/cmd/shfmt@latest
-          echo "${GOPATH}/bin"
+          echo "$GOBIN"
+          ls -l "$GOBIN/shfmt" || true
+          sudo cp "$GOBIN/shfmt" /usr/local/bin/shfmt || sudo mv "$GOBIN/shfmt" /usr/local/bin/shfmt
 
       - name: Run shfmt check
         run: |
           # Print files that need formatting (non-empty output indicates failure)
-          find . -name "*.sh" -not -path "*/node_modules/*" -print0 | xargs -0 shfmt -l || true
           UNFORMATTED=$(find . -name "*.sh" -not -path "*/node_modules/*" -print0 | xargs -0 shfmt -l || true)
           if [ -n "$UNFORMATTED" ]; then
             echo "The following shell files need shfmt formatting:";
