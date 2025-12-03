@@ -29,20 +29,16 @@ jobs:
         run: |
           echo "Not a pull_request event; skipping auto-format apply."
 
-      - name: Setup Go 1.23 and install shfmt
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'
-
-      - name: Install shfmt via go
+      - name: Install shfmt binary (pinned)
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           set -euo pipefail
-          export GOPATH=$(go env GOPATH)
-          export GOBIN="$GOPATH/bin"
-          go install mvdan.cc/sh/v3/cmd/shfmt@latest
-          sudo cp "$GOBIN/shfmt" /usr/local/bin/shfmt || sudo mv "$GOBIN/shfmt" /usr/local/bin/shfmt
+          SHFMT_VERSION=v3.8.1
+          ARCH=linux_amd64
+          URL="https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION#v}_${ARCH}"
+          echo "Downloading shfmt from $URL"
+          curl -L -o /tmp/shfmt "$URL"
+          sudo install -m 0755 /tmp/shfmt /usr/local/bin/shfmt
 
       - name: Setup Python
         if: ${{ github.event_name == 'pull_request' }}
@@ -87,21 +83,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Go 1.23 and install shfmt
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'
-
-      - name: Install shfmt via go
+      - name: Install shfmt binary (pinned)
         run: |
           set -euo pipefail
-          export GOPATH=$(go env GOPATH)
-          export GOBIN="$GOPATH/bin"
-          echo "GOPATH=$GOPATH GOBIN=$GOBIN"
-          go install mvdan.cc/sh/v3/cmd/shfmt@latest
-          echo "$GOBIN"
-          ls -l "$GOBIN/shfmt" || true
-          sudo cp "$GOBIN/shfmt" /usr/local/bin/shfmt || sudo mv "$GOBIN/shfmt" /usr/local/bin/shfmt
+          SHFMT_VERSION=v3.8.1
+          ARCH=linux_amd64
+          URL="https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION#v}_${ARCH}"
+          echo "Downloading shfmt from $URL"
+          curl -L -o /tmp/shfmt "$URL"
+          sudo install -m 0755 /tmp/shfmt /usr/local/bin/shfmt
 
       - name: Run shfmt check
         run: |
