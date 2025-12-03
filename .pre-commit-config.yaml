@@ -1,0 +1,20 @@
+repos:
+  - repo: local
+    hooks:
+      - id: shfmt
+        name: shfmt (format shell)
+        entry: shfmt -w -i 4 -ci
+        language: system
+        files: \.sh$
+      - id: shellcheck
+        name: shellcheck (lint shell)
+        entry: shellcheck -f gcc
+        language: system
+        files: \.sh$
+
+# Note: This configuration uses the system-installed `shfmt` and `shellcheck` binaries
+# (language: system) so developers can manage versions via their package manager.
+# To install pre-commit and enable hooks:
+#   python3 -m pip install --upgrade pre-commit
+#   pre-commit install
+# Or run the helper script: `scripts/install-precommit.sh`
