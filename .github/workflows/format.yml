@@ -7,9 +7,83 @@ on:
     branches: [ main ]
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
+  apply-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Determine trigger
+        id: trigger
+        run: |
+          echo "event=${GITHUB_EVENT_NAME}" >>$GITHUB_OUTPUT
+
+      - name: Skip if not a pull_request
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          echo "Not a pull_request event; skipping auto-format apply."
+
+      - name: Setup Go 1.23 and install shfmt
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Install shfmt via go
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -euo pipefail
+          export GOPATH=$(go env GOPATH)
+          export GOBIN="$GOPATH/bin"
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          sudo cp "$GOBIN/shfmt" /usr/local/bin/shfmt || sudo mv "$GOBIN/shfmt" /usr/local/bin/shfmt
+
+      - name: Setup Python
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install black
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install black
+
+      - name: Apply shfmt and black (on PRs)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -euo pipefail
+          find . -name "*.sh" -not -path "*/node_modules/*" -print0 | xargs -0 shfmt -w -i 4 -ci || true
+          python3 -m black . || true
+
+      - name: Commit & push formatting changes (on PRs)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "chore: apply code formatting (shfmt/black)" || echo "No commit needed"
+            BRANCH_NAME="${{ github.head_ref }}"
+            if [ -n "$BRANCH_NAME" ]; then
+              git push origin "HEAD:$BRANCH_NAME"
+            else
+              git push
+            fi
+          else
+            echo "No formatting changes to commit."
+          fi
+
   shfmt-check:
     runs-on: ubuntu-latest
+    needs: apply-format
     steps:
       - uses: actions/checkout@v3
 
