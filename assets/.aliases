@@ -78,7 +78,6 @@ myip() {
 				echo "Examples:";
 				echo "  myip                  # default (AWS checkip)";
 				echo "  myip --service aws    # use named aws service (checkip.amazonaws.com)";
-				echo "  myip icanhazip        # shorthand for icanhazip service";
 				echo "  myip --ipv6           # prefer IPv6 lookups";
 				return 0
 				;;
