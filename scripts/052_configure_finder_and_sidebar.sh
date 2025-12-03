@@ -22,7 +22,9 @@ set_default NSGlobalDomain AppleShowAllExtensions bool true
 
 # Show Library folder
 echo "Unhiding ~/Library..."
-chflags nohidden ~/Library && xattr -d com.apple.FinderInfo ~/Library 2>/dev/null
+# Ensure we operate on the original user's home when the installer is run under sudo
+execute_as_user chflags nohidden "${ORIGINAL_HOME}/Library" &>/dev/null || true
+execute_as_user xattr -d com.apple.FinderInfo "${ORIGINAL_HOME}/Library" 2>/dev/null || true
 
 # Show status bar
 echo "Showing status bar..."
@@ -58,23 +60,24 @@ print_config "Finder Sidebar"
 
 # Set sidebar icon size to Medium
 echo "Setting sidebar icon size to Medium..."
-set_default NSGlobalDomain NSTableViewDefaultSizeMode int 2
+# Write as the original user so the per-user Finder prefs are modified
+execute_as_user defaults write NSGlobalDomain NSTableViewDefaultSizeMode -int 2 || true
 
 # Hide iCloud Drive
-set_default com.apple.finder SidebarICloudDrive bool false
+execute_as_user defaults write com.apple.finder SidebarICloudDrive -bool false || true
 
 # Hide Shared Section (Bonjour)
-set_default com.apple.finder SidebarBonjourBrowser bool false
+execute_as_user defaults write com.apple.finder SidebarBonjourBrowser -bool false || true
 
 # Hide Tags
-set_default com.apple.finder ShowRecentTags bool false
+execute_as_user defaults write com.apple.finder ShowRecentTags -bool false || true
 
 # Create Projects folder and symlink
-echo "Setting up Projects folder..."
-mkdir -p "$HOME/Documents/Projects"
-if [ ! -d "$HOME/Projects" ]; then
-    ln -s "$HOME/Documents/Projects" "$HOME/Projects"
-    echo "Symlinked ~/Documents/Projects to ~/Projects"
+echo "Setting up Projects folder in user home..."
+execute_as_user mkdir -p "${ORIGINAL_HOME}/Documents/Projects"
+if [ ! -d "${ORIGINAL_HOME}/Projects" ]; then
+    execute_as_user ln -s "${ORIGINAL_HOME}/Documents/Projects" "${ORIGINAL_HOME}/Projects" || true
+    echo "Symlinked ${ORIGINAL_HOME}/Documents/Projects to ${ORIGINAL_HOME}/Projects"
 fi
 
 # Note: Adding Finder sidebar favorites programmatically is not reliably supported
@@ -108,10 +111,11 @@ add_sidebar_item() {
         fi
 
         # Try with file:// URL first, then raw path
-        if "$mysides_bin" add "$name" "$fileurl" >/dev/null 2>&1; then
+        # Run mysides as the original user so changes land in the right account
+        if execute_as_user "$mysides_bin" add "$name" "$fileurl" >/dev/null 2>&1; then
             print_success "Added '$name' (via mysides URL)."
             return 0
-        elif "$mysides_bin" add "$name" "$target" >/dev/null 2>&1; then
+        elif execute_as_user "$mysides_bin" add "$name" "$target" >/dev/null 2>&1; then
             print_success "Added '$name' (via mysides path)."
             return 0
         else
@@ -123,7 +127,8 @@ add_sidebar_item() {
 
     # AppleScript fallback: select the folder in Finder and use the File > Add to Sidebar menu
     print_action "Adding '$name' to Finder sidebar using AppleScript (requires Accessibility permission)..."
-    /usr/bin/osascript <<EOF
+    # Run AppleScript as the original user so the script interacts with the user's Finder session
+    execute_as_user /usr/bin/osascript <<EOF
 tell application "Finder"
     try
         set targetFolder to (POSIX file "$target") as alias
@@ -151,11 +156,15 @@ EOF
 }
 
 # Add the Projects folder created above to the sidebar (friendly name: Projects)
+
 print_action "Configuring Finder sidebar favorites..."
-add_sidebar_item "Projects" "$HOME/Documents/Projects"
+# Use the original home path when adding the item
+add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
 
+# Flush cfprefsd cache for the original user so Finder will pick up the new settings
+print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
+execute_as_user killall cfprefsd &>/dev/null || true
 
-echo "Restarting Finder..."
-killall Finder
+print_notice "Finder restarts are deferred until the final restart step. Run scripts/999_restart_apps.sh when the full run is complete to restart Finder and apply changes."
 
 echo "Finder configuration complete."
