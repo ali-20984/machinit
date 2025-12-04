@@ -13,6 +13,7 @@ TEST_DIR="$(dirname "$0")/../tests"
 PATTERN=""
 LIST_ONLY=false
 VERBOSE=false
+USE_PYTEST=false
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -20,6 +21,8 @@ while [ "$#" -gt 0 ]; do
             PATTERN="$2"; shift 2;;
         --list)
             LIST_ONLY=true; shift;;
+        --pytest)
+            USE_PYTEST=true; shift;;
         --verbose)
             VERBOSE=true; shift;;
         -h|--help)
@@ -37,7 +40,6 @@ fi
 echo "Discovering tests in: $TEST_DIR"
 
 # Find test files in tests/ (non-recursive), sort for deterministic order
-ALL_TESTS=()
 while IFS= read -r entry; do
     ALL_TESTS+=("$entry")
 done < <(find "$TEST_DIR" -maxdepth 1 -type f -print | xargs -n1 basename | sort)
@@ -101,10 +103,19 @@ run_test() {
             fi
             ;;
         py)
-            if ! python3 "$filepath"; then
-                echo "✗ $file failed"; FAILED=1; return 1
+            # Prefer pytest if available or when --pytest was requested
+            if [ "$USE_PYTEST" = true ] || command -v pytest >/dev/null 2>&1; then
+                if ! pytest -q "$filepath"; then
+                    echo "✗ $file failed"; FAILED=1; return 1
+                else
+                    echo "✓ $file passed"; PASSED=$((PASSED+1)); return 0
+                fi
             else
-                echo "✓ $file passed"; PASSED=$((PASSED+1)); return 0
+                if ! python3 "$filepath"; then
+                    echo "✗ $file failed"; FAILED=1; return 1
+                else
+                    echo "✓ $file passed"; PASSED=$((PASSED+1)); return 0
+                fi
             fi
             ;;
         *)
@@ -112,7 +123,6 @@ run_test() {
             ;;
     esac
 }
-
 for t in "${TESTS[@]}"; do
     if ! run_test "$t"; then
         # record a non-zero marker (but continue running remaining tests)
