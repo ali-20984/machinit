@@ -1,3 +1,7 @@
+## Convenience helpers
+
+- `myaliases` — show the list of local `aliases` and `functions` with short descriptions pulled from inline comments. Usage: `myaliases`, `myaliases --aliases`, `myaliases --functions`
+
 # Aliases and Functions (machinit)
 
 This document is a consolidated reference for the small shell aliases and helper functions defined in the dotfiles under `assets/`.

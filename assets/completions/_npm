@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# zsh completion helper for npm — lightweight list of common subcommands
+# This is intentionally small and kept inside the dotfiles for convenience.
+# Users with longer completion needs should install npm completion from upstream.
+
+#compdef npm
+
+local -a commands
+commands=(
+  'install:install packages'
+  'ci:install using package-lock only'
+  'update:update packages'
+  'start:start package'
+  'run:run arbitrary package script'
+  'test:run tests'
+  'build:build package'
+  'publish:publish package'
+  'uninstall:remove packages'
+  'init:create a package.json file'
+  'link:symlink a package folder'
+  'help:show help for a command'
+)
+
+_describe 'npm command' commands && return 0

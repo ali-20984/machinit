@@ -85,6 +85,37 @@ if [ -f "$FUNCTIONS_FILE" ]; then
         print_info ".functions already sourced in $ZSHRC"
     fi
 
+    # Install zsh completions (optional): copy assets/completions into ~/.zsh/completions
+    COMPLETIONS_DIR="$ASSETS_DIR/completions"
+    TARGET_COMPLETIONS="$HOME/.zsh/completions"
+    if [ -d "$COMPLETIONS_DIR" ]; then
+        if [ ! -d "$TARGET_COMPLETIONS" ]; then
+            execute mkdir -p "$TARGET_COMPLETIONS"
+            print_success "Created $TARGET_COMPLETIONS"
+        fi
+        # Link each completion file
+        for f in "$COMPLETIONS_DIR"/*; do
+            [ -f "$f" ] || continue
+            fname=$(basename "$f")
+            if execute ln -sf "$f" "$TARGET_COMPLETIONS/$fname"; then
+                print_success "Installed completion: $fname -> $TARGET_COMPLETIONS/$fname"
+            fi
+        done
+
+        # Ensure fpath includes the completions dir (add to .zshrc if missing) and run compinit
+        if ! grep -q "fpath+=\(~/.zsh/completions\)" "$ZSHRC"; then
+            {
+                echo ""
+                echo "# Add custom zsh completions fpath"
+                echo "fpath+=(~/.zsh/completions)"
+                echo "autoload -Uz compinit && compinit"
+            } >>"$ZSHRC"
+            print_success "Added zsh completions fpath & compinit to $ZSHRC"
+        else
+            print_info ".zshrc already contains completion fpath or compinit"
+        fi
+    fi
+
     # Check for dependencies used in .functions
     echo "Checking dependencies for .functions..."
     check_command "python3"

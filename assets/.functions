@@ -196,6 +196,47 @@ function generate_git_key() {
     echo "run 'pbcopy < ~/.ssh/id_ed25519.pub' and paste that into GitHub"
 }
 
+## myaliases: list custom aliases and functions with short descriptions
+## Usage: myaliases [--aliases|--functions|--all]
+## Prints a nicely formatted table of aliases/functions and their inline comments if present.
+myaliases() {
+	local mode="all"
+	if [ "$#" -gt 0 ]; then
+		case "$1" in
+			--aliases) mode=aliases ;;
+			--functions) mode=functions ;;
+			--all) mode=all ;;
+			--help|-h) echo "Usage: myaliases [--aliases|--functions|--all]"; return 0 ;;
+			*) echo "Unknown option: $1"; return 2 ;;
+		esac
+	fi
+
+	local alias_file="$HOME/.aliases"
+	# prefer local assets file for dev environment
+	if [ -f "$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)/.aliases" ]; then
+		alias_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)/.aliases"
+	fi
+
+	local functions_file="$HOME/.functions"
+	if [ -f "$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)/.functions" ]; then
+		functions_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)/.functions"
+	fi
+
+	if [ "$mode" = "aliases" ] || [ "$mode" = "all" ]; then
+		echo "Aliases:";
+		# show alias and trailing comment
+		awk -F"#" '/^alias[[:space:]]/{gsub(/^[ \t]+|[ \t]+$/,"",$1); name=$1; sub(/^alias[[:space:]]*/,"",name); sub(/=.*/,"",name); desc=$2; gsub(/^[ \t]+|[ \t]+$/,"",desc); printf "  %-20s %s\n", name, desc }' "$alias_file" || true
+		echo
+	fi
+
+	if [ "$mode" = "functions" ] || [ "$mode" = "all" ]; then
+		echo "Functions:";
+		# find function declarations and print preceding comment if exists
+		awk 'BEGIN{prev=""} { if ($0 ~ /^[[:space:]]*#/){ prev=substr($0, index($0,$0)) } else if ($0 ~ /function[[:space:]]+[a-zA-Z0-9_]+[[:space:]]*\(/ || $0 ~ /^[a-zA-Z0-9_]+[[:space:]]*\(\)[[:space:]]*\{/ ) { func=$0; gsub(/^[[:space:]]*function[[:space:]]*/,"",func); gsub(/\(.*$/,"",func); gsub(/^[[:space:]]*|[[:space:]]*$/,"",func); desc=prev; gsub(/^[[:space:]]*#/?/,"",desc); printf "  %-20s %s\n", func, desc; prev="" } else { prev="" } }' "$functions_file" || true
+		echo
+	fi
+}
+
 ## findPid: find out the pid of a specified process
 ## -----------------------------------------------------
 ## Note that the command name can be specified via a regex
