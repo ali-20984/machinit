@@ -7,6 +7,10 @@ This document is a consolidated reference for the small shell aliases and helper
 
 If you maintain these files, please keep them well-commented and add new items to this doc.
 
+Note: The installer runs a pre-check for alias / function name collisions before applying dotfiles
+(`scripts/011_check_aliases_functions_conflicts.sh`). If collisions or duplicates are found the installer will
+abort unless `SKIP_ALIAS_CHECK=1` is set in your environment.
+
 ---
 
 ## Aliases (quick reference)

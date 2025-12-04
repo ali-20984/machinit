@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Script: 011_install_dotfiles.sh
-# Description: Install Dotfiles
+# Script: 012_install_dotfiles.sh
+# Description: Install Dotfiles (moved to 012 to run after 011 checks)
 # Author: supermarsx
 #
 source "$(dirname "$0")/utils.sh"
@@ -25,6 +25,16 @@ print_header "Dotfiles"
 
 # Get the absolute path to the assets directory
 ASSETS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)"
+
+# Run an alias/function conflict check before touching user dotfiles unless SKIP_ALIAS_CHECK=1
+CONFLICT_CHECK_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/011_check_aliases_functions_conflicts.sh"
+if [ -z "${SKIP_ALIAS_CHECK:-}" ] && [ -f "$CONFLICT_CHECK_SCRIPT" ]; then
+    print_info "Checking for alias/function name conflicts before installing dotfiles..."
+    if ! bash "$CONFLICT_CHECK_SCRIPT" "$ASSETS_DIR"; then
+        print_error "Conflicts detected. Aborting dotfiles installation. Set SKIP_ALIAS_CHECK=1 to bypass this check if you are sure."
+        exit 1
+    fi
+fi
 
 # Function: backup_file
 # Description: Preserve a non-symlink target by renaming it with a timestamp

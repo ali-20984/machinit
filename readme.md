@@ -84,7 +84,8 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 | `008_install_cli_tools.sh` | Install Cli Tools |
 | `009_install_fonts.sh` | Install Fonts |
 | `010_install_apps.sh` | Install Apps |
-| `011_install_dotfiles.sh` | Install Dotfiles |
+| `011_check_aliases_functions_conflicts.sh` | Check alias/function name collisions & duplicates |
+| `012_install_dotfiles.sh` | Install Dotfiles |
 | `020_configure_firefox_policies.sh` | Configure Firefox Policies |
 | `020_install_firefox.sh` | Install Firefox |
 | `021_install_vscode.sh` | Install Vscode |

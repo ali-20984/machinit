@@ -320,8 +320,8 @@ fi
 # restricted mode (exit after completion) so we don't run the entire installer.
 if [ "$UPDATE_SHELL" = true ]; then
     echo "Updating aliases and functions only..."
-    if [ -x "$SCRIPTS_DIR/011_install_dotfiles.sh" ]; then
-        if "$SCRIPTS_DIR/011_install_dotfiles.sh" --only-shell; then
+    if [ -x "$SCRIPTS_DIR/012_install_dotfiles.sh" ]; then
+        if "$SCRIPTS_DIR/012_install_dotfiles.sh" --only-shell; then
             echo "Aliases and functions updated successfully. Exiting."
             exit 0
         else
@@ -329,7 +329,7 @@ if [ "$UPDATE_SHELL" = true ]; then
             exit 1
         fi
     else
-        echo "Dotfiles installer script not found or not executable: $SCRIPTS_DIR/011_install_dotfiles.sh" | tee -a "$LOG_FILE"
+        echo "Dotfiles installer script not found or not executable: $SCRIPTS_DIR/012_install_dotfiles.sh" | tee -a "$LOG_FILE"
         exit 1
     fi
 fi
