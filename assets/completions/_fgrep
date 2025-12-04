@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# fgrep -> grep completion wrapper
+
+#compdef fgrep
+
+_grep || _files

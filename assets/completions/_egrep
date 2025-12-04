@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# egrep -> grep completion wrapper
+
+#compdef egrep
+
+_grep || _files

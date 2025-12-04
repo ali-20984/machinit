@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Simple ln completion — files and directories
+
+#compdef ln
+
+_files

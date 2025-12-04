@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Basic fmt completion — formatting tool (simple options)
+
+#compdef fmt
+
+local -a opts
+opts=(
+  '-w#:wrap column'
+  '-c:use fixed width'
+  '--help:show help'
+)
+
+_describe 'fmt option' opts && return 0
+
+_files

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# ld completion fallback (linker) — file args
+#compdef ld
+
+_files

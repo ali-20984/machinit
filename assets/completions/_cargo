@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Minimal cargo completion — basic subcommands
+#compdef cargo
+
+local -a cmds
+cmds=(
+  'build:Compile the current package'
+  'run:Run a binary or example of the local package'
+  'test:Run the test suite'
+  'bench:Run benchmarks'
+  'doc:Build documentation'
+  'new:Create a new cargo package'
+  'init:Create a new cargo package in an existing directory'
+  'install:Install a Rust binary'
+  'update:Update dependencies'
+  'search:Search registry for a crate'
+  'publish:Upload a package to registry'
+  'help:Show help'
+)
+
+_describe 'cargo subcommand' cmds && return 0
+
+_files

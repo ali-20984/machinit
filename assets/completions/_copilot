@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Minimal completion for GitHub Copilot / AWS Copilot CLI — safe stub
+#compdef copilot
+
+local -a cmds
+cmds=(
+  'help:show help'
+  'version:print version'
+  'init:initialize project'
+  'deploy:deploy app'
+  'status:show status'
+)
+
+_describe 'copilot command' cmds && return 0
+
+_files

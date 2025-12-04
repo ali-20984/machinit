@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Simple file completion for cat
+
+#compdef cat
+
+_files

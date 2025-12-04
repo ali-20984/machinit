@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Minimal cron completion — delegate to crontab where available
+
+#compdef cron
+
+if (( $+functions[_crontab] )); then
+  _crontab && return 0
+fi
+
+_files

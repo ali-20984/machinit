@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# mkdir completion — path completion
+#compdef mkdir mkd
+
+_files

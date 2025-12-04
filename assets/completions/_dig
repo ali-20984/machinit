@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Minimal dig completion — common options / hostname or domain
+
+#compdef dig
+
+local -a opts
+opts=(
+  '+short:Display short answers'
+  '+time=#:Set timeout in seconds'
+  '+tcp:Use TCP instead of UDP'
+  '+nssearch:Find nameservers'
+  '+trace:Trace delegation path'
+  'hostname:host to query:_hosts'
+)
+
+_describe 'dig option' opts && return 0
+
+_files

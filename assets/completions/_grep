@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Minimal grep completion (pattern / file) — fallback to filenames
+
+#compdef grep
+
+local -a opts
+opts=(
+  '--help:show help'
+  '--version:print version'
+  '-E:use extended regex'
+  '-F:fixed-strings'
+  '-i:ignore case'
+  '-v:invert match'
+  '-r:recursive'
+)
+
+_describe 'grep option' opts && return 0
+
+# If user asks for a filename we complete files
+_files

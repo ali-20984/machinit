@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# ipconfig completion stub for macOS
+#compdef ipconfig
+
+local -a cmds
+cmds=(
+  'get:get value'
+  'set:set value'
+  'help:show help'
+)
+
+_describe 'ipconfig command' cmds && return 0
+
+_files

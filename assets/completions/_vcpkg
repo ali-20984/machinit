@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# vcpkg completion stub — minimal options
+#compdef vcpkg
+
+local -a cmds
+cmds=(
+  'install:Install a package'
+  'remove:Remove a package'
+  'search:Search packages'
+  'list:List installed packages'
+  'help:Show help'
+)
+
+_describe 'vcpkg subcommand' cmds && return 0
+
+_files

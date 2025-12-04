@@ -26,12 +26,30 @@ DEFAULTS = [
     'rustc','shellcheck','ssh','sort','tar','vcpkg','xargs','wget','which'
 ]
 
+# Alternate lookup names for commands that differ between projects or have
+# characters that can break URL path lookups (e.g. g++). The fetcher will try
+# these alternatives when looking for upstream files.
+ALTERNATES = {
+    'rg': ['rg', 'ripgrep'],
+    'ripgrep': ['rg', 'ripgrep'],
+    'g++': ['g++', 'gcc'],
+    'clang++': ['clang++', 'clang'],
+    'npx': ['npx', 'npm'],
+    'github': ['gh'],
+}
+
 SOURCES = [
+    # zsh-style files
     'https://raw.githubusercontent.com/zsh-users/zsh-completions/master/src/_{name}',
     'https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/{name}/_{name}',
     # bash-completion variants (many projects put completions here)
     'https://raw.githubusercontent.com/scop/bash-completion/master/completions/{name}',
     'https://raw.githubusercontent.com/bash-completion/bash-completion/master/completions/{name}',
+    # some projects keep completion in top-level completion/ dir or completions/
+    'https://raw.githubusercontent.com/{owner}/{repo}/master/completions/{name}',
+    'https://raw.githubusercontent.com/{owner}/{repo}/master/completion/{name}',
+    'https://raw.githubusercontent.com/{owner}/{repo}/master/completions/_{name}',
+    'https://raw.githubusercontent.com/{owner}/{repo}/master/_{name}',
     # git contrib or project-level completions
     'https://raw.githubusercontent.com/git/git/master/contrib/completion/{name}',
     'https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash',
@@ -67,7 +85,10 @@ def main(names):
         got = False
         # try zsh-completions and ohmyzsh
         # try the primary set first (zsh-completions / ohmyzsh / bash-completion)
-        for tmpl in SOURCES[:5]:
+        for tmpl in SOURCES[:8]:
+            # skip owner/repo templates in the first pass
+            if '{owner' in tmpl or '{repo' in tmpl:
+                continue
             url = tmpl.format(name=name)
             content = try_fetch(url)
             if content:
@@ -79,6 +100,26 @@ def main(names):
 
         if got:
             continue
+
+        # try alternate names / filename encodings
+        alts = ALTERNATES.get(name, [name])
+        for alt in alts:
+            for tmpl in SOURCES[:8]:
+                if '{owner' in tmpl or '{repo' in tmpl:
+                    continue
+                try_name = alt
+                # url-encode '+' in names for safe requests
+                try_name_esc = try_name.replace('+', '%2B')
+                url = tmpl.format(name=try_name_esc)
+                content = try_fetch(url)
+                if content:
+                    print(f'FOUND upstream for {name} (via {try_name}) -> {url}')
+                    saved = save(name, content)
+                    results[name] = (url, saved)
+                    got = True
+                    break
+            if got:
+                break
 
         # a small heuristic: check for repo named after cli in common orgs
         # try lookups in some likely owners (git, rust-lang, microsoft, npm)

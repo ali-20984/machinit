@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Alias to rg completion
+#compdef ripgrep
+
+_rg || _grep || _files

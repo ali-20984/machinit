@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Basic clang completion: reuse gcc completions if present
+#compdef clang
+
+if (( $+functions[_gcc] )); then
+  _gcc && return 0
+fi
+
+# Fallback: filename completion
+_files

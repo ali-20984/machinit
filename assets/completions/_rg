@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Minimal completion: reuse grep completion heuristics for ripgrep (rg)
+# If an upstream _rg is installed, prefer that; otherwise use _grep.
+
+#compdef rg ripgrep
+
+if (( $+functions[_rg] )); then
+  _rg
+  return 0
+fi
+
+if (( $+functions[_grep] )); then
+  _grep
+  return 0
+fi
+
+# Fallback: filename completion
+_files

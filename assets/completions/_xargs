@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# xargs completion — files / commands
+#compdef xargs
+
+local -a opts
+opts=(
+  '-n#:max args'
+  '-I:replace-str'
+  '-p:prompt before execution'
+  '--help:show help'
+)
+
+_describe 'xargs option' opts && return 0
+
+_files

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# hexdump completion fallback — filenames
+#compdef hexdump
+
+_files

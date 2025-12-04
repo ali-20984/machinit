@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Simple cp completion — files and directories
+
+#compdef cp
+
+_files
