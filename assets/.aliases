@@ -3,7 +3,6 @@
 ## For functions, see assets/.functions
 
 alias bup="brew update && brew upgrade && brew cleanup" # update Homebrew, upgrade packages, cleanup
-alias shrug="echo '¯\_(ツ)_/¯' | pbcopy" # copy shrug emoticon to clipboard
 ## NOTE: Function 'll' was moved to assets/.functions — keep aliases file strictly for aliases.
 alias reloaddns="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
 alias dnsreload="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
@@ -57,9 +56,12 @@ alias wtf='dmesg | tail' # “What just happened?” — show last kernel messag
 # Helpful playful 'up' alias — prints a fun message then shows the system uptime on the next line
 alias up='echo "Time is an illusion."; uptime'
 
-# Fun emoticon helpers (copyable / cute shortcuts)
-alias tableflip='echo "(╯°□°）╯︵ ┻━┻"' # throw a table (ASCII emoticon)
-alias fix='echo "┬─┬ ノ( ゜-゜ノ)"'     # put table back (ASCII emoticon)
+## Emoticon clipboard helpers
+# These copy cute ASCII emoticons straight to the macOS clipboard using `pbcopy` —
+# the exact same behavior as `shrug`.
+alias shrug='echo "¯\_(ツ)_/¯" | pbcopy'                # copy shrug emoticon to clipboard
+alias tableflip='echo "(╯°□°）╯︵ ┻━┻" | pbcopy'         # copy tableflip emoticon to clipboard
+alias fix='echo "┬─┬ ノ( ゜-゜ノ)" | pbcopy'              # copy fix emoticon to clipboard
 
 # Utilities / convenience
 alias entropy='openssl rand -base64 64' # generate 64 bytes of base64 randomness

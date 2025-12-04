@@ -47,8 +47,8 @@ ni | `npm install` (short)
 nps | `npm start` (short) - start the project's dev server
 wtf | `dmesg | tail` - show most recent kernel messages ("What just happened?")
 up | print a cheeky message then run `uptime` on the next line
-tableflip | `echo "(╯°□°）╯︵ ┻━┻"` - throw a table (ASCII emoticon)
-fix | `echo "┬─┬ ノ( ゜-゜ノ)"` - return a table to a calm state
+tableflip | `echo "(╯°□°）╯︵ ┻━┻" | pbcopy` - copy tableflip emoticon to clipboard (macOS)
+fix | `echo "┬─┬ ノ( ゜-゜ノ)" | pbcopy` - copy fix emoticon to clipboard (macOS)
 entropy | `openssl rand -base64 64` - generate strong base64 entropy for keys
 void | redirect output to `/dev/null` (convenience redirection alias for pipelines)
 fractal | `open -a Terminal .` - open the current folder in Terminal (macOS)

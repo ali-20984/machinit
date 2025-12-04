@@ -228,6 +228,15 @@ else
     FAILED=1
 fi
 
+# Test 14a: shrug uses pbcopy to copy emoticon (consistent behavior)
+echo "Test 14a: shrug uses pbcopy"
+if grep -q "^alias shrug=.*pbcopy" "$ALIASES_FILE"; then
+    echo "PASS: shrug uses pbcopy"
+else
+    echo "FAIL: shrug not present or not using pbcopy"
+    FAILED=1
+fi
+
 # Test 14c: wtf alias exists for dmesg
 echo "Test 14c: wtf alias present"
 if grep -q '^alias wtf=' "$ALIASES_FILE"; then
@@ -246,12 +255,12 @@ else
     FAILED=1
 fi
 
-# Test 14e: tableflip & fix emoticon helpers
-echo "Test 14e: tableflip and fix present"
-if grep -q "^alias tableflip=" "$ALIASES_FILE" && grep -q "^alias fix=" "$ALIASES_FILE"; then
-    echo "PASS: tableflip and fix aliases exist"
+# Test 14e: tableflip & fix emoticon helpers (copy to clipboard with pbcopy)
+echo "Test 14e: tableflip and fix present and copy to clipboard"
+if grep -q "^alias tableflip=.*pbcopy" "$ALIASES_FILE" && grep -q "^alias fix=.*pbcopy" "$ALIASES_FILE"; then
+    echo "PASS: tableflip and fix aliases exist and use pbcopy"
 else
-    echo "FAIL: tableflip / fix aliases are missing"
+    echo "FAIL: tableflip / fix aliases are missing or don't use pbcopy"
     FAILED=1
 fi
 
