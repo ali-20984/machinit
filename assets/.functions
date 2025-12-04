@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Small shell helper functions used across the dotfiles and scripts.
+# Keep these short, documented and safe for interactive shells.
+
 # Create a new directory and enter it
 function mkd() {
 	mkdir -p "$@" && cd "$_";
@@ -365,6 +368,8 @@ myip() {
 		curl_opts="$curl_opts -4"
 	fi
 
+	# extract_ip: helper to parse an IP address (IPv4/IPv6) or JSON responses from HTTP services
+	# Returns first plausible IP-like token it can extract from a string
 	extract_ip() {
 		local text="$1"
 		local ip=""

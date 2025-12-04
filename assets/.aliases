@@ -1,55 +1,63 @@
-alias bup="brew update && brew upgrade && brew cleanup"
-alias shrug="echo '¯\_(ツ)_/¯' | pbcopy"
+## Aliases
+## Purpose: small command-line shortcuts to speed up common tasks. Keep this file strictly for aliases only.
+## For functions, see assets/.functions
+
+alias bup="brew update && brew upgrade && brew cleanup" # update Homebrew, upgrade packages, cleanup
+alias shrug="echo '¯\_(ツ)_/¯' | pbcopy" # copy shrug emoticon to clipboard
 ## NOTE: Function 'll' was moved to assets/.functions — keep aliases file strictly for aliases.
 alias reloaddns="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
 alias dnsreload="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
-alias timestamp="date +%s"
-alias jsrefresh="rm -rf node_modules/ package-lock.json && npm install"
+alias timestamp="date +%s" # print current epoch timestamp (seconds since UNIX epoch)
+alias jsrefresh="rm -rf node_modules/ package-lock.json && npm install" # remove node deps and reinstall (useful for JS projects)
 
 # Navigation
-alias ..="cd .."
-alias ...="cd ../../.."
-alias ....="cd ../../../../"
-alias .....="cd ../../../../"
-alias cd..="cd .."
-alias ~="cd ~"
-alias -- -="cd -"
+alias ..="cd .." # go up one directory
+alias ...="cd ../../.." # go up two levels
+alias ....="cd ../../../../" # go up three levels
+alias .....="cd ../../../../" # go up deeper (alias duplicates, intentionally lenient)
+alias cd..="cd .." # alternate form to go up one (Windows-style typing habit)
+alias ~="cd ~" # go to home directory
+alias -- -="cd -" # switch to previous working directory
 
 # Shortcuts
-alias c="clear"
-alias h="history"
-alias o="open ."
+alias c="clear" # clear terminal screen
+alias h="history" # display shell history
+alias o="open ." # open current directory in Finder (macOS)
 
 # Quick zsh editing
-alias zshconf="nano ~/.zshrc"
+alias zshconf="nano ~/.zshrc" # open zsh configuration for quick edits
 
 # Project navigation shortcuts
-alias projects="cd ~/Projects"
+alias projects="cd ~/Projects" # change to ~/Projects
 alias repos="cd ~/Projects"  # same as projects (Projects lives in ~/Projects -> often symlink to ~/Documents/Projects)
 
+# Quick navigation to common user folders
+alias docs="cd ~/Documents" # quickly change directory to ~/Documents
+alias downloads="cd ~/Downloads" # quickly change directory to ~/Downloads
+
 # Quick find wrapper (name search)
-alias qfind='find . -name'
+alias qfind='find . -name' # find files by name in current dir
 
 # Sockets: requires sudo
-alias lsock='sudo lsof -i -P'
+alias lsock='sudo lsof -i -P' # list network sockets (requires sudo)
 
 # Network
-alias ping_test="ping 1.1.1.1"
+alias ping_test="ping 1.1.1.1" # quick ping to Cloudflare DNS
 
 ## NOTE: Implementation moved to assets/.functions. Keep aliases file strictly for aliases.
-alias localip="ipconfig getifaddr en0"
+alias localip="ipconfig getifaddr en0" # show local IP address for primary interface (macOS)
 
 # npm short install alias
-alias ni="npm install"
+alias ni="npm install" # shorthand to install npm dependencies
  
 
 # System
-alias path='echo -e ${PATH//:/\\n}'
-alias cpu='top -o cpu'
-alias mem='top -o rsize'
+alias path='echo -e ${PATH//:/\\n}' # print PATH entries one-per-line
+alias cpu='top -o cpu' # show top processes by CPU
+alias mem='top -o rsize' # show top processes by memory usage (resident size)
 
 # Lock the screen (when going AFK)
-alias afk='pmset displaysleepnow'
+alias afk='pmset displaysleepnow' # put display to sleep / lock screen
 
 # Find WiFi password, add the name:
-alias wifi_pass='security find-generic-password -wa'
+alias wifi_pass='security find-generic-password -wa' # macOS: retrieve WiFi password from keychain (append SSID)
