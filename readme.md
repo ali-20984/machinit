@@ -109,6 +109,7 @@ The script executes a series of ordered scripts located in the `scripts/` direct
 | `042_disable_siri.sh` | Disable Siri |
 | `043_configure_dock_and_mission_control.sh` | Configure Dock And Mission Control |
 | `044_configure_dock_apps.sh` | Configure Dock Apps |
+Note: `044_configure_dock_apps.sh` clears existing pinned Dock items by default before adding the curated list (to avoid duplicates). Set `SKIP_DOCK_CLEANUP=1` to preserve existing pins.
 | `045_configure_safari.sh` | Configure Safari |
 | `046_configure_terminal.sh` | Configure Terminal |
 | `047_configure_login_screen.sh` | Configure Login Screen |
