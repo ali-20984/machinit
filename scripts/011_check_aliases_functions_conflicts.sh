@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 set -u
 
+# CLI flags
+abort_on_conflict=false
+check_only=false
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --abort-on-conflict)
+      abort_on_conflict=true; shift;;
+    --check-only|--check-and-exit)
+      check_only=true; shift;;
+    --help|-h)
+      echo "Usage: $0 [--abort-on-conflict] [--check-only] [assets_dir]";
+      echo "  --abort-on-conflict   Exit non-zero when conflicts are found (installer should use this).";
+      echo "  --check-only          Run checks, write report, and exit (default behavior is warning-only).";
+      exit 0;;
+    *)
+      # treat as assets_dir override
+      ASSETS_DIR="$1"; shift;;
+  esac
+done
+
 # 011_check_aliases_functions_conflicts.sh
 # Scan assets/.aliases and assets/.functions (plus scripts/*.sh) and detect:
 #  - duplicate names in repo
@@ -114,10 +135,9 @@ env_conflicts=()
 for name in "${alias_names[@]}" "${func_names[@]}"; do
   # skip empty
   [ -z "$name" ] && continue
-  # check type; some shells have type -t
-  # Run `type -a` in a fresh shell to avoid detecting helper functions defined inside
-  # *this* script (which would cause self-reported conflicts).
-  if type_output=$(bash -lc "type -a -- '$name' 2>/dev/null"); then
+  # Use a clean non-exported shell environment to avoid detecting functions
+  # that are defined inside this running script (avoid false positives).
+  if type_output=$(env -i PATH="$PATH" bash -lc "type -a $name" 2>/dev/null); then
     # If type -a returns anything, note it
     env_conflicts+=("$name: $(echo "$type_output" | tr '\n' ' | ')")
   fi
@@ -166,6 +186,7 @@ report_lines+=("### Function names (scan: $functions_file and scripts/*.sh)")
 for name in "${func_names[@]}"; do report_lines+=("- $name"); done
 
 
+# If check-only mode was requested we still write the report and exit (behavior below)
 # Write the report file
 mkdir -p "$(dirname "$REPORT")"
 printf "%s
@@ -178,7 +199,13 @@ echo "Conflicts report generated at: $REPORT"
 
 if [ "$issues_found" -ne 0 ]; then
   echo "One or more conflicts or duplicate definitions were found. See $REPORT for details." >&2
-  exit 1
+  if [ "$abort_on_conflict" = true ]; then
+    exit 1
+  else
+    # warning-only mode -> do not treat as fatal
+    echo "WARNING: conflicts detected, but running in warning-only mode (no abort)." >&2
+    exit 0
+  fi
 else
   echo "No conflicts detected." >&2
   exit 0

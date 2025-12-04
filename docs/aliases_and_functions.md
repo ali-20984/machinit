@@ -7,8 +7,14 @@ This document is a consolidated reference for the small shell aliases and helper
 
 If you maintain these files, please keep them well-commented and add new items to this doc.
 
-Note: The installer runs a pre-check for alias / function name collisions before applying dotfiles
-(`scripts/011_check_aliases_functions_conflicts.sh`). If collisions or duplicates are found the installer will
+Note: The repository includes a conflict-checker `scripts/011_check_aliases_functions_conflicts.sh`.
+By default the checker writes a report and runs in *warning-only* mode (it will not abort on conflicts).
+The installer runs the checker with `--abort-on-conflict` before applying dotfiles so the installation will
+abort if conflicts are detected. You can run the checker manually and control behavior:
+
+- `bash scripts/011_check_aliases_functions_conflicts.sh` — run checker (warning-only; writes report)
+- `bash scripts/011_check_aliases_functions_conflicts.sh --check-only` — run checker and exit (warning-only)
+- `bash scripts/011_check_aliases_functions_conflicts.sh --abort-on-conflict` — exit non-zero if conflicts found (installer uses this)
 abort unless `SKIP_ALIAS_CHECK=1` is set in your environment.
 
 ---

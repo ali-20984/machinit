@@ -30,7 +30,8 @@ ASSETS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../assets" && pwd)"
 CONFLICT_CHECK_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/011_check_aliases_functions_conflicts.sh"
 if [ -z "${SKIP_ALIAS_CHECK:-}" ] && [ -f "$CONFLICT_CHECK_SCRIPT" ]; then
     print_info "Checking for alias/function name conflicts before installing dotfiles..."
-    if ! bash "$CONFLICT_CHECK_SCRIPT" "$ASSETS_DIR"; then
+    # By default the installer wants to abort on conflicts to avoid accidental shadowing
+    if ! bash "$CONFLICT_CHECK_SCRIPT" --abort-on-conflict "$ASSETS_DIR"; then
         print_error "Conflicts detected. Aborting dotfiles installation. Set SKIP_ALIAS_CHECK=1 to bypass this check if you are sure."
         exit 1
     fi
