@@ -49,6 +49,7 @@ alias localip="ipconfig getifaddr en0" # show local IP address for primary inter
 
 # npm short install alias
 alias ni="npm install" # shorthand to install npm dependencies
+alias nps="npm start" # shorthand to run `npm start` (start a JS dev server)
  
 
 # System

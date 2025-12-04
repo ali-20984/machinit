@@ -44,6 +44,7 @@ lsock | Show open sockets (requires sudo)
 ping_test | Quick ping to `1.1.1.1` (Cloudflare)
 localip | `ipconfig getifaddr en0` (macOS local interface ip)
 ni | `npm install` (short)
+nps | `npm start` (short) - start the project's dev server
 path | Print PATH entries one-per-line
 cpu | `top -o cpu` (top processes by CPU usage)
 mem | `top -o rsize` (top processes by memory usage)

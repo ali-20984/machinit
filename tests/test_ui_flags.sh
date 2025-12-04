@@ -219,6 +219,15 @@ else
     FAILED=1
 fi
 
+# Test 14b: nps alias exists for npm start
+echo "Test 14b: nps alias present"
+if grep -q '^alias nps="npm start"' "$ALIASES_FILE"; then
+    echo "PASS: nps alias exists"
+else
+    echo "FAIL: nps alias missing"
+    FAILED=1
+fi
+
 # Test 15: myip includes named shorthands (aws, icanhazip)
 echo "Test 15: myip supports named services such as 'aws' and 'icanhazip'"
 if grep -q "SERVICE_MAP\[aws\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[icanhazip\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[ican\]" "$FUNCTIONS_FILE"; then
