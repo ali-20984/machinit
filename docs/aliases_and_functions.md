@@ -47,6 +47,12 @@ ni | `npm install` (short)
 nps | `npm start` (short) - start the project's dev server
 wtf | `dmesg | tail` - show most recent kernel messages ("What just happened?")
 up | print a cheeky message then run `uptime` on the next line
+tableflip | `echo "(╯°□°）╯︵ ┻━┻"` - throw a table (ASCII emoticon)
+fix | `echo "┬─┬ ノ( ゜-゜ノ)"` - return a table to a calm state
+entropy | `openssl rand -base64 64` - generate strong base64 entropy for keys
+void | redirect output to `/dev/null` (convenience redirection alias for pipelines)
+fractal | `open -a Terminal .` - open the current folder in Terminal (macOS)
+eldritchterror | `open https://en.wikipedia.org/wiki/Heat_death_of_the_universe` - open a doom reading in the browser
 path | Print PATH entries one-per-line
 cpu | `top -o cpu` (top processes by CPU usage)
 mem | `top -o rsize` (top processes by memory usage)

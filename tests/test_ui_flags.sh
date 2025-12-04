@@ -246,6 +246,26 @@ else
     FAILED=1
 fi
 
+# Test 14e: tableflip & fix emoticon helpers
+echo "Test 14e: tableflip and fix present"
+if grep -q "^alias tableflip=" "$ALIASES_FILE" && grep -q "^alias fix=" "$ALIASES_FILE"; then
+    echo "PASS: tableflip and fix aliases exist"
+else
+    echo "FAIL: tableflip / fix aliases are missing"
+    FAILED=1
+fi
+
+# Test 14f: entropy, void, fractal, eldritchterror
+echo "Test 14f: entropy, void, fractal, eldritchterror present"
+for a in entropy void fractal eldritchterror; do
+    if grep -q "^alias ${a}=" "$ALIASES_FILE"; then
+        echo "PASS: $a alias exists"
+    else
+        echo "FAIL: $a alias missing"
+        FAILED=1
+    fi
+done
+
 # Test 15: myip includes named shorthands (aws, icanhazip)
 echo "Test 15: myip supports named services such as 'aws' and 'icanhazip'"
 if grep -q "SERVICE_MAP\[aws\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[icanhazip\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[ican\]" "$FUNCTIONS_FILE"; then

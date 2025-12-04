@@ -56,6 +56,16 @@ alias wtf='dmesg | tail' # “What just happened?” — show last kernel messag
 
 # Helpful playful 'up' alias — prints a fun message then shows the system uptime on the next line
 alias up='echo "Time is an illusion."; uptime'
+
+# Fun emoticon helpers (copyable / cute shortcuts)
+alias tableflip='echo "(╯°□°）╯︵ ┻━┻"' # throw a table (ASCII emoticon)
+alias fix='echo "┬─┬ ノ( ゜-゜ノ)"'     # put table back (ASCII emoticon)
+
+# Utilities / convenience
+alias entropy='openssl rand -base64 64' # generate 64 bytes of base64 randomness
+alias void='>/dev/null 2>&1'             # shortcut for discarding output (use in pipelines)
+alias fractal='open -a Terminal .'      # open current folder in Terminal
+alias eldritchterror='open https://en.wikipedia.org/wiki/Heat_death_of_the_universe' # read doom
  
 
 # System
