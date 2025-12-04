@@ -35,6 +35,7 @@ cd.. | Alias that also changes directory up one level
 c | Clear terminal
 docs | Quick navigation to `~/Documents`
 downloads | Quick navigation to `~/Downloads`
+dl | Short form for `cd ~/Downloads`
 h | Show shell history
 o | Open the current directory in Finder (macOS)
 zshconf | Edit `~/.zshrc`

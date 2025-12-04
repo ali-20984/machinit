@@ -33,6 +33,7 @@ alias repos="cd ~/Projects"  # same as projects (Projects lives in ~/Projects ->
 # Quick navigation to common user folders
 alias docs="cd ~/Documents" # quickly change directory to ~/Documents
 alias downloads="cd ~/Downloads" # quickly change directory to ~/Downloads
+alias dl="cd ~/Downloads" # short form to go to ~/Downloads
 
 # Quick find wrapper (name search)
 alias qfind='find . -name' # find files by name in current dir
