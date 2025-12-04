@@ -228,6 +228,24 @@ else
     FAILED=1
 fi
 
+# Test 14c: wtf alias exists for dmesg
+echo "Test 14c: wtf alias present"
+if grep -q '^alias wtf=' "$ALIASES_FILE"; then
+    echo "PASS: wtf alias exists"
+else
+    echo "FAIL: wtf alias missing"
+    FAILED=1
+fi
+
+# Test 14d: up alias exists and contains uptime invocation
+echo "Test 14d: up alias present and includes uptime"
+if grep -q '^alias up=' "$ALIASES_FILE" && grep -q 'uptime' "$ALIASES_FILE"; then
+    echo "PASS: up alias exists and runs uptime"
+else
+    echo "FAIL: up alias missing or does not include uptime"
+    FAILED=1
+fi
+
 # Test 15: myip includes named shorthands (aws, icanhazip)
 echo "Test 15: myip supports named services such as 'aws' and 'icanhazip'"
 if grep -q "SERVICE_MAP\[aws\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[icanhazip\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[ican\]" "$FUNCTIONS_FILE"; then

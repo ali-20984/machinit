@@ -50,6 +50,12 @@ alias localip="ipconfig getifaddr en0" # show local IP address for primary inter
 # npm short install alias
 alias ni="npm install" # shorthand to install npm dependencies
 alias nps="npm start" # shorthand to run `npm start` (start a JS dev server)
+
+# Quick diagnostics
+alias wtf='dmesg | tail' # “What just happened?” — show last kernel messages (requires privileges on some systems)
+
+# Helpful playful 'up' alias — prints a fun message then shows the system uptime on the next line
+alias up='echo "Time is an illusion."; uptime'
  
 
 # System
