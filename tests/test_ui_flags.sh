@@ -112,19 +112,28 @@ echo "Test 8: alias placement checks"
 ALIASES_FILE="$PROJECT_ROOT/assets/.aliases"
 FUNCTIONS_FILE="$PROJECT_ROOT/assets/.functions"
 for a in zshconf projects repos qfind lsock cd.. '.....'; do
-    if grep -q "alias $a" "$ALIASES_FILE"; then
+    if grep -F -q "alias $a" "$ALIASES_FILE"; then
         echo "PASS: alias $a present in .aliases"
     else
         echo "FAIL: alias $a missing from .aliases"
         FAILED=1
     fi
-    if grep -q "alias $a" "$FUNCTIONS_FILE"; then
+    if grep -F -q "alias $a" "$FUNCTIONS_FILE"; then
         echo "FAIL: alias $a wrongly present in .functions"
         FAILED=1
     else
         echo "PASS: alias $a not in .functions"
     fi
 done
+
+# Test 14g: dl alias points to Downloads
+echo "Test 14g: dl alias present"
+if grep -q '^alias dl="cd ~/Downloads"' "$ALIASES_FILE"; then
+    echo "PASS: dl alias exists"
+else
+    echo "FAIL: dl alias missing"
+    FAILED=1
+fi
 
 # Verify repos alias matches projects
 echo "Test 10: repos alias equals projects"

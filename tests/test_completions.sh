@@ -2,18 +2,20 @@
 # Test that zsh completions for npm exist in assets
 set -euo pipefail
 REPO_ROOT="$(dirname "$0")/.."
-COMPLETION_FILE="$REPO_ROOT/assets/completions/_npm"
+CANDIDATES=("$REPO_ROOT/assets/completions/_npm" "$REPO_ROOT/assets/completions/_yarn")
 
 echo "Running completions test..."
 
-if [ -f "$COMPLETION_FILE" ]; then
-    echo "PASS: completion file present: $COMPLETION_FILE"
-    if grep -q "_describe 'npm command' commands" "$COMPLETION_FILE"; then
-        echo "PASS: completion script contains expected helper list"
-        exit 0
+for f in "${CANDIDATES[@]}"; do
+    if [ -f "$f" ]; then
+        echo "PASS: completion file present: $f"
+        if grep -Eq "_describe '.* command' commands" "$f"; then
+            echo "PASS: completion script contains expected helper list"
+        else
+            echo "FAIL: completion script missing expected content: $f"; exit 2
+        fi
     else
-        echo "FAIL: completion script missing expected content"; exit 2
+        echo "FAIL: completion file not found: $f"; exit 2
     fi
-else
-    echo "FAIL: completion file not found: $COMPLETION_FILE"; exit 2
-fi
+done
+exit 0

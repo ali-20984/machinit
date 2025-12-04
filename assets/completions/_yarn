@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# zsh completion helper for yarn — lightweight list of common subcommands
+# Intentionally small; users who want full completion should install upstream completion.
+
+#compdef yarn
+
+local -a commands
+commands=(
+  'add:add packages'
+  'install:install dependencies'
+  'remove:remove packages'
+  'upgrade:upgrade packages'
+  'run:run a package script'
+  'start:start package'
+  'test:run tests'
+  'build:build the project'
+  'init:create a package.json file'
+  'link:create a symlink for a package'
+  'global:add/remove global packages'
+  'publish:publish package'
+  'help:show help for a command'
+)
+
+_describe 'yarn command' commands && return 0

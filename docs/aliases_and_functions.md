@@ -2,6 +2,10 @@
 
 - `myaliases` — show the list of local `aliases` and `functions` with short descriptions pulled from inline comments. Usage: `myaliases`, `myaliases --aliases`, `myaliases --functions`
 
+## Zsh completions
+
+- Completions bundled in `assets/completions` include `npm` and `yarn`. The installer will copy these to `~/.zsh/completions` and ensure `fpath` and `compinit` are configured in `~/.zshrc` when installing dotfiles.
+
 # Aliases and Functions (machinit)
 
 This document is a consolidated reference for the small shell aliases and helper functions defined in the dotfiles under `assets/`.
