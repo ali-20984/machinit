@@ -1,5 +1,26 @@
 #!/usr/bin/env bash
-# Alias to rg completion
-#compdef ripgrep
+# ripgrep completion — enriched with common flags and aliases to rg
+#compdef ripgrep rg
 
+local -a opts
+opts=(
+	'-i:ignore case'
+	'-S:smart case'
+	'-n:print line numbers'
+	'-H:print filename'
+	'-g:glob pattern'
+	'-u:search hidden files'
+	'-w:match whole words only'
+	'-r:recursive'
+	'--hidden:search hidden files'
+	'--no-ignore:do not respect ignore files'
+	'--type:restrict to type'
+	'--type-add:define a type'
+	'--no-messages:quiet'
+	'--stats:show stats'
+)
+
+_describe 'rg option' opts && return 0
+
+# fallbacks
 _rg || _grep || _files

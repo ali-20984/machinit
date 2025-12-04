@@ -9,6 +9,8 @@ commands=(
   'run:run a package script'
   'create:run a package scaffolding tool'
   'help:show npx help'
+  'install:install package temporarily'
+  '-p:pass args to binary'
 )
 
 _describe 'npx command' commands && return 0

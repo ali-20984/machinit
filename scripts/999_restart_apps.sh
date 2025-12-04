@@ -43,6 +43,9 @@ apps=(
 )
 
 echo "About to restart the following UI processes: ${apps[*]}"
+if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "DRY RUN enabled — no applications will be restarted."
+fi
 if [ "$YES" = false ]; then
     # Use -r to avoid backslash interpretation (ShellCheck SC2162)
     read -r -p "Proceed? [y/N] " answer
@@ -54,15 +57,25 @@ else
     echo "--yes detected: proceeding non-interactively."
 fi
 
-for app in "${apps[@]}"; do
-    echo "Restarting: $app"
-    killall "$app" &>/dev/null || true
-done
+if [ "${DRY_RUN:-false}" = "true" ]; then
+    for app in "${apps[@]}"; do
+        echo "[DRY RUN] would restart: $app"
+    done
+else
+    for app in "${apps[@]}"; do
+        echo "Restarting: $app"
+        killall "$app" &>/dev/null || true
+    done
+fi
 
 echo "Restart complete. Some changes might still need a logout/restart to fully apply."
 
 # Flush cfprefsd cache and restart Dock so dockutil changes are picked up
 # Ensure these run as the original (non-root) user so the right session is affected
 echo "Flushing preference cache and restarting Dock for user $ORIGINAL_USER..."
-execute_as_user killall cfprefsd &>/dev/null || true
-execute_as_user killall Dock &>/dev/null || true
+if [ "${DRY_RUN:-false}" = "true" ]; then
+    echo "[DRY RUN] would flush cfprefsd and restart Dock for user $ORIGINAL_USER"
+else
+    execute_as_user killall cfprefsd &>/dev/null || true
+    execute_as_user killall Dock &>/dev/null || true
+fi

@@ -3,12 +3,18 @@
 #compdef copilot
 
 local -a cmds
+
 cmds=(
   'help:show help'
   'version:print version'
-  'init:initialize project'
-  'deploy:deploy app'
-  'status:show status'
+  'auth:Authenticate with GitHub Copilot'
+  'login:Interactive login flow'
+  'logout:Logout current session'
+  'chat:Open chat assistant'
+  'code:Run code assistant commands'
+  'repo:Work with repository-related commands'
+  'config:View or set configuration options'
+  'status:Show current CLI/session status'
 )
 
 _describe 'copilot command' cmds && return 0

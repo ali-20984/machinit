@@ -9,6 +9,10 @@ cmds=(
   'format:reformat files'
   '--version:print version'
   '--help:show help'
+  '--line-length#:wrap at column'
+  '--target-version:specify target Python version'
+  '--safe:do not apply changes'
+  '--fast:skip experimental safety checks'
 )
 
 _describe 'black command' cmds && return 0

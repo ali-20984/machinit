@@ -9,6 +9,9 @@ cmds=(
   'search:Search packages'
   'list:List installed packages'
   'help:Show help'
+  'integrate:Integrate with an IDE or environment'
+  'export:Export a list of dependencies'
+  'update:Update package list'
 )
 
 _describe 'vcpkg subcommand' cmds && return 0

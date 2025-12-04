@@ -16,6 +16,16 @@ cmds=(
   'search:Search registry for a crate'
   'publish:Upload a package to registry'
   'help:Show help'
+  'check:Check if package compiles without producing artifacts'
+  'clean:Remove artifacts'
+  'fmt:Format code using rustfmt'
+  'clippy:Run clippy lints'
+  '--release:Build artifacts in release mode'
+  '--package:Select a package by name'
+  '--workspace:Operate on workspace'
+  '--manifest-path:Path to Cargo.toml:_files'
+  '--features:Cargo features to activate'
+  '--no-default-features:Disable default features'
 )
 
 _describe 'cargo subcommand' cmds && return 0

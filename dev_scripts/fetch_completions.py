@@ -11,6 +11,8 @@ Usage: ./dev_scripts/fetch_completions.py [name [name ...]]
 If no names are supplied, it tries a built-in list.
 """
 import sys
+import subprocess
+import shutil
 import os
 import urllib.request
 
@@ -52,10 +54,44 @@ SOURCES = [
     'https://raw.githubusercontent.com/{owner}/{repo}/master/_{name}',
     # git contrib or project-level completions
     'https://raw.githubusercontent.com/git/git/master/contrib/completion/{name}',
+    'https://raw.githubusercontent.com/{owner}/{repo}/master/completions/{name}.zsh',
+    'https://raw.githubusercontent.com/{owner}/{repo}/master/completions/_{name}.zsh',
     'https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash',
     # generic fallback to _name at github root for projects that put completions there
     'https://raw.githubusercontent.com/{owner}/{repo}/master/_{name}',
 ]
+
+# Per-tool targeted raw URLs (explicit paths) for better discovery.
+PER_TOOL_URLS = {
+    'ripgrep': [
+        'https://raw.githubusercontent.com/BurntSushi/ripgrep/master/complete/_rg',
+        'https://raw.githubusercontent.com/BurntSushi/ripgrep/master/completions/_rg',
+    ],
+    'cargo': [
+        'https://raw.githubusercontent.com/rust-lang/cargo/master/contrib/completion/cargo.zsh',
+        'https://raw.githubusercontent.com/rust-lang/cargo/master/src/etc/cargo-zsh-completion.sh',
+    ],
+    'rustc': [
+        'https://raw.githubusercontent.com/rust-lang/rust/master/src/etc/rustc-completions.zsh',
+    ],
+    'gh': [
+        'https://raw.githubusercontent.com/cli/cli/trunk/completions/gh.zsh',
+        'https://raw.githubusercontent.com/cli/cli/master/completions/gh.zsh',
+    ],
+    'copilot': [
+        'https://raw.githubusercontent.com/github/copilot-cli/main/completions/copilot.zsh',
+        'https://raw.githubusercontent.com/github/copilot-cli/main/src/completion/copilot.zsh',
+    ],
+    'rg': [
+        'https://raw.githubusercontent.com/BurntSushi/ripgrep/master/complete/_rg',
+    ],
+    'clang': [
+        'https://raw.githubusercontent.com/llvm/llvm-project/main/clang/tools/clang-completion/_clang',
+    ],
+    'g++': [
+        'https://raw.githubusercontent.com/scop/bash-completion/master/completions/gcc'
+    ]
+}
 
 def try_fetch(url):
     try:
@@ -64,6 +100,80 @@ def try_fetch(url):
                 return r.read().decode('utf-8')
     except Exception:
         return None
+
+
+def generate_from_help(name, timeout=3):
+    """Try to derive completion content by running tool's help output locally.
+
+    Returns generated completion content string or None.
+    """
+    # Find the executable on PATH
+    exe = shutil.which(name)
+    if not exe:
+        # try name with + escaped (g++, clang++)
+        exe = shutil.which(name.replace('+', ''))
+        if not exe:
+            return None
+
+    # Try common help forms
+    help_cmds = [[exe, '--help'], [exe, '-h'], [exe, 'help']]
+    out = ''
+    for cmd in help_cmds:
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+            if p.returncode == 0 or p.stdout:
+                out = p.stdout.strip() or p.stderr.strip()
+                if out:
+                    break
+        except Exception:
+            continue
+
+    if not out:
+        return None
+
+    # Parse options and subcommands
+    import re
+
+    opts = set()
+    cmds = []
+
+    # matches --long-option or -s
+    for match in re.finditer(r'(?P<option>--?[A-Za-z0-9][-A-Za-z0-9_=]*)', out):
+        opts.add(match.group('option'))
+
+    # Find 'Commands:' sections or lines that start with whitespace and a word then two spaces
+    for line in out.splitlines():
+        m = re.match(r'^\s{0,4}([a-z0-9][a-z0-9_\-]*)(?:\s{2,}|\s+-)', line, re.I)
+        if m:
+            cmd = m.group(1).strip()
+            if cmd and not cmd.startswith('-'):
+                cmds.append(cmd)
+
+    # Construct a zsh completion snippet
+    parts = [f"#!/usr/bin/env bash", f"# Auto-generated completion for {name} (from --help output)", "#compdef %s" % name, ""]
+
+    if cmds:
+        # create a commands list
+        parts.append('local -a commands')
+        parts.append('commands=(')
+        for c in sorted(set(cmds))[:200]:
+            parts.append(f"  '{c}:{c} subcommand'")
+        parts.append(')')
+        parts.append("_describe 'command' commands && return 0")
+
+    if opts:
+        parts.append('local -a opts')
+        parts.append('opts=(')
+        for o in sorted(opts):
+            # skip single-letter grouped options without description
+            parts.append(f"  '{o}:{o} option'")
+        parts.append(')')
+        parts.append("_describe 'option' opts && return 0")
+
+    # fallback to files
+    parts.append('_files')
+    parts.append('')
+    return '\n'.join(parts)
 
 def ensure_out_dir():
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -128,6 +238,15 @@ def main(names):
             ('ripgrep', 'ripgrep'),
             ('rust-lang', 'cargo'),
             ('rust-lang', 'rust'),
+                    # Try some known owners / repos for specific tools
+                    ('BurntSushi', 'ripgrep'),
+                    ('cli', 'cli'),
+                    ('github', 'copilot-cli'),
+                    ('rust-lang', 'cargo'),
+                    ('rust-lang', 'rust'),
+                    ('llvm', 'llvm-project'),
+                    ('psf', 'black'),
+                    ('microsoft', 'vcpkg'),
             ('nodejs', 'node'),
             ('npm', 'cli'),
             ('microsoft', name),

@@ -8,6 +8,11 @@ opts=(
   '--help:show help'
   '-o:output file:_files'
   '--crate-type:crate type'
+  '--edition:specify edition (2015|2018|2021)'
+  '-C:codegen options'
+  '-g:include debug info'
+  '-O:optimize (equivalent to -C opt-level=3)'
+  '--emit:what to emit (asm,obj,link)
 )
 
 _describe 'rustc option' opts && return 0

@@ -18,6 +18,14 @@ commands=(
   'uninstall:remove packages'
   'init:create a package.json file'
   'link:symlink a package folder'
+  'version:manage package version'
+  'outdated:check for outdated deps'
+  'ls:list installed packages'
+  'exec:run a binary from node_modules'
+  'pack:create tarball from package'
+  'rebuild:rebuild native addons'
+  'cache:manipulate npm cache'
+  'config:get/set npm config'
   'help:show help for a command'
 )
 

@@ -9,10 +9,34 @@ if (( $+functions[_rg] )); then
   return 0
 fi
 
+local -a opts
+opts=(
+  '-i:ignore case'
+  '-S:smart case'
+  '-n:show line numbers'
+  '-H:print filename'
+  '-g:glob pattern'
+  '-u:search hidden files'
+  '-w:match whole words only'
+  '-r:recursive'
+  '-s:casesensitive search'
+  '-v:invert match'
+  '--hidden:search hidden files'
+  '--no-ignore:do not respect ignore files'
+  '--no-messages:quiet'
+  '--stats:show stats'
+  '--max-columns#:maximum columns'
+  '--type=TYPE:restrict to type'
+  '--type-add=TYPE:define a type'
+  '--ignore-file:use ignore file:_files'
+)
+
+_describe 'rg option' opts && return 0
+
+# If no helper present, fall back to grep behaviour if present, else filename
 if (( $+functions[_grep] )); then
   _grep
   return 0
 fi
 
-# Fallback: filename completion
 _files
