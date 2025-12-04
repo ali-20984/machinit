@@ -166,8 +166,9 @@ fi
 # Test 12: ll implementation is robust (no hard-coded homebrew gnubin path)
 echo "Test 12: ll is defined and does not hard-code a gnubin path"
 ALIASES_FILE="$PROJECT_ROOT/assets/.aliases"
-if grep -q "ll()" "$ALIASES_FILE" || grep -q "alias ll=" "$ALIASES_FILE"; then
-    echo "PASS: ll is defined in .aliases"
+FUNCTIONS_FILE="$PROJECT_ROOT/assets/.functions"
+if grep -q "ll()" "$FUNCTIONS_FILE" || grep -q "alias ll=" "$ALIASES_FILE"; then
+    echo "PASS: ll is defined in .functions or alias in .aliases"
 else
     echo "FAIL: ll is not defined in .aliases"
     FAILED=1
@@ -175,7 +176,7 @@ fi
 
 # Test 13: myip function exists and references multiple fallbacks (defaults to Amazon checkip)
 echo "Test 13: myip() present and checks multiple services (default prefers Amazon)"
-if grep -q "myip()" "$ALIASES_FILE" && grep -q "checkip.amazonaws.com" "$ALIASES_FILE"; then
+if grep -q "myip()" "$FUNCTIONS_FILE" && grep -q "checkip.amazonaws.com" "$FUNCTIONS_FILE"; then
     echo "PASS: myip function exists and prefers checkip.amazonaws.com by default"
 else
     echo "FAIL: myip function missing or does not prefer checkip.amazonaws.com"
@@ -202,7 +203,7 @@ fi
 
 # Test 13b: myip supports --ipv6/-6 flag
 echo "Test 13b: myip supports --ipv6 or -6"
-if grep -q -- "--ipv6" "$ALIASES_FILE" || grep -q -- "-6" "$ALIASES_FILE"; then
+if grep -q -- "--ipv6" "$FUNCTIONS_FILE" || grep -q -- "-6" "$FUNCTIONS_FILE"; then
     echo "PASS: myip supports IPv6 flag"
 else
     echo "FAIL: myip lacks --ipv6/-6 support"
@@ -220,7 +221,7 @@ fi
 
 # Test 15: myip includes named shorthands (aws, icanhazip)
 echo "Test 15: myip supports named services such as 'aws' and 'icanhazip'"
-if grep -q "SERVICE_MAP\[aws\]" "$ALIASES_FILE" && grep -q "SERVICE_MAP\[icanhazip\]" "$ALIASES_FILE" && grep -q "SERVICE_MAP\[ican\]" "$ALIASES_FILE"; then
+if grep -q "SERVICE_MAP\[aws\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[icanhazip\]" "$FUNCTIONS_FILE" && grep -q "SERVICE_MAP\[ican\]" "$FUNCTIONS_FILE"; then
     echo "PASS: myip supports named services (aws, icanhazip, ican)"
 else
     echo "FAIL: myip does not include named service mappings (aws/icanhazip)"
@@ -229,14 +230,14 @@ fi
 
 # Test 16: myip help exists
 echo "Test 16: myip has a help message (--help)"
-if grep -q -- "--help" "$ALIASES_FILE" || grep -q -- "Usage: myip" "$ALIASES_FILE"; then
+if grep -q -- "--help" "$FUNCTIONS_FILE" || grep -q -- "Usage: myip" "$FUNCTIONS_FILE"; then
     echo "PASS: myip help exists"
 else
     echo "FAIL: myip help missing"
     FAILED=1
 fi
 
-if grep -q "/opt/homebrew/opt/coreutils/libexec/gnubin/ls" "$ALIASES_FILE"; then
+if grep -q "/opt/homebrew/opt/coreutils/libexec/gnubin/ls" "$FUNCTIONS_FILE"; then
     echo "FAIL: ll uses a hard-coded Homebrew gnubin path"
     FAILED=1
 else

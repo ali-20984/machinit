@@ -285,3 +285,149 @@ recent() {
 	echo "No matching project found for '$pattern'"
 	return 1
 }
+
+# ll: robust listing — prefer GNU 'ls' if available, otherwise fallback
+ll() {
+	# Accept arbitrary args
+	if command -v gls >/dev/null 2>&1; then
+		gls -AhlFo --color --group-directories-first "$@"
+	elif ls --color >/dev/null 2>&1; then
+		# system ls supports --color (likely GNU), use colorized listing
+		ls -AhlFo --color --group-directories-first "$@" 2>/dev/null || ls -AhlFo "$@"
+	elif command -v gls >/dev/null 2>&1; then
+		gls -AhlFo --color --group-directories-first "$@"
+	elif command -v ls >/dev/null 2>&1; then
+		# BSD ls lacks --color; don't pass unknown options
+		ls -AhlFo --group-directories-first "$@" 2>/dev/null || ls -AhlFo "$@"
+	else
+		/bin/ls -AhlF "$@"
+	fi
+}
+
+# myip: robust public IP lookup (moved from assets/.aliases)
+myip() {
+	# Usage: myip [--service <url>] [--ipv6|-6]
+	# Default: use Amazon checkip (https://checkip.amazonaws.com) first, then fallbacks
+	local service=""
+	local prefer_v6=false
+
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			--service)
+				shift
+				service="$1"
+				shift
+				;;
+			--ipv6|-6)
+				prefer_v6=true
+				shift
+				;;
+			--help|-h)
+				echo "Usage: myip [--service <url|name>] [--ipv6|-6]";
+				echo "Named services: aws, icanhazip, ifconfig, ident, ipinfo";
+				echo "Examples:";
+				echo "  myip                  # default (AWS checkip)";
+				echo "  myip --service aws    # use named aws service (checkip.amazonaws.com)";
+				echo "  myip --ipv6           # prefer IPv6 lookups";
+				return 0
+				;;
+			*)
+				# allow single positional to be treated as service url/name
+				if [ -z "$service" ]; then
+					service="$1"
+				fi
+				shift
+				;;
+		esac
+	done
+
+	declare -A SERVICE_MAP
+	SERVICE_MAP[aws]="https://checkip.amazonaws.com"
+	SERVICE_MAP[icanhazip]="https://icanhazip.com"
+	SERVICE_MAP[ican]="https://icanhazip.com"
+	SERVICE_MAP[ifconfig]="https://ifconfig.me"
+	SERVICE_MAP[ident]="https://ident.me"
+	SERVICE_MAP[ipinfo]="https://ipinfo.io/ip"
+
+	if [ -n "$service" ] && [[ "${SERVICE_MAP[$service]+_}" ]]; then
+		service="${SERVICE_MAP[$service]}"
+	fi
+
+	local services=("https://checkip.amazonaws.com" "https://icanhazip.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip" "https://api.ipify.org" "https://ifconfig.co/ip")
+	if [ -n "$service" ]; then
+		services=("$service" "https://checkip.amazonaws.com" "https://icanhazip.com" "https://ifconfig.me" "https://ident.me" "https://ipinfo.io/ip")
+	fi
+
+	local curl_opts="-s --max-time 3"
+	if [ "$prefer_v6" = true ]; then
+		curl_opts="$curl_opts -6"
+	else
+		curl_opts="$curl_opts -4"
+	fi
+
+	extract_ip() {
+		local text="$1"
+		local ip=""
+
+		ip=$(printf "%s" "$text" | grep -Eo '"ip"[[:space:]]*:[[:space:]]*"[^"]+"' | sed -E 's/.*"ip"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/' | head -n1 || true)
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
+		fi
+
+		ip=$(printf "%s" "$text" | grep -Eo '((25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])' | head -n1 || true)
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
+		fi
+
+		ip=$(printf "%s" "$text" | grep -Eo '([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{1,4}|::|([0-9a-fA-F:]+::[0-9a-fA-F:]*)' | head -n1 || true)
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
+		fi
+
+		ip=$(printf "%s" "$text" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n1 || true)
+		if [ -n "$ip" ]; then
+			printf "%s" "$ip" && return 0
+		fi
+
+		return 1
+	}
+
+	for s in "${services[@]}"; do
+		if command -v curl >/dev/null 2>&1; then
+			out=$(curl $curl_opts -A "machinit/myip" --retry 1 --retry-connrefused --retry-delay 1 "$s" 2>/dev/null || true)
+		elif command -v wget >/dev/null 2>&1; then
+			if [ "$prefer_v6" = true ]; then
+				out=$(wget -qO- --timeout=3 -6 "$s" 2>/dev/null || true)
+			else
+				out=$(wget -qO- --timeout=3 "$s" 2>/dev/null || true)
+			fi
+		else
+			echo "No HTTP client (curl|wget) found to fetch public IP"
+			return 1
+		fi
+
+		out=$(echo "$out" | tr -d '\r' || true)
+		ip=""
+		ip=$(extract_ip "$out" || true)
+		if [ -n "$ip" ]; then
+			echo "$ip"
+			return 0
+		fi
+	done
+
+	if command -v dig >/dev/null 2>&1; then
+		if [ "$prefer_v6" = true ]; then
+			dns_out=$(dig -6 +short myip.opendns.com @resolver1.opendns.com 2>/dev/null || true)
+		else
+			dns_out=$(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null || true)
+		fi
+		dns_out=$(echo "$dns_out" | tr -d '\r' | tr -d '\n' || true)
+		if [ -n "$dns_out" ] && extract_ip "$dns_out" >/dev/null 2>&1; then
+			echo "$dns_out"
+			return 0
+		fi
+	fi
+
+	echo "Could not determine public IP from known services"
+	return 1
+}
