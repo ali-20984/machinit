@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Minimal zsh completion wrapper for GitHub CLI (gh).
+# This tries to use the tool's built-in completion generator when available.
+
+#compdef gh
+
+if command -v gh >/dev/null 2>&1; then
+  # ask gh to dump its zsh completion and evaluate it
+  # (gh prints a complete zsh completion file when asked)
+  if out=$(gh completion -s zsh 2>/dev/null); then
+    # shellcheck disable=SC2148
+    eval "$out"
+  fi
+fi
+
+return 0

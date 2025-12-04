@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Lightweight zsh completion helper for npx
+# npx is part of npm CLI — fall back to npm's helper where possible
+
+#compdef npx
+
+local -a commands
+commands=(
+  'run:run a package script'
+  'create:run a package scaffolding tool'
+  'help:show npx help'
+)
+
+_describe 'npx command' commands && return 0
+
+return 1

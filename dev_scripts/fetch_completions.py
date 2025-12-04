@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""Fetch zsh completion files from common upstream sources.
+
+Tries these locations (in order) for each completion name:
+ - zsh-users/zsh-completions (src/_name)
+ - ohmyzsh plugins (plugins/name/_name)
+
+Saves downloads to assets/completions/_name if found and not already present.
+
+Usage: ./dev_scripts/fetch_completions.py [name [name ...]]
+If no names are supplied, it tries a built-in list.
+"""
+import sys
+import os
+import urllib.request
+
+ROOT = os.path.dirname(os.path.dirname(__file__))
+OUT_DIR = os.path.join(ROOT, 'assets', 'completions')
+
+DEFAULTS = [
+    'npm','npx','yarn','curl','rg','ripgrep','node','black','chown','chmod',
+    'copilot','clang','clang++','cargo','cmake','code','cp','cron','crontab',
+    'dd','df','dig','dockutil','du','egrep','find','fgrep','fmt','flake8',
+    'git','gh','github','g++','gcc','grep','gnumake','hexdump','ip','ipconfig',
+    'ld','ln','mount','mkdir','cat','nvm','nvram','ping','nslookup','ps','rsync',
+    'rustc','shellcheck','ssh','sort','tar','vcpkg','xargs','wget','which'
+]
+
+SOURCES = [
+    'https://raw.githubusercontent.com/zsh-users/zsh-completions/master/src/_{name}',
+    'https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/{name}/_{name}',
+    # bash-completion variants (many projects put completions here)
+    'https://raw.githubusercontent.com/scop/bash-completion/master/completions/{name}',
+    'https://raw.githubusercontent.com/bash-completion/bash-completion/master/completions/{name}',
+    # git contrib or project-level completions
+    'https://raw.githubusercontent.com/git/git/master/contrib/completion/{name}',
+    'https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash',
+    # generic fallback to _name at github root for projects that put completions there
+    'https://raw.githubusercontent.com/{owner}/{repo}/master/_{name}',
+]
+
+def try_fetch(url):
+    try:
+        with urllib.request.urlopen(url, timeout=10) as r:
+            if r.status == 200:
+                return r.read().decode('utf-8')
+    except Exception:
+        return None
+
+def ensure_out_dir():
+    os.makedirs(OUT_DIR, exist_ok=True)
+
+def save(name, content):
+    fname = os.path.join(OUT_DIR, f'_{name}')
+    if os.path.exists(fname):
+        print(f'SKIP: _{name} already exists')
+        return False
+    with open(fname, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f'WROTE: {fname}')
+    return True
+
+def main(names):
+    ensure_out_dir()
+    results = {}
+    for name in names:
+        got = False
+        # try zsh-completions and ohmyzsh
+        # try the primary set first (zsh-completions / ohmyzsh / bash-completion)
+        for tmpl in SOURCES[:5]:
+            url = tmpl.format(name=name)
+            content = try_fetch(url)
+            if content:
+                print(f'FOUND upstream for {name} -> {url}')
+                saved = save(name, content)
+                results[name] = (url, saved)
+                got = True
+                break
+
+        if got:
+            continue
+
+        # a small heuristic: check for repo named after cli in common orgs
+        # try lookups in some likely owners (git, rust-lang, microsoft, npm)
+        attempts = [
+            ('git', 'git'),
+            ('ripgrep', 'ripgrep'),
+            ('rust-lang', 'cargo'),
+            ('rust-lang', 'rust'),
+            ('nodejs', 'node'),
+            ('npm', 'cli'),
+            ('microsoft', name),
+            ('Homebrew', name),
+            ('docker', name),
+        ]
+        for owner, repo in attempts:
+            url = SOURCES[2].format(owner=owner, repo=repo, name=name)
+            content = try_fetch(url)
+            if content:
+                print(f'FOUND (fallback) for {name} -> {url}')
+                saved = save(name, content)
+                results[name] = (url, saved)
+                got = True
+                break
+
+        if not got:
+            print(f'NOT FOUND: {name}')
+            results[name] = (None, False)
+
+    return results
+
+if __name__ == '__main__':
+    names = sys.argv[1:] or DEFAULTS
+    main(names)
