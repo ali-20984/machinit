@@ -126,7 +126,11 @@ install_brew_package pnpm
 
 print_install "@github/copilot"
 if command -v npm &>/dev/null; then
-    npm install -g @github/copilot
+    if [ "$DRY_RUN" = true ]; then
+        print_dry_run "npm install -g @github/copilot"
+    else
+        execute_as_user npm install -g @github/copilot
+    fi
 else
     print_skip "npm not found, skipping @github/copilot"
 fi

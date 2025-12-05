@@ -38,22 +38,32 @@ if [ ! -w "$NVM_DIR" ]; then
 fi
 execute chmod -R u+rwX "$NVM_DIR"
 
-# Get nvm prefix
-NVM_PREFIX=$(brew --prefix nvm)
+# Get nvm prefix (guard brew call in dry-run to avoid touching brew/db or creating caches)
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "Determine Brew prefix for nvm (skipped in dry-run)"
+    # safe placeholder so we can print sensible DRY_RUN messages later
+    NVM_PREFIX="$ORIGINAL_HOME/.nvm"
+else
+    NVM_PREFIX=$(brew --prefix nvm 2>/dev/null || echo "$ORIGINAL_HOME/.nvm")
+fi
 
 # Add nvm configuration to shell profile (zshrc and bash_profile)
 for profile in "$ORIGINAL_HOME/.zshrc" "$ORIGINAL_HOME/.bash_profile" "$ORIGINAL_HOME/.bashrc"; do
     ensure_profile_ready "$profile"
     if ! grep -q "nvm.sh" "$profile"; then
         echo "Adding nvm to $profile..."
-        # shellcheck disable=SC2016
-        {
-            echo ""
-            echo '# NVM configuration'
-            echo 'export NVM_DIR="$HOME/.nvm"'
-            echo "[ -s \"$NVM_PREFIX/nvm.sh\" ] && \\. \"$NVM_PREFIX/nvm.sh\"  # This loads nvm"
-            echo "[ -s \"$NVM_PREFIX/etc/bash_completion.d/nvm\" ] && \\. \"$NVM_PREFIX/etc/bash_completion.d/nvm\"  # This loads nvm bash_completion"
-        } >>"$profile"
+        if [ "$DRY_RUN" = true ]; then
+            print_dry_run "Append nvm configuration to $profile"
+        else
+            # shellcheck disable=SC2016
+            {
+                echo ""
+                echo '# NVM configuration'
+                echo 'export NVM_DIR="$HOME/.nvm"'
+                echo "[ -s \"$NVM_PREFIX/nvm.sh\" ] && \\\. \"$NVM_PREFIX/nvm.sh\"  # This loads nvm"
+                echo "[ -s \"$NVM_PREFIX/etc/bash_completion.d/nvm\" ] && \\\. \"$NVM_PREFIX/etc/bash_completion.d/nvm\"  # This loads nvm bash_completion"
+            } >>"$profile"
+        fi
     else
         echo "nvm already configured in $profile"
     fi
