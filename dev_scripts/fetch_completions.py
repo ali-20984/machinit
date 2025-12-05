@@ -98,8 +98,10 @@ SOURCES = [
     "https://raw.githubusercontent.com/zsh-users/zsh-completions/master/src/_{name}",
     "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/{name}/_{name}",
     # bash-completion variants (many projects put completions here)
-    "https://raw.githubusercontent.com/scop/bash-completion/master/completions/{name}",
-    "https://raw.githubusercontent.com/bash-completion/bash-completion/master/completions/{name}",
+    ("https://raw.githubusercontent.com/scop/bash-completion/"
+     "master/completions/{name}"),
+    ("https://raw.githubusercontent.com/bash-completion/"
+     "bash-completion/master/completions/{name}"),
     # some projects keep completion in top-level completion/ dir or completions/
     "https://raw.githubusercontent.com/{owner}/{repo}/master/completions/{name}",
     "https://raw.githubusercontent.com/{owner}/{repo}/master/completion/{name}",
@@ -107,8 +109,10 @@ SOURCES = [
     "https://raw.githubusercontent.com/{owner}/{repo}/master/_{name}",
     # git contrib or project-level completions
     "https://raw.githubusercontent.com/git/git/master/contrib/completion/{name}",
-    "https://raw.githubusercontent.com/{owner}/{repo}/master/completions/{name}.zsh",
-    "https://raw.githubusercontent.com/{owner}/{repo}/master/completions/_{name}.zsh",
+    ("https://raw.githubusercontent.com/{owner}/{repo}/"
+     "master/completions/{name}.zsh"),
+    ("https://raw.githubusercontent.com/{owner}/{repo}/"
+     "master/completions/_{name}.zsh"),
     "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash",
     # generic fallback to _name at github root for projects that put completions there
     "https://raw.githubusercontent.com/{owner}/{repo}/master/_{name}",
@@ -117,32 +121,44 @@ SOURCES = [
 # Per-tool targeted raw URLs (explicit paths) for better discovery.
 PER_TOOL_URLS = {
     "ripgrep": [
-        "https://raw.githubusercontent.com/BurntSushi/ripgrep/master/complete/_rg",
-        "https://raw.githubusercontent.com/BurntSushi/ripgrep/master/completions/_rg",
+        ("https://raw.githubusercontent.com/BurntSushi/ripgrep/"
+         "master/complete/_rg"),
+        ("https://raw.githubusercontent.com/BurntSushi/ripgrep/"
+         "master/completions/_rg"),
     ],
     "cargo": [
-        "https://raw.githubusercontent.com/rust-lang/cargo/master/contrib/completion/cargo.zsh",
-        "https://raw.githubusercontent.com/rust-lang/cargo/master/src/etc/cargo-zsh-completion.sh",
+        ("https://raw.githubusercontent.com/rust-lang/cargo/"
+         "master/contrib/completion/cargo.zsh"),
+        ("https://raw.githubusercontent.com/rust-lang/cargo/"
+         "master/src/etc/cargo-zsh-completion.sh"),
     ],
     "rustc": [
-        "https://raw.githubusercontent.com/rust-lang/rust/master/src/etc/rustc-completions.zsh",
+        ("https://raw.githubusercontent.com/rust-lang/rust/"
+         "master/src/etc/rustc-completions.zsh"),
     ],
     "gh": [
-        "https://raw.githubusercontent.com/cli/cli/trunk/completions/gh.zsh",
-        "https://raw.githubusercontent.com/cli/cli/master/completions/gh.zsh",
+        ("https://raw.githubusercontent.com/cli/cli/"
+         "trunk/completions/gh.zsh"),
+        ("https://raw.githubusercontent.com/cli/cli/"
+         "master/completions/gh.zsh"),
     ],
     "copilot": [
-        "https://raw.githubusercontent.com/github/copilot-cli/main/completions/copilot.zsh",
-        "https://raw.githubusercontent.com/github/copilot-cli/main/src/completion/copilot.zsh",
+        ("https://raw.githubusercontent.com/github/copilot-cli/"
+         "main/completions/copilot.zsh"),
+        ("https://raw.githubusercontent.com/github/copilot-cli/"
+         "main/src/completion/copilot.zsh"),
     ],
     "rg": [
-        "https://raw.githubusercontent.com/BurntSushi/ripgrep/master/complete/_rg",
+        ("https://raw.githubusercontent.com/BurntSushi/ripgrep/"
+         "master/complete/_rg"),
     ],
     "clang": [
-        "https://raw.githubusercontent.com/llvm/llvm-project/main/clang/tools/clang-completion/_clang",
+        ("https://raw.githubusercontent.com/llvm/llvm-project/"
+         "main/clang/tools/clang-completion/_clang"),
     ],
     "g++": [
-        "https://raw.githubusercontent.com/scop/bash-completion/master/completions/gcc"
+        ("https://raw.githubusercontent.com/scop/bash-completion/"
+         "master/completions/gcc")
     ],
 }
 
@@ -196,8 +212,16 @@ def generate_from_help(name, timeout=3):
         opts.add(match.group("option"))
 
     # Find 'Commands:' sections or lines that start with whitespace and a word then two spaces
+    # Match commands lines that either begin with a command followed by two
+    # spaces, or command followed by whitespace and a dash (common help layouts
+    # across many projects). Keep the pattern split across two literals to
+    # satisfy linters' max-line-length limits.
+    CMD_RE = (
+        r"^\s{0,4}([a-z0-9][a-z0-9_\-]*)"
+        r"(?:\s{2,}|\s+-)"
+    )
     for line in out.splitlines():
-        m = re.match(r"^\s{0,4}([a-z0-9][a-z0-9_\-]*)(?:\s{2,}|\s+-)", line, re.I)
+        m = re.match(CMD_RE, line, re.I)
         if m:
             cmd = m.group(1).strip()
             if cmd and not cmd.startswith("-"):
