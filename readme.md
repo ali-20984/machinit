@@ -1,311 +1,540 @@
-<img width="1536" height="664" alt="machinit-banner" src="https://github.com/user-attachments/assets/4126f9e7-dc86-4024-b7c0-9ae04b3aeba5" />
+![machinit banner](https://github.com/user-attachments/assets/4126f9e7-dc86-4024-b7c0-9ae04b3aeba5)
+
 <br>
 <br>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/supermarsx/machinit/.github/workflows/test-suite.yml?branch=main&style=flat-square)](https://github.com/supermarsx/machinit/actions/workflows/test-suite.yml)
+[![Made with Shell & Tears](https://img.shields.io/badge/made%20with-Shell%20%26%20Tears-ffa500?style=flat-square)](https://github.com/supermarsx/machinit)
+[![DRY-RUN safe](https://img.shields.io/badge/DRY--RUN-SAFE-brightgreen?style=flat-square)](./tests/test_dry_run_protection.sh)
+[![Inventory](https://img.shields.io/badge/inventory-docs-green?style=flat-square)](docs/inventory.md)
 [![GitHub stars](https://img.shields.io/github/stars/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/network/members)
 [![GitHub watchers](https://img.shields.io/github/watchers/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/watchers)
-[![GitHub issues](https://img.shields.io/github/issues/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/issues)
-[![Made with Shell & Tears](https://img.shields.io/badge/made%20with-Shell%20%26%20Tears-ffa500?style=flat-square)](https://github.com/supermarsx/machinit)
+[![Open issues](https://img.shields.io/github/issues/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/issues)
 
-MachInit is an automated, "hands-off" initialization script for macOS. It sets up a fresh Mac with a curated list of applications, development tools, system preferences, and customizations in a sequential, migration-style manner.
+# machinit — macOS bootstrap & dotfiles installer
 
-<h2 id="getting-started">🚀 Getting Started</h2>
+> A curated macOS bootstrap and dotfiles installer designed for reproducible, opinionated developer setups. Includes a safe installer flow, shell aliases & functions, zsh completions, and a test harness to validate changes.
 
-### Prerequisites
+Key goals:
+- reproducible machine setup for dev environments
+- safe, audit-friendly defaults with a DRY_RUN (dry-run) mode
+- curated CLI completions, aliases, and helper scripts for productivity
 
-- A fresh installation of macOS (recommended, but works on existing setups too).
-- An active internet connection.
-- Administrator privileges (you will be prompted for `sudo` password).
+---
 
-### Installation
+## Quick start
 
-1. Clone this repository:
+1. Clone the repo and run the installer:
 
-    ```bash
-    git clone https://github.com/supermarsx/machinit.git
-    cd machinit
-    ```
+```bash
+git clone https://github.com/supermarsx/machinit.git
+cd machinit
+chmod +x install.sh
+./install.sh
+```
 
-2. Make the installer executable and run it:
-
-    ```bash
-    chmod +x install.sh
-    ./install.sh
-    ```
-
-### Dry Run Mode
-
-To see what changes would be made without actually applying them, use the `--dry-run` flag:
+2. See what would change without applying anything:
 
 ```bash
 ./install.sh --dry-run
 ```
 
-### Configuration
-
-You can customize the installation process by editing `config.toml`. This file allows you to define:
-- System defaults (Computer Name, Timezone)
-- Applications to install (Homebrew Formulae and Casks)
-- macOS Defaults (Dock settings, UI tweaks)
-
-<h2 id="index">📚 Index</h2>
-
-- [🚀 Getting Started](#getting-started)
-- [🛠️ What it Does](#what-it-does)
-- [🖥️ System & Environment](#system-environment)
-- [📦 Applications](#applications)
-- [🧰 Development Stack](#development-stack)
-- [🎨 Customization & UI](#customization-ui)
-- [⚙️ Advanced UI helpers](#advanced-ui-helpers)
-- [🔥 Terminal Theme](#terminal-theme)
-- [⚡ Performance Optimizations](#performance-optimizations)
-- [💡 Included Shell Enhancements](#included-shell-enhancements)
-- [🧪 Development (Linting & CI)](#development)
-- [📄 License](#license)
+3. Customize `config.toml` before running for any machine-specific settings.
 
 
-<h2 id="what-it-does">🛠️ What it Does</h2>
+## What this repo contains (short)
 
-The script executes a series of ordered scripts located in the `scripts/` directory.
+- `install.sh` — top-level orchestrator (supports flags like `--dry-run`, `--resume-failure`, `--clear-logs`).
+- `scripts/` — many ordered scripts to install packages, configure system settings, and apply UI customizations.
+- `assets/` — dotfiles, zsh completion files, themes, and templates.
+- `dev_scripts/` — test, fetcher, and maintenance helpers (fetch completions, run the test harness, linting helpers).
+- `dev_scripts/generate_inventory.py` — generates a current list of aliases, functions, completions, install targets and defaults into `docs/inventory.md` (run locally to refresh).
+- `tests/` — local test harness that validates non-destructive behavior (safely using DRY_RUN).
 
-<h3 id="scripts-reference">Scripts Reference</h3>
+---
 
-| Script | Description |
-|--------|-------------|
-| `001_env_setup.sh` | Env Setup |
-| `002_install_homebrew.sh` | Install Homebrew |
-| `003_update_terminal_tools.sh` | Update Terminal Tools |
-| `004_install_nvm.sh` | Install Nvm |
-| `005_install_rust.sh` | Install Rust |
-| `006_install_vcpkg.sh` | Install Vcpkg |
-| `007_install_powershell.sh` | Install Powershell |
-| `008_install_cli_tools.sh` | Install Cli Tools |
-| `009_install_fonts.sh` | Install Fonts |
-| `010_install_apps.sh` | Install Apps |
-| `011_check_aliases_functions_conflicts.sh` | Check alias/function name collisions & duplicates |
-| `012_install_dotfiles.sh` | Install Dotfiles |
-| `020_configure_firefox_policies.sh` | Configure Firefox Policies |
-| `020_install_firefox.sh` | Install Firefox |
-| `021_install_vscode.sh` | Install Vscode |
-| `022_install_codex.sh` | Install Codex |
-| `023_install_opencode.sh` | Install Opencode |
-| `024_install_beeper.sh` | Install Beeper |
-| `025_install_github_desktop.sh` | Install Github Desktop |
-| `026_install_keepassxc.sh` | Install Keepassxc |
-| `027_install_chrome_devtools_mcp.sh` | Install Chrome Devtools Mcp |
-| `028_install_google_chrome.sh` | Install Google Chrome |
-| `029_install_nextcloud.sh` | Install Nextcloud |
-| `030_install_bitwarden.sh` | Install Bitwarden |
-| `031_install_vscode_extensions.sh` | Install Vscode Extensions |
-| `032_install_microsoft_excel.sh` | Install Microsoft Excel |
-| `033_install_microsoft_outlook.sh` | Install Microsoft Outlook |
-| `034_install_microsoft_powerpoint.sh` | Install Microsoft Powerpoint |
-| `035_install_microsoft_word.sh` | Install Microsoft Word |
-| `036_install_adobe_reader.sh` | Install Adobe Reader |
-| `037_install_openvpn.sh` | Install Openvpn |
-| `041_disable_telemetry.sh` | Disable Telemetry |
-| `042_disable_siri.sh` | Disable Siri |
-| `043_configure_dock_and_mission_control.sh` | Configure Dock And Mission Control |
-| `044_configure_dock_apps.sh` | Configure Dock Apps |
-Note: `044_configure_dock_apps.sh` clears existing pinned Dock items by default before adding the curated list (to avoid duplicates). Set `SKIP_DOCK_CLEANUP=1` to preserve existing pins.
-| `045_configure_safari.sh` | Configure Safari |
-| `046_configure_terminal.sh` | Configure Terminal |
-| `047_configure_login_screen.sh` | Configure Login Screen |
-| `050_performance_optimizations.sh` | Performance Optimizations |
-| `051_configure_system_ui_ux.sh` | Configure System Ui Ux |
-| `052_configure_finder_and_sidebar.sh` | Configure Finder And Sidebar |
-| `053_configure_power_management.sh` | Configure Power Management |
-| `054_configure_input_devices.sh` | Configure Input Devices |
-| `055_configure_security_privacy.sh` | Configure Security Privacy |
-| `056_configure_system_apps.sh` | Configure System Apps |
-| `099_set_wallpaper.sh` | Set Wallpaper |
-| `999_cleanup.sh` | Cleanup |
+## Full inventory (generated — lowercase)
 
-<h3 id="system-environment">🖥️ System & Environment</h3>
+The repository contains a generated, machine-readable inventory in `docs/inventory.md`. Below is the current full, lowercase inventory (aliases, functions, completions, install targets and defaults).
 
-- **Homebrew**: Installs Homebrew and updates packages.
-- **Shell**: Installs PowerShell, updates terminal tools (coreutils), and configures `nvm` (Node.js) and `pyenv` (Python).
-- **Fonts**: Installs custom fonts (Fantasque Sans Mono).
-- **Telemetry**: Disables macOS telemetry, crash reporting, and personalized ads.
-- **Privacy**: Disables Siri, hides iCloud Drive, enables Firewall and Stealth Mode.
+> NOTE: This block is kept in README for quick reference; it is regenerated by running `python3 dev_scripts/generate_inventory.py` which writes `docs/inventory.md`.
 
-<h3 id="applications">📦 Applications</h3>
+<!-- Generated inventory snapshot (kept here for quick reference). Update using: `python3 dev_scripts/generate_inventory.py` -->
 
-- **Browsers**: Firefox (with extensions), Google Chrome.
-- **Development**: VS Code (with extensions), Codex, OpenCode, Chrome DevTools MCP, iTerm2, Mark Text, Standard Notes.
-- **Communication**: Beeper, Outlook.
-- **Productivity**: Microsoft Office 365 (Word, Excel, PowerPoint), Adobe Acrobat Reader, Nextcloud, Bitwarden, KeePassXC.
-- **Utilities**: GitHub Desktop, OpenVPN Connect, vcpkg, Glances, pgcli.
+<!-- BEGIN GENERATED INVENTORY -->
+<!-- This block is overwritten by dev_scripts/generate_inventory.py -->
 
-<h3 id="development-stack">🧰 Development Stack</h3>
+```markdown
+# MachInit Inventory
+
+Generated by dev_scripts/generate_inventory.py
+
+## Aliases (assets/.aliases)
+- `bup` — update Homebrew, upgrade packages, cleanup
+- `reloaddns`
+- `dnsreload`
+- `timestamp` — print current epoch timestamp (seconds since UNIX epoch)
+- `jsrefresh` — remove node deps and reinstall (useful for JS projects)
+- `..` — go up one directory
+- `...` — go up two levels
+- `....` — go up three levels
+- `.....` — go up deeper (alias duplicates, intentionally lenient)
+- `cd..` — alternate form to go up one (Windows-style typing habit)
+- `~` — go to home directory
+- `-- -` — switch to previous working directory
+- `c` — clear terminal screen
+- `h` — display shell history
+- `o` — open current directory in Finder (macOS)
+- `zshconf` — open zsh configuration for quick edits
+- `projects` — change to ~/Projects
+- `repos` — same as projects (Projects lives in ~/Projects -> often symlink to ~/Documents/Projects)
+- `docs` — quickly change directory to ~/Documents
+- `downloads` — quickly change directory to ~/Downloads
+- `dl` — short form to go to ~/Downloads
+- `qfind` — find files by name in current dir
+- `lsock` — list network sockets (requires sudo)
+- `ping_test` — quick ping to Cloudflare DNS
+- `localip` — show local IP address for primary interface (macOS)
+- `ni` — shorthand to install npm dependencies
+- `nps` — shorthand to run `npm start` (start a JS dev server)
+- `wtf` — “What just happened?” — show last kernel messages (requires privileges on some systems)
+- `up`
+- `shrug` — copy shrug emoticon to clipboard
+- `tableflip` — copy tableflip emoticon to clipboard
+- `fix` — copy fix emoticon to clipboard
+- `entropy` — generate 64 bytes of base64 randomness
+- `void` — shortcut for discarding output (use in pipelines)
+- `fractal` — open current folder in Terminal
+- `eldritchterror` — read doom
+- `path` — print PATH entries one-per-line
+- `cpu` — show top processes by CPU
+- `mem` — show top processes by memory usage (resident size)
+- `afk` — put display to sleep / lock screen
+- `wifi_pass` — macOS: retrieve WiFi password from keychain (append SSID)
+
+## Functions (assets/.functions + scanned scripts)
+- `add_alias()`
+- `add_func()`
+- `add_sidebar_item()`
+- `backup_file()` — Function: backup_file Description: Preserve a non-symlink target by renaming it with a timestamp before we replace it with the managed dotfile symlink.
+- `cdf()` — Change working directory to the top-most Finder window location
+- `check_command()` — Function: check_command Description: Confirm a binary exists in PATH before running follow-up logic.
+- `check_status()` — Function: check_status Description: Print a consistent success/failure marker after each grouped Spotlight change so logs are easy to scan.
+- `dataurl()` — Create a data URL from a file
+- `diff()`
+- `digga()` — Run `dig` and display the most useful info
+- `disable_launch_item()`
+- `ensure_dir_permissions()` — Function: ensure_dir_permissions Description: Make sure target directories exist and are writable by the invoking user before rustup manipulates them.
+- `ensure_directory()` — Function: ensure_directory Description: Create destination folders with sudo when they do not exist.
+- `ensure_distribution_dir()`
+- `ensure_profile_ready()`
+- `ensure_sudo()` — Function: ensure_sudo Description: Refresh sudo credentials on demand so privilege prompts happen in a predictable place before we run the real command.
+- `execute()` — Function: execute Description: Evaluate an arbitrary command string, printing instead of executing when DRY_RUN=true.
+- `execute_as_user()` — Function: execute_as_user Description: Run command as the original user (useful for brew, npm, etc.)
+- `execute_sudo()` — Function: execute_sudo Description: Run command with elevated privileges. The keepalive loop in install.sh keeps credentials fresh, so sudo won't prompt.
+- `extract_ip()` — extract_ip: helper to parse an IP address (IPv4/IPv6) or JSON responses from HTTP services Returns first plausible IP-like token it can extract from a string
+- `find_app()` — Function: find_app Description: Find an app by name pattern in common locations
+- `findpid()` — findPid: find out the pid of a specified process ----------------------------------------------------- Note that the command name can be specified via a regex E.g. findPid '/d$/' finds pids of all processes with names ending in 'd' Without the 'sudo' it will only find processes of the current user -----------------------------------------------------
+- `fs()` — Determine size of a file or total size of a directory
+- `generate_git_key()` — Generate a new SSH key for GitHub
+- `get_config()` — Function: get_config Description: Read a TOML key via the shared Python parser when config-driven toggles are needed inside child scripts.
+- `getcertnames()` — Show all the names (CNs and SANs) listed in the SSL certificate for a given domain
+- `global_cleanup()` — Function: global_cleanup Description: Performs cache purges across package managers plus optional system hygiene tasks to free disk and reset services.
+- `gz()` — Compare original and gzipped file size
+- `install_brew_package()` — Function: install_brew_package Description: Installs either formulae or casks if missing, emitting helpful logs and supporting DRY_RUN-friendly output.
+- `link_system_app_to_directory()` — Function: link_system_app_to_directory Description: Drop a symlink for SIP-protected apps so they show up in the custom folder without relocating the source bundle.
+- `ll()` — ll: robust listing — prefer GNU 'ls' if available, otherwise fallback
+- `mkd()` — Create a new directory and enter it
+- `move_app_to_directory()` — Function: move_app_to_directory Description: Relocate third-party apps into the requested folder when found.
+- `move_policies()`
+- `myaliases()` — myaliases: list custom aliases and functions with short descriptions Usage: myaliases [--aliases|--functions|--all] Prints a nicely formatted table of aliases/functions and their inline comments if present.
+- `myip()` — myip: robust public IP lookup (moved from assets/.aliases)
+- `o()` — `o` with no arguments opens the current directory, otherwise opens the given location
+- `parse_aliases()`
+- `parse_functions()`
+- `parse_functions_in_file()`
+- `print_action()` — Function: print_action Description: Show an action being taken (installing, configuring, etc).
+- `print_config()` — Function: print_config Description: Highlight a configuration action.
+- `print_divider()` — Function: print_divider Description: Print a subtle divider line.
+- `print_dry_run()` — Function: print_dry_run Description: Make it obvious when a command is only simulated.
+- `print_error()` — Function: print_error Description: Emit a red X prefix to highlight failures.
+- `print_header()` — Function: print_header Description: Print a prominent section header.
+- `print_info()` — Function: print_info Description: Emit a teal info marker for progress messages.
+- `print_install()` — Function: print_install Description: Highlight an installation action with a nice package icon.
+- `print_notice()` — Function: print_notice Description: Display a soft notice for non-critical information.
+- `print_skip()` — Function: print_skip Description: Indicate something was intentionally skipped.
+- `print_step()` — Function: print_step Description: Highlight a major step or section in the installer.
+- `print_success()` — Function: print_success Description: Emit a green checkmark prefix so success logs stand out.
+- `print_warning()` — Function: print_warning Description: Emit a yellow warning marker.
+- `recent()` — recent: cd to the most recently modified project directory under ~/Projects
+- `require_safari_full_disk_access()`
+- `run_spotlight_configuration()` — Function: run_spotlight_configuration Description: Applies the Spotlight defaults plist ordering and disables web suggestions before restarting the metadata server.
+- `secure_policies()`
+- `server()` — Start an HTTP server from a directory, optionally specifying the port
+- `set_default()` — Function: set_default Description: Wrapper for defaults write that logs the intent and obeys DRY_RUN; targeted at simple scalar types.
+- `set_user_default()` — Function: set_user_default Description: Write a per-user preference as the original (non-root) user. This wraps `defaults write` so scripts don't need to call `execute_as_user` every time they want to change a user-pref.
+- `targz()` — Create a .tar.gz archive, using `zopfli`, `pigz` or `gzip` for compression
+- `tre()` — `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring the `.git` directory, listing directories first. The output gets piped into `less` with options to preserve color and line numbers, unless the output is small enough for one screen.
+
+## Completions (assets/completions)
+... (see docs/inventory.md for full)
+
+```
+
+<!-- END GENERATED INVENTORY -->
+
+
+### Functions (assets/.functions + scanned scripts)
+- `add_alias()`
+- `add_func()`
+- `add_sidebar_item()`
+- `backup_file()`
+- `cdf()`
+- `check_command()`
+- `check_status()`
+- `dataurl()`
+- `diff()`
+- `digga()`
+- `disable_launch_item()`
+- `ensure_dir_permissions()`
+- `ensure_directory()`
+- `ensure_distribution_dir()`
+- `ensure_profile_ready()`
+- `ensure_sudo()`
+- `execute()`
+- `execute_as_user()`
+- `execute_sudo()`
+- `extract_ip()`
+- `find_app()`
+- `findpid()`
+- `fs()`
+- `generate_git_key()`
+- `get_config()`
+- `getcertnames()`
+- `global_cleanup()`
+- `gz()`
+- `install_brew_package()`
+- `link_system_app_to_directory()`
+- `ll()`
+- `mkd()`
+- `move_app_to_directory()`
+- `move_policies()`
+- `myaliases()`
+- `myip()`
+- `o()`
+- `parse_aliases()`
+- `parse_functions()`
+- `parse_functions_in_file()`
+- `print_action()`
+- `print_config()`
+- `print_divider()`
+- `print_dry_run()`
+- `print_error()`
+- `print_header()`
+- `print_info()`
+- `print_install()`
+- `print_notice()`
+- `print_skip()`
+- `print_step()`
+- `print_success()`
+- `print_warning()`
+- `recent()`
+- `require_safari_full_disk_access()`
+- `run_spotlight_configuration()`
+- `secure_policies()`
+- `server()`
+- `set_default()`
+- `set_user_default()`
+- `targz()`
+- `tre()`
+
+### Completions (assets/completions)
+- `black`
+- `cargo`
+- `cat`
+- `chmod`
+- `chown`
+- `clang`
+- `clang++`
+- `cmake`
+- `code`
+- `codex`
+- `copilot`
+- `cp`
+- `cron`
+- `crontab`
+- `curl`
+- `dd`
+- `df`
+- `dig`
+- `dockutil`
+- `du`
+- `egrep`
+- `fgrep`
+- `find`
+- `flake8`
+- `fmt`
+- `g++`
+- `gcc`
+- `gh`
+- `git`
+- `github`
+- `gnumake`
+- `grep`
+- `hexdump`
+- `ip`
+- `ipconfig`
+- `ld`
+- `ln`
+- `mkdir`
+- `node`
+- `npm`
+- `npx`
+- `nslookup`
+- `nvm`
+- `nvram`
+- `opencode`
+- `ping`
+- `ps`
+- `rg`
+- `ripgrep`
+- `rsync`
+- `rustc`
+- `shellcheck`
+- `sort`
+- `ssh`
+- `tar`
+- `vcpkg`
+- `wget`
+- `xargs`
+- `yarn`
+
+### App / install targets (detected via print_install in scripts/)
+(excerpt — full scan is in `docs/inventory.md`)
+- `coreutils` (from `008_install_cli_tools.sh`)
+- `moreutils` (from `008_install_cli_tools.sh`)
+- `findutils` (from `008_install_cli_tools.sh`)
+- `gnu sed` (from `008_install_cli_tools.sh`)
+- `bash and completion` (from `008_install_cli_tools.sh`)
+- `tree` (from `008_install_cli_tools.sh`)
+- `p7zip` (from `008_install_cli_tools.sh`)
+- `pigz (parallel gzip)` (from `008_install_cli_tools.sh`)
+- `zopfli` (from `008_install_cli_tools.sh`)
+- `lua` (from `008_install_cli_tools.sh`)
+- `github cli` (from `008_install_cli_tools.sh`)
+- `search tools` (from `008_install_cli_tools.sh`)
+- `git delta` (from `008_install_cli_tools.sh`)
+- `shellcheck` (from `008_install_cli_tools.sh`)
+- `languages and managers` (from `008_install_cli_tools.sh`)
+- `network tools` (from `008_install_cli_tools.sh`)
+- `database tools` (from `008_install_cli_tools.sh`)
+- `system monitoring` (from `008_install_cli_tools.sh`)
+- `json tools` (from `008_install_cli_tools.sh`)
+- `git` (from `008_install_cli_tools.sh`)
+- `c++ development tools` (from `008_install_cli_tools.sh`)
+- `python development tools` (from `008_install_cli_tools.sh`)
+- `javascript/node tools` (from `008_install_cli_tools.sh`)
+- `@github/copilot` (from `008_install_cli_tools.sh`)
  
-- **Languages**: Rust, Node.js, Python, C++ (gcc, llvm, cmake, ninja).
-- **Tools**: Git, Yarn, pnpm, Poetry, jq, httpie, ripgrep, fd, fzf.
+### Defaults referenced (set_default / set_user_default)
+The project config scripts reference these user/system defaults across `scripts/` (see `docs/inventory.md` for the complete machine-generated list):
 
-<h3 id="customization-ui">🎨 Customization & UI</h3>
+- `nsglobaldomain` `appleaccentcolor`
+- `nsglobaldomain` `appleenableswipenavigatewithscrolls`
+- `nsglobaldomain` `applehighlightcolor`
+- `nsglobaldomain` `appleinterfacestyle`
+- `nsglobaldomain` `applelocale`
+- `nsglobaldomain` `applemeasurementunits`
+- `nsglobaldomain` `applemetricunits`
+- `nsglobaldomain` `applereducedesktoptinting`
+- `nsglobaldomain` `appleshowallextensions`
+- `nsglobaldomain` `nsautomaticcapitalizationenabled`
+- `nsglobaldomain` `nsautomaticdashsubstitutionenabled`
+- `nsglobaldomain` `nsautomaticperiodsubstitutionenabled`
+- `nsglobaldomain` `nsautomaticquotesubstitutionenabled`
+- `nsglobaldomain` `nsautomaticspellingcorrectionenabled`
+- `nsglobaldomain` `nsautomaticwindowanimationsenabled`
+- `nsglobaldomain` `nsdocumentsavenewdocumentstocloud`
+- `nsglobaldomain` `nsnavpanelexpandedstateforsavemode`
+- `nsglobaldomain` `nsnavpanelexpandedstateforsavemode2`
+- `nsglobaldomain` `nstableviewdefaultsizemode`
+- `nsglobaldomain` `nsuseanimatedfocusring`
+- `nsglobaldomain` `nswindowresizetime`
+- `nsglobaldomain` `pmprintingexpandedstateforprint`
+- `nsglobaldomain` `pmprintingexpandedstateforprint2`
+- `com.apple.accessibility` `differentiatewithoutcolor`
+- `com.apple.accessibility` `reducemotionenabled`
+- `com.apple.activitymonitor` `openmainwindow`
+- `com.apple.activitymonitor` `showcategory`
+- `com.apple.adlib` `allowapplepersonalizedadvertising`
+- `com.apple.adlib` `forcelimitadtracking`
+- `com.apple.bezelservices` `kdim`
+- `com.apple.bezelservices` `kdimtime`
+- `com.apple.crashreporter` `dialogtype`
+- `com.apple.diskutility` `dudebugmenuenabled`
+- `com.apple.diskutility` `advanced-image-options`
+- `com.apple.hitoolbox` `applefnusagetype`
+- `com.apple.launchservices` `lsquarantine`
+- `com.apple.networkbrowser` `disableairdrop`
+- `com.apple.safari` `autofillcreditcarddata`
+- `com.apple.safari` `autofillfromaddressbook`
+- `com.apple.safari` `autofillmiscellaneousforms`
+- `com.apple.safari` `autofillpasswords`
+- `com.apple.safari` `debugsnapshotsupdatepolicy`
+- `com.apple.safari` `includedevelopmenu`
+- `com.apple.safari` `showfavoritesbar`
+- `com.apple.safari` `showfullurlinsmartsearchfield`
+- `com.apple.safari` `showsidebarintopsites`
+- `com.apple.safari` `suppresssearchsuggestions`
+- `com.apple.safari` `universalsearchenabled`
+- `com.apple.safari` `warnaboutfraudulentwebsites`
+- `com.apple.safari` `webkitdeveloperextrasenabledpreferencekey`
+- `com.apple.safari` `webkitjavaenabled`
+- `com.apple.safari` `webkitjavascriptcanopenwindowsautomatically`
+- `com.apple.safari` `webkitpluginsenabled`
+- `com.apple.safari` `com.apple.safari.contentpagegroupidentifier.webkit2backspacekeynavigationenabled`
+- `com.apple.safari` `com.apple.safari.contentpagegroupidentifier.webkit2developerextrasenabled`
+- `com.apple.safari` `com.apple.safari.contentpagegroupidentifier.webkit2javaenabled`
+- `com.apple.safari` `com.apple.safari.contentpagegroupidentifier.webkit2javaenabledforlocalfiles`
+- `com.apple.safari` `com.apple.safari.contentpagegroupidentifier.webkit2javascriptcanopenwindowsautomatically`
+- `com.apple.safari` `com.apple.safari.contentpagegroupidentifier.webkit2pluginsenabled`
+- `com.apple.siri` `statusmenuvisible`
+- `com.apple.siri` `userhasdeclinedenable`
+- `com.apple.softwareupdate` `automaticcheckenabled`
+- `com.apple.softwareupdate` `automaticdownload`
+- `com.apple.softwareupdate` `criticalupdateinstall`
+- `com.apple.submitdiaginfo` `autosubmit`
+- `com.apple.submitdiaginfo` `submitdiaginfo`
+- `com.apple.textedit` `plaintextencoding`
+- `com.apple.timemachine` `donotoffernewdisksforbackup`
+- `com.apple.tips` `showhelponstartup`
+- `com.apple.tips` `userhasdeclinedenable`
+- `com.apple.airplay` `receiverenabled`
+- `com.apple.assistant.support` `assistant enabled`
+- `com.apple.assistant.support` `siri data sharing opt-in status`
+- `com.apple.commerce` `autoupdate`
+- `com.apple.commerce` `autoupdaterestartrequired`
+- `com.apple.coreservices.uiagent` `csuihassafaribeenlaunched`
+- `com.apple.dashboard` `mcx-disabled`
+- `com.apple.desktopservices` `dsdontwritenetworkstores`
+- `com.apple.desktopservices` `dsdontwriteusbstores`
+- `com.apple.dock` `autohide`
+- `com.apple.dock` `autohide-delay`
+- `com.apple.dock` `autohide-time-modifier`
+- `com.apple.dock` `enable-spring-load-actions-on-all-items`
+- `com.apple.dock` `expose-animation-duration`
+- `com.apple.dock` `mineffect`
+- `com.apple.dock` `minimize-to-application`
+- `com.apple.dock` `show-process-indicators`
+- `com.apple.dock` `show-recents`
+- `com.apple.dock` `showhidden`
+- `com.apple.dock` `tilesize`
+- `com.apple.finder` `disableallanimations`
+- `com.apple.finder` `fxdefaultsearchscope`
+- `com.apple.finder` `fxpreferredviewstyle`
+- `com.apple.finder` `newwindowtarget`
+- `com.apple.finder` `newwindowtargetpath`
+- `com.apple.finder` `quitmenuitem`
+- `com.apple.finder` `showpathbar`
+- `com.apple.finder` `showrecenttags`
+- `com.apple.finder` `showstatusbar`
+- `com.apple.finder` `sidebarbonjourbrowser`
+- `com.apple.finder` `sidebariclouddrive`
+- `com.apple.finder` `sidebariclouddrivecollapsed`
+- `com.apple.menuextra.battery` `showpercent`
+- `com.apple.print.printingprefs` `quit when finished`
+- `com.apple.screencapture` `disable-shadow`
+- `com.apple.screencapture` `location`
+- `com.apple.screencapture` `type`
+- `com.apple.screensaver` `askforpassword`
+- `com.apple.screensaver` `askforpassworddelay`
+- `com.apple.terminal` `securekeyboardentry`
+- `com.apple.universalaccess` `reducemotion`
+- `com.apple.universalaccess` `reducetransparency`
+- `com.googlecode.iterm2` `promptonquit`
 
-- **Wallpaper**: Sets a custom wallpaper centered on a black background.
-- **Dock**: Configures Dock size, removes default apps, and pins selected apps.
-- **Terminal**: Sets a custom "Shades of Fire" theme for Terminal.app.
-- **System accent**: The global macOS accent color is set to a neutral charcoal/graphite tone by default to keep the UI unobtrusive.
-- **Login Screen**: Configures a "Console-style" login screen.
-- **Safari**: Clears favorites, history, and suppresses "launched" notifications.
-- **Dotfiles**: Installs `.aliases`, `.functions`, `.nanorc`, and `.gitignore_global`.
+---
 
-<h3 id="advanced-ui-helpers">⚙️ Advanced UI helpers</h3>
+## Completions
 
-There are a couple of utilities and workflow improvements to make per-user UI changes safer and easier:
+Completions live in `assets/completions/` as zsh-compatible completion scripts (files named like `_git`, `_npm`, `_codex`, etc.).
 
-- `scripts/999_restart_apps.sh` — Final, single-shot restart script that safely restarts UI services (Dock, Finder, cfprefsd, SystemUIServer, etc.) for the original user. It supports a non-interactive mode via `--yes` / `-y`.
+Tools & features:
+- `dev_scripts/fetch_completions.py` — fetches upstream completion files, or generates a fallback from `--help` output and saves them under `assets/completions/` (it uses safe heuristics and creates backups where appropriate).
+- We maintain curated completions for important tools (e.g., `cargo`, `rustc`, `rg`, `clang`, `copilot`, `codex`, `opencode`, `npm`, `npx`, `yarn`).
 
-- `set_user_default` — A new helper in `scripts/utils.sh` which wraps `defaults write` and ensures per-user preferences are written as the original user (not root). Scripts that modify Finder, Dock and other per-user settings use this helper to avoid silently writing root preferences.
-
-These two changes are designed to avoid race conditions and permission problems when the installer is invoked with `sudo`.
-
-<h3 id="terminal-theme">🔥 Terminal Theme: Shades of Fire (configurable)</h3>
-
-Terminal theming is now configurable via `config.toml` under the `[appearance]` section. The default value is `shades_of_fire`, which applies the warm, ember palette to Terminal.app and adds a matching prompt block to `~/.zshrc`.
-
-Additionally, a minimal iTerm2 theme-import script and two small color presets are included under `assets/themes/` (`shades_of_fire.itermcolors` and `charcoal.itermcolors`). The installer `scripts/046_configure_iterm2.sh` will open the chosen `.itermcolors` file (or dry-run) and allow iTerm2 to register the preset when iTerm2 is installed.
-
-The prompt block looks like:
-
-```text
-# Shades of Fire prompt (user/folder in warm ember tones)
-# Username: bright orange; arrow: red; current dir: warm yellow
-export PROMPT='%F{202}%n%f %F{196}➜%f %F{220}%~%f '
-```
-
-
-<h3 id="performance-optimizations">⚡ Performance Optimizations</h3>
-
-- **Spotlight**: Disables indexing for better performance.
-- **Animations**: Reduces motion, transparency, and disables window animations.
-- **SSD**: Optimizes power management for SSDs (disables hibernation, sleepimage).
-- **HiDPI**: Enables HiDPI display modes.
-- **Power Management**: Enables Low Power Mode (Always) and disables sleep while charging.
-
-<h3 id="included-shell-enhancements">💡 Included Shell Enhancements</h3>
-
-The installation includes a set of useful aliases and functions (installed to `~/.aliases` and `~/.functions`).
-
-#### Aliases
-
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `bup` | `brew update && brew upgrade && brew cleanup` | Update Homebrew and cleanup |
-| `shrug` | `echo '¯\_(ツ)_/¯' \| pbcopy` | Copy shrug kaomoji to clipboard |
-| `ll` | robust wrapper (prefers GNU ls from Homebrew/gls, falls back to system ls) | Enhanced list view |
-| `ni` | `npm install` | Short alias for quick npm installs |
-| `reloaddns` | `dscacheutil -flushcache ...` | Flush DNS cache |
-| `dnsreload` | `dscacheutil -flushcache ...` | Flush DNS cache (alias) |
-| `jsrefresh` | `rm -rf node_modules ...` | Reinstall npm dependencies |
-| `..` | `cd ..` | Go up one directory |
-| `c` | `clear` | Clear terminal |
-| `o` | `open .` | Open current directory in Finder |
-| `zshconf` | `nano ~/.zshrc` | Edit zsh config quickly |
-| `myip` | function — queries multiple public-IP services and returns the first result (default: `https://checkip.amazonaws.com`). Supports `--service <url>` and `--ipv6`/`-6`. | Show public IP |
-
-Note: `myip` is now a robust helper that queries multiple public IP services (e.g. icanhazip.com, checkip.amazonaws.com, ifconfig.me, ident.me, ipinfo.io) and returns the first successful result. This makes it more reliable across environments.
-
-Usage examples:
-
-```bash
-# Default (uses Amazon checkip first):
-myip
-
-# Force IPv6 lookup (tries same service list over IPv6):
-myip --ipv6
-
-# Use a specific service:
-myip --service https://icanhazip.com
-
-# Short form for IPv6:
-myip -6
-```
-| `localip` | `ipconfig getifaddr en0` | Show local IP |
-| `afk` | `pmset displaysleepnow` | Lock screen (display sleep) |
-| `wifi_pass` | `security find-generic-password -wa` | Show WiFi password |
-| `projects` | `cd ~/Projects` | Jump to your Projects folder |
-| `repos` | `cd ~/Projects` | Same as `projects` (recommended location: `~/Projects` which may be symlinked to `~/Documents/Projects`) |
-| `qfind` | `find . -name` | Quick find alias |
-
-#### Functions
-
-- **`mkd <dir>`**: Create a directory and enter it.
-- **`cdf`**: Change directory to the current Finder window.
-- **`targz <file>`**: Create a `.tar.gz` archive using the best available compression.
-- **`fs [path]`**: Determine size of a file or directory.
-- **`server [port]`**: Start a simple HTTP server (default port 8000).
-- **`dataurl <file>`**: Create a data URL from a file.
-- **`digga <domain>`**: Run `dig` and display useful info.
-- **`tre [path]`**: Enhanced `tree` command.
-- **`generate_git_key <email>`**: Generate a new SSH key for GitHub and add it to the agent.
-
-Additional useful utilities added to `~/.functions`:
-
-- `findPid` — find PID(s) for a matching process name or regex (uses `lsof -t -c`).
-- `lsock` — alias to `sudo lsof -i -P` for inspecting listening sockets.
-
-- `recent` — function to cd into the most recently-modified project under `~/Projects` (useful shortcut when frequently switching between projects).
-
-<h2 id="development">🧪 Development</h2>
-
-### Linting
-
-To check the scripts for syntax errors and best practices:
-
-```bash
-./dev_scripts/lint.sh
-```
-
-### CI/CD
-
-This project uses GitHub Actions for Continuous Integration. The pipeline runs `shellcheck` on all scripts and executes a dry-run test on macOS runners to ensure stability.
-
-#### New UI/flags CI checks
-
-I added a new lightweight CI test to validate UI helper scripts and flags without making system changes:
-
-- `tests/test_ui_flags.sh` — non-destructive checks (runs in `DRY_RUN`) which:
-    - Confirm `set_user_default` helper exists,
-    - Validate `scripts/999_restart_apps.sh` accepts `--yes`/`-y` in non-interactive mode,
-    - Verify `install.sh` supports `--run-only <N>` and `--restart-ui` signalling,
-    - Ensure `scripts/052_configure_finder_and_sidebar.sh` includes verification code and uses `set_user_default`.
-
-Run the test locally:
-```bash
-chmod +x tests/test_ui_flags.sh
-./tests/test_ui_flags.sh
-```
-
-There are additional non-destructive tests for logging and resume behavior:
+If you want to refresh completions from upstream or local tools:
 
 ```bash
-chmod +x tests/test_resume_and_logs.sh
-./tests/test_resume_and_logs.sh
+# Fetch upstream/computed completions for default toolset
+./dev_scripts/fetch_completions.py
+
+# Or fetch specific tools (example)
+./dev_scripts/fetch_completions.py gh copilot codex
 ```
 
-### Logs & resume
+Note: This repo keeps content tidy — backups and generated artifacts are removed as part of repository maintenance; curated completion files are kept under `assets/completions/`.
 
-- The installer now writes logs to `./logs/` by default (created per run). Logs are automatically ignored in `.gitignore`.
-- New CLI flags:
-    - `--clear-logs` — remove the logs directory and exit.
-    - `--resume-failure` — resume from the last failed script recorded in `logs/last_failed`.
-    - `--exit` — exit immediately without running scripts (useful for scripting and CI).
+---
 
-These make CI-friendly workflows easier and help recover from intermittent failures.
+## Test harness & CI
 
-## ⚠️ Disclaimer
+We validate changes using the test harness `dev_scripts/test.sh`. This script discovers tests under `tests/` and runs them in a safe manner.
 
-This script modifies system settings, installs software, and changes configuration files.
+Common commands:
 
-- **Review the scripts** in the `scripts/` directory before running.
-- **Backup your data** if running on a machine with important files.
-- The performance optimizations (especially disabling Spotlight and hibernation) are aggressive.
+```bash
+# Run all tests (shell + python where applicable)
+./dev_scripts/test.sh
 
-<h2 id="license">📄 License</h2>
+# Run only completion-related tests and print output
+./dev_scripts/test.sh --pattern completions --verbose
 
-Released under the MIT License — see `license.md` for details.
+# Use the pytest mode for python tests when helpful
+./dev_scripts/test.sh --pytest
+```
+
+Local development checklist:
+
+1. Make edits to completions, scripts, dotfiles
+2. Run linting: `./dev_scripts/lint.sh`
+3. Run focused tests: `./dev_scripts/test.sh --pattern completions --verbose`
+4. If everything passes, commit and open a PR
+
+CI note: the repository has a GitHub Actions pipeline that runs these tests for PRs and pushes — keep changes test-friendly and DRY_RUN-safe.
+
+---
+
+## Contributing
+
+We welcome contributions — typical flows:
+
+1. Fork and create topic branch.
+2. Make small, well-scoped changes (completions, scripts, docs, tests).
+3. Add/adjust tests in `tests/` to exercise changes, prefer DRY_RUN-friendly assertions.
+4. Run the test harness locally and ensure green CI.
+
+Developer tips:
+
+- Keep completions conservative and offline-friendly (avoid network calls during shell completion evaluation).
+- Use `dev_scripts/fetch_completions.py` to fetch or regenerate helpful completions.
+- If replacing an existing completion file, keep a backup copy or prefer `.generated` suffix until changes are validated.
+
+---
+
+## Security & Notes
+
+This installer makes system-level changes and should be audited carefully before running. Use `--dry-run` and test on disposable machines or VMs if in doubt.
+
+---
+
+## License
+
+MIT — see `license.md`.
+
+---
+
+If you'd like, I can also generate:
+- a single cheat-sheet markdown (commands + flags) for tools we polished (e.g., Copilot, Codex, OpenCode), or
+- machine-readable JSON/YAML specifications for completions (useful for generating richer completions).

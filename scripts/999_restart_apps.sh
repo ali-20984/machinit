@@ -45,6 +45,9 @@ apps=(
 echo "About to restart the following UI processes: ${apps[*]}"
 if [ "${DRY_RUN:-false}" = "true" ]; then
     echo "DRY RUN enabled — no applications will be restarted."
+    # In a dry-run don't prompt for confirmation — behave non-interactively so
+    # automated tests and CI won't hang waiting for user input.
+    YES=true
 fi
 if [ "$YES" = false ]; then
     # Use -r to avoid backslash interpretation (ShellCheck SC2162)

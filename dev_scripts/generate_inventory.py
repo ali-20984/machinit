@@ -14,30 +14,70 @@ DOCS = ROOT / "docs"
 DOCS.mkdir(exist_ok=True)
 
 def parse_aliases(file):
+    # Return list of (name, description) for aliases in file.
     aliases = []
     if not file.exists():
         return aliases
     with open(file, 'r') as fh:
         for line in fh:
-            m = re.match(r"^\s*alias(?:\s+--\s+)?([^=\s]+)", line)
-            if m:
-                aliases.append(m.group(1))
+            # strip trailing comments for description capture
+            # Approach:
+            #  - split on first '#' to extract an optional description (comment)
+            #  - ensure the left-hand side starts with 'alias' and extract the name
+            parts = line.split('#', 1)
+            left = parts[0].strip()
+            desc = (parts[1].strip() if len(parts) > 1 else '')
+
+            if not left.startswith('alias'):
+                continue
+
+            try:
+                # remove the leading `alias` keyword and any leading flags
+                _, rest = left.split(None, 1)
+            except ValueError:
+                # malformed alias line
+                continue
+
+            # rest should look like name=value or -- -="value"
+            # we only care about the name on the left side of '='
+            if '=' in rest:
+                name_part = rest.split('=', 1)[0].strip()
+            else:
+                name_part = rest.strip()
+
+            # strip quotes if present
+            name = name_part.strip().strip('"').strip("'")
+            aliases.append((name, desc))
     return aliases
 
 def parse_functions(file):
-    funcs = set()
+    # Returns list of (name, description) where description is the contiguous
+    # comment block immediately preceding the function declaration (if any).
+    funcs = []
     if not file.exists():
-        return sorted(funcs)
-    with open(file, 'r') as fh:
-        for line in fh:
-            m = re.match(r"^\s*function\s+([a-zA-Z0-9_]+)\s*\(", line)
-            if m:
-                funcs.add(m.group(1))
+        return funcs
+    lines = file.read_text().splitlines()
+    for idx, line in enumerate(lines):
+        m = re.match(r"^\s*function\s+([a-zA-Z0-9_]+)\s*\(", line)
+        if not m:
+            m2 = re.match(r"^\s*([a-zA-Z0-9_]+)\s*\(\)\s*\{", line)
+            if m2:
+                name = m2.group(1)
             else:
-                m2 = re.match(r"^\s*([a-zA-Z0-9_]+)\s*\(\)\s*\{", line)
-                if m2:
-                    funcs.add(m2.group(1))
-    return sorted(funcs)
+                continue
+        else:
+            name = m.group(1)
+
+        # collect contiguous comment lines above
+        desc_lines = []
+        j = idx - 1
+        while j >= 0 and lines[j].strip().startswith('#'):
+            desc_lines.insert(0, lines[j].strip().lstrip('#').strip())
+            j -= 1
+
+        desc = ' '.join(desc_lines).strip()
+        funcs.append((name, desc))
+    return funcs
 
 def list_completions():
     completions_dir = ASSETS / "completions"
@@ -58,51 +98,77 @@ def find_print_installs():
 
 def find_defaults():
     defaults = set()
-    rx = re.compile(r"set_(?:user_)?default\s+([^\s]+)\s+([^\s]+)")
+    # Capture set_default or set_user_default invocations while ignoring
+    # commented lines. Keys can be quoted and may contain spaces, so handle
+    # both quoted and unquoted keys.
+    rx = re.compile(r'set_(?:user_)?default\s+(\S+)\s+(?:"([^"]+)"|\'([^\']+)\'|(\S+))')
     for f in SCRIPTS.glob('*.sh'):
         with open(f, 'r') as fh:
             for line in fh:
+                # skip comment lines to avoid matching commented notes like
+                # "Date handling in set_default is tricky..."
+                if line.strip().startswith('#'):
+                    continue
+
                 m = rx.search(line)
                 if m:
                     domain = m.group(1)
-                    key = m.group(2)
-                    defaults.add((domain, key))
+                    # key may be in group 2,3,4 depending on quoting
+                    key = m.group(2) or m.group(3) or m.group(4)
+                    if key:
+                        defaults.add((domain, key))
     return sorted(defaults)
 
 def main():
     aliases_file = ASSETS / '.aliases'
     functions_file = ASSETS / '.functions'
 
-    aliases = parse_aliases(aliases_file)
-    functions = parse_functions(functions_file)
+    # Normalise aliases -> list of (name, desc)
+    aliases = [(name.lower(), desc) for (name, desc) in parse_aliases(aliases_file)]
+
+    # Normalise functions from assets/.functions -> dict name -> desc
+    functions_map = {name.lower(): desc for (name, desc) in parse_functions(functions_file)}
     # also include function names found inside scripts
+    # Also include function names found inside scripts (preserve any existing descriptions
+    # if not already present)
     for f in SCRIPTS.glob('*.sh'):
-        for name in parse_functions(f):
-            if name not in functions:
-                functions.append(name)
-    functions = sorted(set(functions))
+        for (name, desc) in parse_functions(f):
+            lname = name.lower()
+            if lname not in functions_map:
+                functions_map[lname] = desc
 
-    completions = list_completions()
-    installs = find_print_installs()
-    defaults = find_defaults()
+    # Final functions list is a sorted list of tuples (name, desc)
+    functions = sorted([(name, desc) for (name, desc) in functions_map.items()], key=lambda x: x[0])
 
-    out = DOCS / 'INVENTORY.md'
+    completions = [c.lower() for c in list_completions()]
+    # Normalise install target names to lowercase
+    installs = [(s, app.lower()) for (s, app) in find_print_installs()]
+    # Normalise defaults domains and keys to lowercase
+    defaults = [(d.lower(), k.lower()) for (d, k) in find_defaults()]
+
+    out = DOCS / 'inventory.md'
     with open(out, 'w') as fh:
         fh.write('# MachInit Inventory\n\n')
         fh.write('Generated by dev_scripts/generate_inventory.py\n\n')
 
         fh.write('## Aliases (assets/.aliases)\n')
         if aliases:
-            for a in aliases:
-                fh.write(f'- `{a}`\n')
+            for (name, desc) in aliases:
+                if desc:
+                    fh.write(f'- `{name}` — {desc}\n')
+                else:
+                    fh.write(f'- `{name}`\n')
         else:
             fh.write('- (none)\n')
         fh.write('\n')
 
         fh.write('## Functions (assets/.functions + scanned scripts)\n')
         if functions:
-            for f in functions:
-                fh.write(f'- `{f}()`\n')
+            for (name, desc) in functions:
+                if desc:
+                    fh.write(f'- `{name}()` — {desc}\n')
+                else:
+                    fh.write(f'- `{name}()`\n')
         else:
             fh.write('- (none)\n')
         fh.write('\n')
