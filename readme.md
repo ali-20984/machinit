@@ -260,6 +260,11 @@ These are the GUI apps and developer tools the installer can install (via Homebr
 
 - `OpenVPN Connect` — official OpenVPN client for connecting to OpenVPN servers. (`scripts/037_install_openvpn.sh`)
 
+### Security & Password managers
+
+- `Bitwarden` — a secure cloud-backed password manager and vault (desktop client). (`scripts/030_install_bitwarden.sh`)
+- `KeePassXC` — an offline, open-source cross-platform password manager for local vaults. (`scripts/026_install_keepassxc.sh`)
+
 ### Sync & Storage
 
 - `Nextcloud` — desktop sync client for Nextcloud file sync services. (`scripts/029_install_nextcloud.sh`)
