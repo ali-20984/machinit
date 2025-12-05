@@ -35,11 +35,28 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-.idea/
-.vscode
 .vagrant/
 node_modules
 npm-debug.log
+
+# IDE / Editor files
+#####################
+# Visual Studio Code
+.vscode/
+# JetBrains / IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/gradle.xml
+.idea/**/caches
+.idea/**/libraries
+.project
+.classpath
+.settings/
+
 
 # Build / distribution folders
 ############################
@@ -58,7 +75,6 @@ CMakeCache.txt
 .next/
 .nuxt/
 .parcel-cache/
-.cache/
 .turbo/
 .vercel/
 .serverless/
@@ -128,7 +144,69 @@ id_ed25519
 
 # Misc
 #######
-.cache/
 .grunt/
 .sass-cache/
 thumbs.db
+
+# Ruby / Rails
+################
+.bundle/
+vendor/bundle/
+*.gem
+log/*.log
+tmp/
+tmp/pids/
+tmp/cache/
+tmp/sockets/
+public/system/
+
+# Java / JVM (Maven, Gradle)
+###########################
+.gradle/
+build/  # Gradle build output (also used by other languages)
+*.class
+*.war
+*.ear
+
+# Go
+#####
+bin/
+pkg/
+vendor/
+*.test
+
+# Docker
+#######
+.docker/
+docker-compose.override.yml
+
+# Android / Kotlin
+###################
+.externalNativeBuild/
+.cxx/
+.captures/
+local.properties
+# Gradle caches and wrappers
+gradle-app.setting
+gradle-wrapper.jar
+gradle-wrapper.properties
+gradlew
+gradlew.bat
+
+
+# Xcode / iOS
+#############
+DerivedData/
+*.xcworkspace
+*.xcuserdata
+*.xcuserstate
+
+# PHP / Composer
+#################
+vendor/
+composer.phar
+
+# CI / caches
+#############
+.cache/
+
