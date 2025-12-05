@@ -233,7 +233,7 @@ These are the GUI apps and developer tools the installer can install (via Homebr
 
 - `Google Chrome` — the Chromium-based web browser. (`scripts/028_install_google_chrome.sh`)
 - `Chrome DevTools MCP` — Chrome DevTools helper/utility installed for browser development workflows. (`scripts/027_install_chrome_devtools_mcp.sh`)
- - `Firefox` — the Mozilla Firefox web browser (configurable via policies.json for extensions). (`scripts/020_install_firefox.sh`)
+- `Firefox` — the Mozilla Firefox web browser (configurable via policies.json for extensions). (`scripts/020_install_firefox.sh`)
 
 ### Office & Productivity
 
