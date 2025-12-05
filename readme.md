@@ -58,6 +58,8 @@ chmod +x install.sh
 
 The following aliases are provided in `assets/.aliases` for quick command-line shortcuts.
 
+Note: these aliases live in `assets/.aliases`. Source this file from your shell rc to enable them (for example, add `source /path/to/machinit/assets/.aliases` to `~/.zshrc` or `~/.bashrc`). The file is intended to be compatible with both bash and zsh; do not execute it directly because aliases defined in a subshell will not persist in your interactive shell.
+
 - `bup` — `brew update && brew upgrade && brew cleanup` — update Homebrew, upgrade packages, cleanup
 - `reloaddns` — `dscacheutil -flushcache && sudo killall -HUP mDNSResponder` — flush macOS DNS cache and restart `mDNSResponder` (requires `sudo`)
 - `dnsreload` — `dscacheutil -flushcache && sudo killall -HUP mDNSResponder` — flush macOS DNS cache and restart `mDNSResponder` (requires `sudo`)
@@ -71,7 +73,7 @@ Navigation:
 - `.....` — `cd ../../../../` — go up deeper (lenient duplicate)
 - `cd..` — `cd ..` — alternate form to go up one
 - `~` — `cd ~` — go to home directory
-- `-` — `cd -` — switch to previous working directory
+- `~~` — `cd -` — switch to previous working directory (use `~~` to go to the previous dir)
 
 Shortcuts:
 - `c` — `clear` — clear terminal screen
@@ -118,7 +120,7 @@ Utilities:
 - `eldritchterror` — `open https://en.wikipedia.org/wiki/Heat_death_of_the_universe` — open doom article
 
 System:
-- `path` — `echo -e ${PATH//:/\\n}` — print PATH entries one-per-line
+- `path` — `echo -e ${PATH//:/\\n}` — print PATH entries one-per-line (uses `${PATH//:/\\n}` which is supported in bash and zsh)
 - `cpu` — `top -o cpu` — show top processes by CPU
 - `mem` — `top -o rsize` — show top processes by memory usage (resident size)
 

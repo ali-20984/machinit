@@ -92,7 +92,6 @@ target/
 *.pdb
 *.ipdb
 *.dSYM/
-*.exe
 *.out
 *.elf
 *.map
@@ -101,8 +100,6 @@ target/
 ##########################################
 *.sublime-workspace
 *.sublime-project
-.idea/
-.vscode/
 .history/
 
 # Environment and secrets
@@ -131,7 +128,6 @@ id_ed25519
 
 # Misc
 #######
-.DS_Store
 .cache/
 .grunt/
 .sass-cache/
