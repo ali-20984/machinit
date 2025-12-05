@@ -93,6 +93,7 @@ function show_help() {
     echo "  --reset-finder-view      Remove per-folder .DS_Store and apply Finder List-view defaults across folders."
     echo "  --computer-name <name>  Set computer name non-interactively."
     echo "  --help, -h              Show this help message."
+    echo "  --pin-sidebar            Add configured Finder sidebar items (Projects/Downloads) then exit."
     echo ""
 }
 
@@ -224,6 +225,10 @@ while [[ $# -gt 0 ]]; do
                 shift
             fi
             ;;
+        --pin-sidebar)
+                PIN_SIDEBAR=true
+                shift
+                ;;
         --run-only)
             RUN_ONLY_INDEX="$2"
             shift 2
@@ -343,6 +348,23 @@ if [ "$RESET_FINDER_VIEW" = true ]; then
             exit 0
         else
             echo "Finder reset failed." | tee -a "$LOG_FILE"
+            exit 1
+        fi
+    else
+        echo "Finder script not found or not executable: $SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" | tee -a "$LOG_FILE"
+        exit 1
+    fi
+fi
+
+# If user requested only to pin Finder sidebar items, run just that step then exit.
+if [ "${PIN_SIDEBAR:-false}" = true ]; then
+    echo "Pinning Finder sidebar items only..."
+    if [ -x "$SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" ]; then
+        if "$SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" --add-sidebar-only; then
+            echo "Finder sidebar pinning complete. Exiting."
+            exit 0
+        else
+            echo "Finder sidebar pinning failed." | tee -a "$LOG_FILE"
             exit 1
         fi
     else

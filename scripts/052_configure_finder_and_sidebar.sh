@@ -10,10 +10,15 @@ source "$(dirname "$0")/utils.sh"
 # .DS_Store files. Also honor the environment variable RESET_FINDER_VIEW
 # (useful when the script is invoked from install.sh).
 RESET_FINDER_VIEW=${RESET_FINDER_VIEW:-false}
+ADD_SIDEBAR_ONLY=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --reset-view)
             RESET_FINDER_VIEW=true
+            shift
+            ;;
+        --add-sidebar-only)
+            ADD_SIDEBAR_ONLY=true
             shift
             ;;
         *)
@@ -210,6 +215,26 @@ EOF
 # Add the Projects folder created above to the sidebar (friendly name: Projects)
 
 print_action "Configuring Finder sidebar favorites..."
+
+# If invoked with --add-sidebar-only, perform a minimal 'pin to sidebar' step
+# and exit so callers (or CI) can target sidebar pinning exclusively.
+if [ "$ADD_SIDEBAR_ONLY" = true ]; then
+    # Ensure both Downloads and Documents/Projects exist for the user
+    execute_as_user mkdir -p "${ORIGINAL_HOME}/Downloads" || true
+    execute_as_user mkdir -p "${ORIGINAL_HOME}/Documents/Projects" || true
+
+    # Prefer the Documents/Projects canonical path when pinning
+    add_sidebar_item "Downloads" "${ORIGINAL_HOME}/Downloads"
+    add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
+
+    # Flush preferences so Finder picks up the change
+    print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
+    execute_as_user killall cfprefsd &>/dev/null || true
+
+    echo "Finder sidebar pinning done (add-only mode)."
+    exit 0
+fi
+
 # Use the original home path when adding the item
 add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
 

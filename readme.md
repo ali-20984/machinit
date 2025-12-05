@@ -41,6 +41,35 @@ chmod +x install.sh
 
 3. Customize `config.toml` before running for any machine-specific settings.
 
+## CLI flags / options
+
+The top-level installer `install.sh` exposes several useful command-line flags to control
+behavior and limit the scope of operations (useful for automation or CI). A quick reference:
+
+- `--dry-run` — Simulate actions without making changes (safe testing).
+- `--update` — Self-update the repository (git pull) and exit.
+- `--config <file>` — Use an alternate configuration TOML file to filter which scripts run.
+- `--no-log` — Disable persistent logging to the `./logs/` directory.
+- `--verbose` / `-v` — Enable verbose stdout (set -x) for troubleshooting.
+- `--start-from <script>` — Resume execution starting at the specified script file name.
+- `--run-only <N>` — Run only the 1-based indexed script N from `scripts/` and exit.
+- `--restart-ui` — After a successful run, perform the final UI restart step (Dock/Finder/etc.).
+- `--update-shell` — Only update `~/.aliases` and `~/.functions` then exit (runs `scripts/012_install_dotfiles.sh --only-shell`).
+- `--reset-finder-view` — Remove per-folder `.DS_Store` files under the user's home and set Finder list-view defaults.
+- `--pin-sidebar` — Pin configured Finder sidebar items (Downloads / Projects) then exit.
+- `--clear-logs` — Remove all files under `./logs/` and exit.
+- `--resume-failure` — Resume a previously failed run using the script name recorded in `logs/last_failed`.
+- `--exit` — Immediate no-op exit (used for testing/CI flows).
+- `--computer-name <name>` — Set the computer name non-interactively (uses macOS scutil and defaults writes).
+- `--help` / `-h` — Show short help for the installer.
+
+Additionally some scripts accept their own flags. For example:
+
+- `scripts/052_configure_finder_and_sidebar.sh --add-sidebar-only` — Add Finder sidebar items only and exit (useful when run directly or via `install.sh --pin-sidebar`).
+- `scripts/011_check_aliases_functions_conflicts.sh --abort-on-conflict` — Exit non-zero if conflicts detected (used by `scripts/012_install_dotfiles.sh` by default; the top-level installer bypasses aborts during a full run).
+
+Use `./install.sh --dry-run` to test these behaviors safely before running on a live machine.
+
 
 ## What this repo contains (short)
 
