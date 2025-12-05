@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# Auto-generated completion for ld (from --help output)
-#compdef ld
-
-_files

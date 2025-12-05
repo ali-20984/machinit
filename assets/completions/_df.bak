@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# Minimal df completion (mount points / file args)
-
-#compdef df
-
-_files
