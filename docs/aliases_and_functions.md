@@ -17,8 +17,11 @@ If you maintain these files, please keep them well-commented and add new items t
 
 Note: The repository includes a conflict-checker `scripts/011_check_aliases_functions_conflicts.sh`.
 By default the checker writes a report and runs in *warning-only* mode (it will not abort on conflicts).
-The installer runs the checker with `--abort-on-conflict` before applying dotfiles so the installation will
-abort if conflicts are detected. You can run the checker manually and control behavior:
+When running the full top-level installer (`install.sh`) the installer bypasses immediate aborts and sets
+`SKIP_ALIAS_CHECK=1` for the child dotfiles step so dotfile installation is not stopped by the report. The
+checker remains available to run manually and `--update-shell` still runs the checker with
+`--abort-on-conflict` when you explicitly ask to update only the shell files.
+You can run the checker manually and control behavior:
 
 - `bash scripts/011_check_aliases_functions_conflicts.sh` — run checker (warning-only; writes report)
 - `bash scripts/011_check_aliases_functions_conflicts.sh --check-only` — run checker and exit (warning-only)

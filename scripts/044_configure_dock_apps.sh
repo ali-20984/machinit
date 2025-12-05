@@ -112,10 +112,42 @@ if [ ! -d "$download_folder" ]; then
 fi
 
 # Ensure Projects location exists (the installer may create a Documents/Projects earlier)
-if [ ! -d "$projects_folder" ]; then
-    # fallback to Documents/Projects if present
-    if [ -d "${ORIGINAL_HOME}/Documents/Projects" ]; then
-        projects_folder="${ORIGINAL_HOME}/Documents/Projects"
+if [ -d "${ORIGINAL_HOME}/Documents/Projects" ]; then
+    # Prefer the canonical Documents/Projects folder when it exists so
+    # we pin the real directory (not a symlink) to the Dock.
+    projects_folder="${ORIGINAL_HOME}/Documents/Projects"
+else
+    if [ -d "${ORIGINAL_HOME}/Projects" ]; then
+        # If Projects exists and is a symlink, try to resolve it to the
+        # real path so we avoid pinning the symlink itself.
+        if [ -L "${ORIGINAL_HOME}/Projects" ]; then
+            if command -v python3 >/dev/null 2>&1; then
+                resolved=$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${ORIGINAL_HOME}/Projects")
+                if [ -d "$resolved" ]; then
+                    projects_folder="$resolved"
+                else
+                    projects_folder="${ORIGINAL_HOME}/Projects"
+                fi
+            elif command -v realpath >/dev/null 2>&1; then
+                projects_folder=$(realpath "${ORIGINAL_HOME}/Projects")
+            elif command -v readlink >/dev/null 2>&1; then
+                target=$(readlink "${ORIGINAL_HOME}/Projects")
+                if [ -n "$target" ]; then
+                    if [[ "$target" != /* ]]; then
+                        # create an absolute path from relative target
+                        projects_folder="${ORIGINAL_HOME}/$(dirname "${ORIGINAL_HOME}/Projects")/$target"
+                    else
+                        projects_folder="$target"
+                    fi
+                else
+                    projects_folder="${ORIGINAL_HOME}/Projects"
+                fi
+            else
+                projects_folder="${ORIGINAL_HOME}/Projects"
+            fi
+        else
+            projects_folder="${ORIGINAL_HOME}/Projects"
+        fi
     else
         execute_as_user mkdir -p "${ORIGINAL_HOME}/Projects"
         print_info "Created missing Projects folder at ${ORIGINAL_HOME}/Projects"

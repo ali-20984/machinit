@@ -422,6 +422,15 @@ if [ "$RESUME_FAILURE" = true ]; then
     fi
 fi
 
+# When running the full installer we intentionally bypass alias/function
+# name conflict aborts so the user-level dotfiles installation won't be
+# interrupted by the report. The dedicated checker script is still
+# available to run manually and the --update-shell flow runs the checker
+# as before.
+# Export SKIP_ALIAS_CHECK so child scripts (e.g. 012_install_dotfiles.sh)
+# see it and skip the abort-on-conflict behavior during a full install run.
+export SKIP_ALIAS_CHECK=1
+
 # Iterate through all .sh files in the scripts directory
 for script in "$SCRIPTS_DIR"/*.sh; do
     # Check if file exists (in case glob matches nothing)
