@@ -150,7 +150,8 @@ add_sidebar_item() {
     target="$(cd "$(dirname "$target")" 2>/dev/null && pwd)/$(basename "$target")"
 
     # If requested, prefer using FinderSidebarEditor Python module
-    if [ "${USE_FSE}" = true ]; then
+    case "${USE_FSE:-}" in
+        1|true|True|TRUE|yes|Yes|YES)
         if command -v python3 >/dev/null 2>&1; then
             print_action "Adding '$name' to Finder sidebar using FinderSidebarEditor (python module)..."
             # Use the FinderSidebarEditor module if available in the user's environment
@@ -164,7 +165,8 @@ add_sidebar_item() {
         else
             print_notice "python3 not found; cannot use FinderSidebarEditor"
         fi
-    fi
+        ;;
+    esac
 
     # Prefer Homebrew-installed mysides (may be in /usr/local or /opt/homebrew)
     local mysides_bin=""
