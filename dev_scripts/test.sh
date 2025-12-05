@@ -42,7 +42,7 @@ echo "Discovering tests in: $TEST_DIR"
 # Find test files in tests/ (non-recursive), sort for deterministic order
 while IFS= read -r entry; do
     ALL_TESTS+=("$entry")
-done < <(find "$TEST_DIR" -maxdepth 1 -type f -print | xargs -n1 basename | sort)
+done < <(find "$TEST_DIR" -maxdepth 1 -type f -print0 | xargs -0 -n1 basename | sort)
 
 # Optionally filter by pattern
 TESTS=()
@@ -125,8 +125,8 @@ run_test() {
 }
 for t in "${TESTS[@]}"; do
     if ! run_test "$t"; then
-        # record a non-zero marker (but continue running remaining tests)
-        failed_local=1
+        # continue running remaining tests; failed marker handled inside run_test
+        :
     fi
 done
 

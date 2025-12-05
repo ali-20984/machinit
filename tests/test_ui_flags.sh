@@ -203,6 +203,8 @@ fi
 
 # Test 19: Finder script supports reset flag or env var for .DS_Store cleanup
 echo "Test 19: Finder script supports .DS_Store cleanup via flag/env"
+# This grep intentionally searches for the literal string containing ${ORIGINAL_HOME}
+# shellcheck disable=SC2016
 if grep -Fq 'find "${ORIGINAL_HOME}"' "$FINDER_SCRIPT" && grep -Fq '.DS_Store' "$FINDER_SCRIPT"; then
     echo "PASS: Finder script contains .DS_Store cleanup logic"
 else

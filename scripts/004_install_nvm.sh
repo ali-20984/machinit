@@ -60,8 +60,9 @@ for profile in "$ORIGINAL_HOME/.zshrc" "$ORIGINAL_HOME/.bash_profile" "$ORIGINAL
                 echo ""
                 echo '# NVM configuration'
                 echo 'export NVM_DIR="$HOME/.nvm"'
-                echo "[ -s \"$NVM_PREFIX/nvm.sh\" ] && \\\. \"$NVM_PREFIX/nvm.sh\"  # This loads nvm"
-                echo "[ -s \"$NVM_PREFIX/etc/bash_completion.d/nvm\" ] && \\\. \"$NVM_PREFIX/etc/bash_completion.d/nvm\"  # This loads nvm bash_completion"
+                # Use printf to ensure backslash escapes are preserved portably
+                printf '%s\n' "[ -s \"$NVM_PREFIX/nvm.sh\" ] && \\. \"$NVM_PREFIX/nvm.sh\"  # This loads nvm"
+                printf '%s\n' "[ -s \"$NVM_PREFIX/etc/bash_completion.d/nvm\" ] && \\. \"$NVM_PREFIX/etc/bash_completion.d/nvm\"  # This loads nvm bash_completion"
             } >>"$profile"
         fi
     else

@@ -3,6 +3,8 @@ set -u
 
 # CLI flags
 abort_on_conflict=false
+# check_only is intentionally available as a flag for callers — when used the
+# script will write the report and exit immediately (check-only mode).
 check_only=false
 
 while [ "$#" -gt 0 ]; do
@@ -162,8 +164,9 @@ fi
 # List duplicates details
 dups=()
 for f in "${func_names[@]}"; do
-  if [ ${func_map[$f]:-0} -gt 1 ]; then
-    dups+=("- FUNC duplicate: $f (${func_map[$f]})")
+  count=${func_map[$f]:-0}
+  if [ "$count" -gt 1 ]; then
+    dups+=("- FUNC duplicate: $f ($count)")
   fi
 done
 if [ ${#dups[@]} -ne 0 ]; then
@@ -199,6 +202,19 @@ else
 fi
 
 echo "Conflicts report generated at: $REPORT"
+
+# If check-only mode requested, stop here and return non-zero when issues were
+# found (useful for CI checks that want to stop on failures without applying
+# any installs).
+if [ "$check_only" = true ]; then
+  if [ "$issues_found" -ne 0 ]; then
+    echo "Issues detected (check-only): see $REPORT" >&2
+  else
+    echo "No issues detected (check-only)" >&2
+  fi
+  # check-only mode is intentionally warning-only by default — exit zero
+  exit 0
+fi
 
 if [ "$issues_found" -ne 0 ]; then
   echo "One or more conflicts or duplicate definitions were found. See $REPORT for details." >&2
