@@ -11,6 +11,7 @@ source "$(dirname "$0")/utils.sh"
 # (useful when the script is invoked from install.sh).
 RESET_FINDER_VIEW=${RESET_FINDER_VIEW:-false}
 ADD_SIDEBAR_ONLY=false
+USE_FSE=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --reset-view)
@@ -19,6 +20,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --add-sidebar-only)
             ADD_SIDEBAR_ONLY=true
+            shift
+            ;;
+        --use-fse)
+            USE_FSE=true
             shift
             ;;
         *)
@@ -143,6 +148,23 @@ add_sidebar_item() {
 
     # Resolve to absolute path
     target="$(cd "$(dirname "$target")" 2>/dev/null && pwd)/$(basename "$target")"
+
+    # If requested, prefer using FinderSidebarEditor Python module
+    if [ "${USE_FSE}" = true ]; then
+        if command -v python3 >/dev/null 2>&1; then
+            print_action "Adding '$name' to Finder sidebar using FinderSidebarEditor (python module)..."
+            # Use the FinderSidebarEditor module if available in the user's environment
+            pycmd="from FinderSidebarEditor import FinderSidebar; FinderSidebar().add(\"${target}\")"
+            if execute_as_user python3 -c "$pycmd" >/dev/null 2>&1; then
+                print_success "Added '$name' (via FinderSidebarEditor)."
+                return 0
+            else
+                print_warning "FinderSidebarEditor invocation failed or module not present; falling back to other methods."
+            fi
+        else
+            print_notice "python3 not found; cannot use FinderSidebarEditor"
+        fi
+    fi
 
     # Prefer Homebrew-installed mysides (may be in /usr/local or /opt/homebrew)
     local mysides_bin=""
