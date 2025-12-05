@@ -59,8 +59,8 @@ chmod +x install.sh
 The following aliases are provided in `assets/.aliases` for quick command-line shortcuts.
 
 - `bup` — `brew update && brew upgrade && brew cleanup` — update Homebrew, upgrade packages, cleanup
-- `reloaddns` — `dscacheutil -flushcache && sudo killall -HUP mDNSResponder`
-- `dnsreload` — `dscacheutil -flushcache && sudo killall -HUP mDNSResponder`
+- `reloaddns` — `dscacheutil -flushcache && sudo killall -HUP mDNSResponder` — flush macOS DNS cache and restart `mDNSResponder` (requires `sudo`)
+- `dnsreload` — `dscacheutil -flushcache && sudo killall -HUP mDNSResponder` — flush macOS DNS cache and restart `mDNSResponder` (requires `sudo`)
 - `timestamp` — `date +%s` — print current epoch timestamp (seconds since UNIX epoch)
 - `jsrefresh` — `rm -rf node_modules/ package-lock.json && npm install` — remove node deps and reinstall
 
