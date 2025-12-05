@@ -21,7 +21,6 @@ alias ~~="cd -" # switch to previous working directory (use `~~` to go to previo
 # Shortcuts
 alias c="clear" # clear terminal screen
 alias h="history" # display shell history
-alias o="open ." # open current directory in Finder (macOS)
 
 # Quick zsh editing
 alias zshconf="nano ~/.zshrc" # open zsh configuration for quick edits

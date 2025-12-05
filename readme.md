@@ -76,6 +76,32 @@ Notes:
 - It intentionally does not ignore dependency lockfiles (e.g. `package-lock.json`, `Gemfile.lock`, `Cargo.lock`) since those are commonly committed for reproducible builds.
 - Contributions and additions are welcome; keep unrelated repo-specific ignores out of the global file.
 
+## Functions
+
+The following helper functions are provided in `assets/.functions`. Source that file into your shell (`source /path/to/machinit/assets/.functions`) to make these available in your interactive session.
+
+- `mkd` — create a new directory (with parents) and immediately `cd` into it.
+- `cdf` — change working directory to the top-most Finder window location (macOS Finder integration).
+- `targz` — create a `.tar.gz` archive using `zopfli`, `pigz` or `gzip` (chooses best available compressor).
+- `fs` — show size of a file or total size of a directory in a human-readable form (portable `du` wrapper).
+- `diff` — use Git’s colored diff when available (`git diff --no-index --color-words`).
+- `dataurl` — produce a data URL (base64) from a file; sets proper mime-type for text files.
+- `server` — start a simple HTTP server (Python) from the current directory and open it in a browser; enables CORS.
+- `gz` — compare original and gzipped file sizes and print ratio.
+- `digga` — run `dig` with useful flags to show concise DNS answers.
+- `getcertnames` — print the Common Name and Subject Alternative Names from an HTTPS certificate for a domain.
+- `o` — `open` wrapper: `o` opens the current directory if called without args, otherwise opens its arguments.
+- `tre` — enhanced `tree` alias: show hidden files, color, ignore `.git` and `node_modules`, view with `less`.
+- `generate_git_key` — interactive helper to generate a new SSH key (ed25519), add it to the ssh-agent/keychain, and instruct how to add the public key to GitHub.
+- `myaliases` — print a formatted table of aliases and functions (supports `--aliases`, `--functions`, `--all`).
+- `findPid` — helper to find process IDs by process name/regex (uses `lsof -t -c`).
+- `recent` — `cd` to the most recently modified project directory under `~/Projects` (supports indexing and name patterns).
+- `ll` — robust `ls` wrapper that prefers GNU `ls`/`gls` but falls back safely for BSD systems.
+- `myip` — robust public IP lookup with multiple service fallbacks and optional IPv6 support.
+
+
+These functions are written to be safe for interactive shells (bash/zsh). If you rely on shell-specific features, consider sourcing the file from the appropriate rc file (e.g. `~/.zshrc` or `~/.bashrc`).
+
 ## Aliases
 
 The following aliases are provided in `assets/.aliases` for quick command-line shortcuts.
@@ -100,7 +126,7 @@ Navigation:
 Shortcuts:
 - `c` — `clear` — clear terminal screen
 - `h` — `history` — display shell history
-- `o` — `open .` — open current directory in Finder (macOS)
+ 
 
 Zsh / config editors:
 - `zshconf` — `nano ~/.zshrc` — open zsh configuration for quick edits
