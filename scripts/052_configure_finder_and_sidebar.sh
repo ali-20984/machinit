@@ -152,7 +152,9 @@ add_sidebar_item() {
         print_action "Adding '$name' to Finder sidebar using mysides..."
         # Construct file:// URL (escape spaces/unsafe chars)
         if command -v python3 >/dev/null 2>&1; then
-            fileurl="file://$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$target")"
+            # Use urllib.parse.quote with safe='/' to preserve path separators
+            # while percent-encoding spaces/unsafe characters for file:// URLs.
+            fileurl=$(python3 -c 'import urllib.parse,sys;print("file://" + urllib.parse.quote(sys.argv[1], safe="/"))' "$target")
         else
             # Fallback: naive space-escape
             # URL-encode spaces in path using parameter expansion (faster, avoids sed)
