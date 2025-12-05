@@ -16,7 +16,7 @@ alias ....="cd ../../../../" # go up three levels
 alias .....="cd ../../../../" # go up deeper (alias duplicates, intentionally lenient)
 alias cd..="cd .." # alternate form to go up one (Windows-style typing habit)
 alias ~="cd ~" # go to home directory
-alias -- -="cd -" # switch to previous working directory
+alias ~~="cd -" # switch to previous working directory (use `~~` to go to previous dir)
 
 # Shortcuts
 alias c="clear" # clear terminal screen
