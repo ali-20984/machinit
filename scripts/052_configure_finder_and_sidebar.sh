@@ -159,7 +159,7 @@ add_sidebar_item() {
             ;;
     esac
 
-    # 1) Default path: use the bundled FinderSidebarEditor under scripts/lib
+    # 1) Default path: use the bundled finder_sidebar_editor under scripts/lib
     if [ "${USE_MYSIDES_FLAG:-0}" -eq 0 ]; then
         if command -v python3 >/dev/null 2>&1; then
             print_action "Adding '$name' to Finder sidebar using finder_sidebar_editor (local module)..."

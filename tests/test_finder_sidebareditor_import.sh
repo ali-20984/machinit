@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ensure the new bundled FinderSidebarEditor.py is importable by python3
+# Ensure the new bundled finder_sidebar_editor.py is importable by python3
 set -euo pipefail
 
 echo "Testing finder_sidebar_editor importability..."

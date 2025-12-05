@@ -21,7 +21,6 @@ Usage:
 from __future__ import annotations
 
 import os
-import shlex
 import subprocess
 import sys
 import urllib.parse
@@ -42,7 +41,7 @@ class FinderSidebar:
     def _run(self, cmd: List[str], **kwargs) -> subprocess.CompletedProcess:
         try:
             return subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
-        except FileNotFoundError as exc:
+        except FileNotFoundError:
             # emulate a non-zero returncode to indicate missing binary
             cp = subprocess.CompletedProcess(cmd, returncode=127)
             return cp
@@ -87,7 +86,7 @@ class FinderSidebar:
                     return True
 
         # AppleScript fallback (UI automation) — best-effort
-        applescript = f"""
+        applescript = """
 tell application "Finder"
     try
         set targetFolder to (POSIX file "{target}") as alias
@@ -154,7 +153,7 @@ end tell
                         return True
 
         # Best-effort AppleScript: find item in sidebar and remove via UI
-        applescript = f"""
+        applescript = """
 tell application "System Events"
     tell process "Finder"
         try
@@ -187,7 +186,7 @@ end tell
                     return True
 
         # UI automation fallback is complex; attempt best-effort AppleScript
-        applescript = f"""
+        applescript = """
 -- UI move is a no-op fallback here; reordering via AppleScript is non-trivial
 return 1
 """
@@ -211,7 +210,7 @@ def main(argv=None) -> int:
     p_rm = sub.add_parser("remove")
     p_rm.add_argument("name")
 
-    p_list = sub.add_parser("list")
+    sub.add_parser("list")
 
     p_move = sub.add_parser("move")
     p_move.add_argument("name")
