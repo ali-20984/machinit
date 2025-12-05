@@ -45,3 +45,5 @@ data['workbench.startupEditor'] = 'none'
 EOF
 
 echo "VS Code configured."
+
+fi

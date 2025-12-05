@@ -205,7 +205,7 @@ def generate_from_help(name, timeout=3):
 
     # Construct a zsh completion snippet
     parts = [
-        f"#!/usr/bin/env bash",
+        "#!/usr/bin/env bash",
         f"# Auto-generated completion for {name} (from --help output)",
         "#compdef %s" % name,
         "",
