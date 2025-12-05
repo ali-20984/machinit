@@ -268,6 +268,60 @@ These are the GUI apps and developer tools the installer can install (via Homebr
 - `Fantasque Sans Mono` — a bundled monospace font installed for development/terminal use. (`scripts/009_install_fonts.sh`)
 
 
+## System tweaks & defaults (summary)
+
+This installer applies a curated set of macOS preference tweaks and system settings across multiple scripts. Most changes are DRY_RUN-safe and are applied using `defaults write`, `pmset`, `nvram`, `dockutil`, or the helper `set_user_default` to target per-user domains. Changes that require elevated privileges write to `/Library/Preferences` or are run with `sudo`.
+
+High-level categories of tweaks applied by the installer:
+
+- **UI / Appearance:** enable Dark Mode, reduce transparency, disable many window animations, set system accent/highlight values, show battery percentage.
+- **Dock & Mission Control:** adjust icon size, enable auto-hide with no delay/animation, minimize-to-application, hide recent apps, speed up Mission Control animations, pin curated apps and folder stacks (via `dockutil`).
+- **Finder & Sidebar:** show all filename extensions, enable status/path bars, default to List view, prevent `.DS_Store` on network/USB volumes, configure sidebar items and default new-window location, unhide `~/Library` and `/Volumes`.
+- **Safari:** privacy/security changes (disable search suggestions, show full URL, enable Develop menu, disable AutoFill, disable Java/plugins, block pop-ups), clear Favorites/History when requested, and postpone Safari recommendation notices.
+- **Spotlight:** restrict indexing to Applications only and disable web/Siri suggestions and Spotlight query suggestions.
+- **Power & Performance:** SSD-friendly settings (hibernatemode, remove sleepimage), enable HiDPI, pmset tweaks (lid wake, display sleep, low power mode), and disable some background agents where possible.
+- **Input devices & keyboard:** disable swipe navigation, adjust keyboard illumination, map Fn to Emoji & Symbols, disable automatic capitalization/quotes/period substitution and auto-correct.
+- **Security & Privacy:** disable crash reporting/auto-submit, enable Application Firewall + stealth/block-all, disable AirDrop/AirPlay Receiver, and disable quarantine prompts for Brew-installed apps where configured.
+- **System apps & utilities:** prevent Photos auto-open on plug, Time Machine behavior tweaks, Activity Monitor showing all processes, TextEdit defaults (UTF-8), and App Store/Software Update preferences.
+- **Terminal & iTerm2:** import themes, set Terminal encoding and secure keyboard entry, and inject a theme prompt block into `~/.zshrc`.
+
+Notes:
+
+- Many preference writes are best-effort and may be ignored by newer macOS versions, MDM profiles, or TCC restrictions. Where applicable, scripts check for Full Disk Access or use `execute_as_user` to write per-user preferences.
+- Restarts of Finder/Dock/SystemUIServer are deferred to `scripts/999_restart_apps.sh` so changes are applied together at the end of a full run.
+
+## Firefox extensions
+
+The installer can configure Firefox via a `policies.json` file to auto-install curated extensions. The current curated list (written by `scripts/020_configure_firefox_policies.sh`) is:
+
+- `uBlock Origin` — content blocker for ads and trackers.
+- `Violentmonkey` — userscript manager for custom client-side scripts.
+- `Stylus` — site-specific CSS manager for custom styling.
+- `FoxyProxy Standard` — advanced proxy management helper.
+- `Dark Reader` — per-site dark mode for websites.
+- `ColorZilla` — eyedropper and color utilities for web design.
+- `Bitwarden` — password manager and vault integration.
+- `Clear Cache` — quick cache clearing helper for Firefox.
+
+These are installed by `scripts/020_configure_firefox_policies.sh` into Firefox's `distribution/policies.json` (requires Full Disk Access to write into the app bundle path when run locally).
+
+## Visual Studio Code extensions
+
+The installer installs a small curated list of VS Code extensions (see `scripts/031_install_vscode_extensions.sh`). Current extensions include:
+
+- `openai.chatgpt` — OpenAI / ChatGPT integration for editor assistance.
+- `dbaeumer.vscode-eslint` — ESLint integration for JavaScript/TypeScript linting.
+- `github.vscode-github-actions` — GitHub Actions workflow tooling.
+- `github.copilot-chat` — GitHub Copilot Chat extension.
+- `davidanson.vscode-markdownlint` — Markdown linting rules and validation.
+- `christian-kohler.npm-intellisense` — npm package auto-imports for JS/TS.
+- `timonwong.shellcheck` — ShellCheck integration for shell script linting.
+- `rooveterinaryinc.roo-cline` — curated tooling (installed when available).
+- `chadbaileyvh.oled-pure-black---vscode` — dark OLED-friendly theme.
+- `streetsidesoftware.code-spell-checker` — spelling diagnostics for code and docs.
+
+VS Code extensions are installed by `scripts/031_install_vscode_extensions.sh` using the `code` CLI when available; the script is DRY_RUN-aware and will skip installation in CI/dry-run modes.
+
 ## Test harness & CI
 
 We validate changes using the test harness `dev_scripts/test.sh`. This script discovers tests under `tests/` and runs them in a safe manner.
