@@ -214,6 +214,33 @@ Included completion scripts (filename -> purpose):
 
 Note: Some completions are auto-generated or derived from upstream sources; where available the scripts prefer a tool's native completion output. For the full list, see the `assets/completions/` folder.
 
+## Installed Apps
+
+These are the GUI apps and developer tools the installer can install (via Homebrew Casks or other helpers). Each entry references the script that performs the install in `scripts/`.
+
+- `iTerm2` — a feature-rich terminal emulator for macOS with profiles, tabs and split panes. (`scripts/010_install_apps.sh`)
+- `Mark Text` — an open-source WYSIWYG Markdown editor for writing and previewing Markdown. (`scripts/010_install_apps.sh`)
+- `Standard Notes` — an encrypted note-taking application focused on privacy and sync. (`scripts/010_install_apps.sh`)
+- `Google Chrome` — the Chromium-based web browser. (`scripts/028_install_google_chrome.sh`)
+- `Adobe Acrobat Reader` — a PDF reader for viewing and annotating PDFs. (`scripts/036_install_adobe_reader.sh`)
+- `Fantasque Sans Mono` — a bundled monospace font installed for development/terminal use. (`scripts/009_install_fonts.sh`)
+- `vcpkg` — C/C++ package manager for native dependencies. (`scripts/006_install_vcpkg.sh`)
+- `nvm (Node Version Manager)` — manage multiple Node.js versions per-user. (`scripts/004_install_nvm.sh`)
+- `Chrome DevTools MCP` — Chrome DevTools helper/utility installed for browser development workflows. (`scripts/027_install_chrome_devtools_mcp.sh`)
+- `OpenCode` — a lightweight code editor/tooling package installed via Homebrew. (`scripts/023_install_opencode.sh`)
+- `OpenAI Codex CLI` — CLI tooling for interacting with the Codex/AI helper (where available). (`scripts/022_install_codex.sh`)
+- `OpenVPN Connect` — official OpenVPN client for connecting to OpenVPN servers. (`scripts/037_install_openvpn.sh`)
+- `Rust (rustup)` — installs the Rust toolchain using `rustup` (compiler, Cargo, toolchains). (`scripts/005_install_rust.sh`)
+- `Nextcloud` — desktop sync client for Nextcloud file sync services. (`scripts/029_install_nextcloud.sh`)
+- `GitHub Desktop` — graphical Git client for GitHub workflows. (`scripts/025_install_github_desktop.sh`)
+- `PowerShell` — Microsoft's cross-platform shell and scripting environment. (`scripts/007_install_powershell.sh`)
+- `Visual Studio Code` — popular, extensible code editor with many extensions. (`scripts/021_install_vscode.sh`)
+- `Beeper` — chat/IM aggregation client that can bridge multiple services. (`scripts/024_install_beeper.sh`)
+- `Microsoft Outlook` — email and calendar client from Microsoft Office. (`scripts/033_install_microsoft_outlook.sh`)
+- `Microsoft Excel` — spreadsheet application from Microsoft Office. (`scripts/032_install_microsoft_excel.sh`)
+- `Microsoft PowerPoint` — presentation application from Microsoft Office. (`scripts/034_install_microsoft_powerpoint.sh`)
+- `Microsoft Word` — word processing application from Microsoft Office. (`scripts/035_install_microsoft_word.sh`)
+
 ## Test harness & CI
 
 We validate changes using the test harness `dev_scripts/test.sh`. This script discovers tests under `tests/` and runs them in a safe manner.
