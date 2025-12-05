@@ -13,6 +13,12 @@ export DRY_RUN=false
 # shellcheck disable=SC1090
 source "$UTILS"
 
+# Skip this test on non-macOS systems where `defaults` is not available.
+if ! command -v defaults >/dev/null 2>&1; then
+    echo "SKIP: 'defaults' command not found on this platform; skipping macOS user-defaults integration tests"
+    exit 0
+fi
+
 # Clean up at exit
 # shellcheck disable=SC2329
 cleanup() {
