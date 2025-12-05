@@ -250,6 +250,29 @@ EOF
 
 print_action "Configuring Finder sidebar favorites..."
 
+# Helper: clear all existing sidebar favorites (best-effort)
+clear_sidebar() {
+    print_action "Clearing Finder sidebar favorites..."
+    repo_root="$(cd "$(dirname "$0")/.." >/dev/null && pwd)"
+    libpath="${repo_root}/scripts/lib"
+
+    if command -v python3 >/dev/null 2>&1; then
+        # get the current list (one per line) using the bundled module
+        current_items=$(execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true)
+
+        # remove each item (best-effort)
+        while IFS= read -r item; do
+            if [ -n "${item}" ]; then
+                execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])" -- "${item}" >/dev/null 2>&1 || true
+            fi
+        done <<EOF
+${current_items:-}
+EOF
+    else
+        print_notice "python3 not found; cannot clear sidebar programmatically (skipping)."
+    fi
+}
+
 # If invoked with --add-sidebar-only, perform a minimal 'pin to sidebar' step
 # and exit so callers (or CI) can target sidebar pinning exclusively.
 if [ "$ADD_SIDEBAR_ONLY" = true ]; then
@@ -257,9 +280,18 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
     execute_as_user mkdir -p "${ORIGINAL_HOME}/Downloads" || true
     execute_as_user mkdir -p "${ORIGINAL_HOME}/Documents/Projects" || true
 
-    # Prefer the Documents/Projects canonical path when pinning
+    # Clear existing favorites then populate in a deterministic order
+    clear_sidebar
+
+    # Populate favorites from top to bottom
+    add_sidebar_item "Recents" "${ORIGINAL_HOME}"
+    add_sidebar_item "Applications" "/Applications"
+    add_sidebar_item "Home" "${ORIGINAL_HOME}"
+    add_sidebar_item "Desktop" "${ORIGINAL_HOME}/Desktop"
+    add_sidebar_item "Documents" "${ORIGINAL_HOME}/Documents"
     add_sidebar_item "Downloads" "${ORIGINAL_HOME}/Downloads"
     add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
+    add_sidebar_item "Nextcloud" "${ORIGINAL_HOME}/Nextcloud"
 
     # Flush preferences so Finder picks up the change
     print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
@@ -270,7 +302,16 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
 fi
 
 # Use the original home path when adding the item
+# On a full run, clear and re-add a curated list (same as add-only)
+clear_sidebar
+add_sidebar_item "Recents" "${ORIGINAL_HOME}"
+add_sidebar_item "Applications" "/Applications"
+add_sidebar_item "Home" "${ORIGINAL_HOME}"
+add_sidebar_item "Desktop" "${ORIGINAL_HOME}/Desktop"
+add_sidebar_item "Documents" "${ORIGINAL_HOME}/Documents"
+add_sidebar_item "Downloads" "${ORIGINAL_HOME}/Downloads"
 add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
+add_sidebar_item "Nextcloud" "${ORIGINAL_HOME}/Nextcloud"
 
 # Flush cfprefsd cache for the original user so Finder will pick up the new settings
 print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
