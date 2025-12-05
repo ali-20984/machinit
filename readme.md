@@ -174,6 +174,45 @@ System:
 
 - `afk` — `pmset displaysleepnow` — put display to sleep / lock screen
 - `wifi_pass` — `security find-generic-password -wa` — retrieve WiFi password from keychain (append SSID)
+ 
+## Completions
+
+The `assets/completions/` directory contains curated zsh completion scripts included with these dotfiles. Install or source them into your shell to get improved tab completion for many common commands.
+
+Included completion scripts (filename -> purpose):
+
+- `_git` — Git CLI: subcommands and options completion.
+- `_npm` — npm: curated npm subcommands and package.json helpers.
+- `_node` — Node.js: official node CLI completion.
+- `_copilot` — Copilot CLI: GitHub/AWS Copilot command completion.
+- `_nvm` — Node Version Manager: install/use/list completions.
+- `_npx` — npx: run binaries from node_modules with completion.
+- `_yarn` — yarn: common yarn commands.
+- `_cargo` — Cargo (Rust): build/test/run/etc. completions.
+- `_rustc` — rustc: compiler flags and options.
+- `_clang` / `_clang++` — Clang/Clang++: compiler options.
+- `_gcc` / `_g++` — GCC/G++: compiler and linker flags.
+- `_cmake` — CMake: generator and target completions.
+- `_gnumake` — GNU make: common targets and options.
+- `_vcpkg` — vcpkg: package manager completions for C/C++.
+- `_black` / `_flake8` — Python tooling (formatter/linter) completions.
+- `_grep` / `_egrep` / `_fgrep` — grep-family completions (search tools).
+- `_rg` / `_ripgrep` — ripgrep: fast recursive search completion.
+- `_ssh` — ssh client completions (hosts, options).
+- `_curl` — curl: URL/option completions and common flags.
+- `_wget` — wget: download utility completions.
+- `_tar` — tar: archive operations and options.
+- `_rsync` — rsync: sync options and remote/target completions.
+- `_ip` / `_ipconfig` — network tools (ip/ipconfig) completions.
+- `_ping` / `_dig` / `_nslookup` — DNS and network diagnostic completions.
+- `_df` / `_du` — disk utilities completions.
+- `_cat` / `_dd` / `_hexdump` — raw file utilities completions.
+- `_code` / `_gh` / `_github` / `_opencode` / `_codex` — editor & GitHub/CLI completions.
+- `_cron` / `_crontab` — cron scheduling helpers and crontab completions.
+- `_dockutil` — macOS Dock utility completions.
+- `_nvram` / `_ifconfig` — macOS system utilities completions.
+
+Note: Some completions are auto-generated or derived from upstream sources; where available the scripts prefer a tool's native completion output. For the full list, see the `assets/completions/` folder.
 
 ## Test harness & CI
 
