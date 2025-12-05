@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
-# nvram completion stub (macOS)
+# Auto-generated completion for nvram (from --help output)
 #compdef nvram
 
+local -a commands
+commands=(
+  'name:name subcommand'
+)
+_describe 'command' commands && return 0
 local -a opts
 opts=(
-  'help:show help'
-  'get:Get a parameter:_files'
-  'set:Set a parameter:_files'
-  'delete:Delete a parameter'
+  '-X:-X option'
+  '-b:-b option'
+  '-c:-c option'
+  '-d:-d option'
+  '-f:-f option'
+  '-p:-p option'
+  '-r:-r option'
+  '-x:-x option'
 )
-
-_describe 'nvram' opts && return 0
-
+_describe 'option' opts && return 0
 _files

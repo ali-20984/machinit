@@ -1,20 +1,57 @@
 #!/usr/bin/env bash
-# Minimal black completion — common subcommands and options
-
+# Auto-generated completion for black (from --help output)
 #compdef black
 
-local -a cmds
-cmds=(
-  'check:check if files would be reformatted'
-  'format:reformat files'
-  '--version:print version'
-  '--help:show help'
-  '--line-length#:wrap at column'
-  '--target-version:specify target Python version'
-  '--safe:do not apply changes'
-  '--fast:skip experimental safety checks'
+local -a opts
+opts=(
+  '--check:--check option'
+  '--code:--code option'
+  '--color:--color option'
+  '--config:--config option'
+  '--diff:--diff option'
+  '--enable-unstable-feature:--enable-unstable-feature option'
+  '--exclude:--exclude option'
+  '--extend-exclude:--extend-exclude option'
+  '--fast:--fast option'
+  '--force-exclude:--force-exclude option'
+  '--help:--help option'
+  '--include:--include option'
+  '--ipynb:--ipynb option'
+  '--line-length:--line-length option'
+  '--line-ranges:--line-ranges option'
+  '--no-cache:--no-cache option'
+  '--no-color:--no-color option'
+  '--preview:--preview option'
+  '--pyi:--pyi option'
+  '--python-cell-magics:--python-cell-magics option'
+  '--quiet:--quiet option'
+  '--required-version:--required-version option'
+  '--safe:--safe option'
+  '--skip-magic-trailing-comma:--skip-magic-trailing-comma option'
+  '--skip-source-first-line:--skip-source-first-line option'
+  '--skip-string-normalization:--skip-string-normalization option'
+  '--stdin-filename:--stdin-filename option'
+  '--target-version:--target-version option'
+  '--unstable:--unstable option'
+  '--verbose:--verbose option'
+  '--version:--version option'
+  '--workers:--workers option'
+  '-C:-C option'
+  '-END:-END option'
+  '-S:-S option'
+  '-W:-W option'
+  '-based:-based option'
+  '-c:-c option'
+  '-commit:-commit option'
+  '-critical:-critical option'
+  '-detection:-detection option'
+  '-file:-file option'
+  '-h:-h option'
+  '-l:-l option'
+  '-q:-q option'
+  '-t:-t option'
+  '-v:-v option'
+  '-x:-x option'
 )
-
-_describe 'black command' cmds && return 0
-
+_describe 'option' opts && return 0
 _files

@@ -1,18 +1,68 @@
 #!/usr/bin/env bash
-# Lightweight zsh completion helper for npx
-# npx is part of npm CLI — fall back to npm's helper where possible
-
+# Curated npx completion — prefer binary-completion when available, otherwise provide common options
 #compdef npx
 
-local -a commands
-commands=(
-  'run:run a package script'
-  'create:run a package scaffolding tool'
-  'help:show npx help'
-  'install:install package temporarily'
-  '-p:pass args to binary'
-)
+if command -v npx >/dev/null 2>&1; then
+  # prefer the tool-generated completion when possible
+  if out=$(npx completion 2>/dev/null); then
+    # shellcheck disable=SC2148
+    eval "$out" 2>/dev/null || true
+  fi
+fi
 
-_describe 'npx command' commands && return 0
+# Curated npx completion (common flags + fallback suggestions)
+# Usage patterns supported:
+#   npx [options] <command>[@version] [command-arg]...
+#   npx [options] -p|--package <pkg> <command> [command-arg]...
+#   npx [options] -c '<command-string>'
+#   npx -- <command> [arguments…]
 
-return 1
+_arguments -s \
+  '(-h --help)'{-h,--help}'[Display help]' \
+  '(-v --version)'{-v,--version}'[Show version]' \
+  '--package=-p=[pkg]:package to install or run (name[@version])' \
+  '--no-install[Do not attempt to install missing packages]' \
+  '(-y --yes)'{-y,--yes}'[Answer yes to prompts]' \
+  '(-q --quiet)'{-q,--quiet}'[Be quiet (suppress npx logs)]' \
+  '-c=[cmd]:Execute a shell command string' \
+  '--shell-auto-fallback=[shell]:install a shell fallback:(bash zsh fish)' \
+  '--: :[End options — the rest is the command and args]' \
+  '1:command or package:_npx_commands'
+
+_npx_commands() {
+  local -a candidates
+
+  # Suggest package.json scripts when available
+  if [ -f package.json ]; then
+    # quick safe extraction of script names — fallback if perl isn't present
+    if command -v perl >/dev/null 2>&1; then
+      candidates=( $(cat package.json | perl -0777 -MJSON::PP -n -E 'binmode(STDOUT, ":encoding(UTF-8)"); $r=decode_json($_); if($r->{scripts}) { say for sort keys %{$r->{scripts}} }') )
+    fi
+  fi
+
+  # Offer executables under node_modules/.bin when present
+  if compgen -G "node_modules/.bin/*" >/dev/null 2>&1; then
+    local -a bins
+    bins=(node_modules/.bin/*)
+    # strip path
+    for b in "${bins[@]}"; do
+      candidates+=("$(basename "$b")")
+    done
+  fi
+
+  # If we have candidates, describe them. Otherwise fall back to files/commands.
+  if [ ${#candidates[@]} -gt 0 ]; then
+    _describe 'command' candidates && return 0
+  fi
+
+  # Generic fallback: suggest files, executables, or commands on PATH
+  _files -g '*'
+}
+
+case $state in
+  args)
+    _npx_commands
+    ;;
+esac
+
+return 0

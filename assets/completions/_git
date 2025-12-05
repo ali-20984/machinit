@@ -1,41 +1,61 @@
 #!/usr/bin/env bash
-# Lightweight zsh wrapper for git completion.
-# Uses system-provided git bash completion if available; this mirrors
-# upstream git's recommended approach.
-# Source: https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.zsh
+# Auto-generated completion for git (from --help output)
+#compdef git
 
-#compdef git gitk
-
-zstyle -T ':completion:*:*:git:*' tag-order && \
-  zstyle ':completion:*:*:git:*' tag-order 'common-commands'
-
-zstyle -s ":completion:*:*:git:*" script script
-if [ -z "$script" ]; then
-  local -a locations
-  local e bash_completion
-
-  # try pkg-config for bash-completion location
-  bash_completion=$(pkg-config --variable=completionsdir bash-completion 2>/dev/null) || \
-    bash_completion='/usr/share/bash-completion/completions/'
-
-  locations=(
-    "$(dirname ${funcsourcetrace[1]%:*})/git-completion.bash"
-    "$HOME/.local/share/bash-completion/completions/git"
-    "$bash_completion/git"
-    '/etc/bash_completion.d/git'
-  )
-  for e in "${locations[@]}"; do
-    test -f "$e" && script="$e" && break
-  done
-fi
-
-if [ -n "$script" ]; then
-  # temporarily disable 'complete' function wrappers while sourcing
-  local old_complete
-  old_complete="$functions[complete]"
-  functions[complete]=:
-  GIT_SOURCING_ZSH_COMPLETION=1 . "$script"
-  functions[complete]="$old_complete"
-fi
-
-return 0
+local -a commands
+commands=(
+  'add:add subcommand'
+  'backfill:backfill subcommand'
+  'bisect:bisect subcommand'
+  'branch:branch subcommand'
+  'clone:clone subcommand'
+  'commit:commit subcommand'
+  'diff:diff subcommand'
+  'fetch:fetch subcommand'
+  'grep:grep subcommand'
+  'init:init subcommand'
+  'log:log subcommand'
+  'merge:merge subcommand'
+  'mv:mv subcommand'
+  'pull:pull subcommand'
+  'push:push subcommand'
+  'rebase:rebase subcommand'
+  'reset:reset subcommand'
+  'restore:restore subcommand'
+  'rm:rm subcommand'
+  'show:show subcommand'
+  'status:status subcommand'
+  'switch:switch subcommand'
+  'tag:tag subcommand'
+)
+_describe 'command' commands && return 0
+local -a opts
+opts=(
+  '--bare:--bare option'
+  '--config-env=:--config-env= option'
+  '--exec-path:--exec-path option'
+  '--git-dir=:--git-dir= option'
+  '--help:--help option'
+  '--html-path:--html-path option'
+  '--info-path:--info-path option'
+  '--man-path:--man-path option'
+  '--namespace=:--namespace= option'
+  '--no-advice:--no-advice option'
+  '--no-lazy-fetch:--no-lazy-fetch option'
+  '--no-optional-locks:--no-optional-locks option'
+  '--no-pager:--no-pager option'
+  '--no-replace-objects:--no-replace-objects option'
+  '--paginate:--paginate option'
+  '--version:--version option'
+  '--work-tree=:--work-tree= option'
+  '-C:-C option'
+  '-P:-P option'
+  '-a:-a option'
+  '-c:-c option'
+  '-g:-g option'
+  '-h:-h option'
+  '-p:-p option'
+  '-v:-v option'
+)
+_describe 'option' opts && return 0
+_files

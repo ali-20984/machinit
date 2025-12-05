@@ -1,22 +1,95 @@
 #!/usr/bin/env bash
-# Minimal completion for GitHub Copilot / AWS Copilot CLI — safe stub
+# Curated completion for Copilot CLI (GitHub Copilot or AWS Copilot)
+# Prefers the tool's own generated completion when available; otherwise falls
+# back to a curated list of commonly used subcommands and sensible argument
+# completions. This keeps the completion helpful in environments without the
+# binary installed.
+
 #compdef copilot
 
-local -a cmds
+if command -v copilot >/dev/null 2>&1; then
+  # prefer the tool's own completion if the binary is present and can emit it
+  if out=$(copilot completion -s zsh 2>/dev/null); then
+    # shellcheck disable=SC2148
+    eval "$out"
+    return 0
+  fi
+fi
 
-cmds=(
-  'help:show help'
-  'version:print version'
-  'auth:Authenticate with GitHub Copilot'
+# Curated GitHub Copilot CLI completion
+# Includes global invocation flags and a helpful interactive slash-command set
+# to assist interactive sessions.
+
+#compdef copilot
+
+local -a commands
+commands=(
+  'auth:Authenticate / manage login state'
   'login:Interactive login flow'
-  'logout:Logout current session'
-  'chat:Open chat assistant'
-  'code:Run code assistant commands'
-  'repo:Work with repository-related commands'
-  'config:View or set configuration options'
-  'status:Show current CLI/session status'
+  'logout:End current session'
+  'version:Show version information'
+  'help:Show help for a command'
+  'chat:Open an interactive assistant/chat (accepts files):file:_files'
+  'code:Run code assistant (accepts file paths):file:_files'
+  'repo:Repository operations (create, fork, clone, view)'
+  'status:Show CLI or service status'
+  'config:Manage configuration values'
+  'init:Initialize a project or manifest'
+  'resume:Resume a previous session (optional session id)'
+  'continue:Resume the last session without a picker'
+  'version:Show version info'
+  'help:Show usage and help'
 )
 
-_describe 'copilot command' cmds && return 0
+_describe 'copilot subcommand' commands && return 0
 
-_files
+# Slash-commands available inside interactive sessions (prefix: /)
+_copilot_slash_commands() {
+  local -a slash
+  slash=(
+    '/model:Switch AI model for this session'
+    '/login:Authenticate with GitHub (if needed)'
+    '/feedback:Send feedback about suggestions'
+    '/add-dir:Add a directory to trusted list'
+    '/cwd:Change working directory for current session'
+    '/usage:Show session usage and stats'
+  )
+  _describe 'slash command' slash
+}
+
+# Main options and flags documented in this repo's reference
+_arguments -s \
+  '(-h --help)'{-h,--help}'[Show global help]' \
+  '(-V --version)'{-V,--version}'[Show version]' \
+  '-p:--prompt=[prompt]:Run a single prompt non-interactively' \
+  '--prompt=[prompt]:Run a single prompt non-interactively' \
+  '--continue[Resume the most recent session without a picker]' \
+  '--resume[session-id]:Resume previous session (with optional ID)' \
+  '--banner[Show startup banner even if previously dismissed]' \
+  '--allow-all-tools[Allow Copilot to run any tool without prompting]' \
+  '--allow-tool=[pattern]:Allow a specific tool pattern (e.g. shell(npm) or write)'
+  '--deny-tool=[pattern]:Deny a specific tool pattern (takes precedence over allow rules)' \
+  '--allow-all-paths[Allow file-system operations on any path in noninteractive mode]' \
+  '--additional-mcp-config=[@file|json]:Pass extra MCP config inline or via @file' \
+  '--enable-all-github-mcp-tools[Enable additional GitHub MCP toolset]' \
+  '--screen-reader[Enable accessibility friendly mode]' \
+  '--no-color[Disable colorized output]' \
+  '--log-level=[level]:Set logging level:(debug info warn error)' \
+  '*:arg:->args'
+
+case $state in
+  args)
+    # Provide slash-command completions when user types a token starting with '/'
+    if [[ $words[CURRENT] == /* ]]; then
+      _copilot_slash_commands && return 0
+    fi
+
+    # Provide file completion for some subcommands that accept paths
+    if [[ $words[1] == chat || $words[1] == code || $words[1] == init ]]; then
+      _files && return 0
+    fi
+
+    ;;
+esac
+
+return 0

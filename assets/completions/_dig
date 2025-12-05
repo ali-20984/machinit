@@ -1,18 +1,46 @@
 #!/usr/bin/env bash
-# Minimal dig completion — common options / hostname or domain
-
+# Auto-generated completion for dig (from --help output)
 #compdef dig
 
 local -a opts
 opts=(
-  '+short:Display short answers'
-  '+time=#:Set timeout in seconds'
-  '+tcp:Use TCP instead of UDP'
-  '+nssearch:Find nameservers'
-  '+trace:Trace delegation path'
-  'hostname:host to query:_hosts'
+  '-4:-4 option'
+  '-6:-6 option'
+  '-b:-b option'
+  '-c:-c option'
+  '-ca:-ca option'
+  '-certfile=file:-certfile=file option'
+  '-class:-class option'
+  '-client-subnet:-client-subnet option'
+  '-d-opt:-d-opt option'
+  '-dst_addr:-dst_addr option'
+  '-f:-f option'
+  '-get:-get option'
+  '-h:-h option'
+  '-hostname=hostname:-hostname=hostname option'
+  '-k:-k option'
+  '-keyfile=file:-keyfile=file option'
+  '-m:-m option'
+  '-notation:-notation option'
+  '-only:-only option'
+  '-opt:-opt option'
+  '-opts:-opts option'
+  '-over-HTTPS:-over-HTTPS option'
+  '-over-TLS:-over-TLS option'
+  '-p:-p option'
+  '-plain:-plain option'
+  '-plain-get:-plain-get option'
+  '-q:-q option'
+  '-r:-r option'
+  '-readable:-readable option'
+  '-record:-record option'
+  '-server:-server option'
+  '-t:-t option'
+  '-type:-type option'
+  '-u:-u option'
+  '-v:-v option'
+  '-x:-x option'
+  '-y:-y option'
 )
-
-_describe 'dig option' opts && return 0
-
+_describe 'option' opts && return 0
 _files

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Auto-generated completion for du (from --help output)
+#compdef du
+
+_files

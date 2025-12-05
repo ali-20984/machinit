@@ -181,8 +181,26 @@ def ensure_out_dir():
 def save(name, content):
     fname = os.path.join(OUT_DIR, f'_{name}')
     if os.path.exists(fname):
-        print(f'SKIP: _{name} already exists')
-        return False
+        with open(fname, 'r', encoding='utf-8') as f:
+            existing = f.read()
+        if existing == content:
+            print(f'SKIP: _{name} already exists (identical)')
+            return False
+        # If generated content looks significantly richer, overwrite but keep backup
+        if len(content) > len(existing) + 30:
+            bak = fname + '.bak'
+            with open(bak, 'w', encoding='utf-8') as bf:
+                bf.write(existing)
+            with open(fname, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f'OVERWROTE: {fname} (backup at {bak})')
+            return True
+        else:
+            gen_name = fname + '.generated'
+            with open(gen_name, 'w', encoding='utf-8') as gf:
+                gf.write(content)
+            print(f'WROTE GENERATED: {gen_name} (existing _{name} kept)')
+            return True
     with open(fname, 'w', encoding='utf-8') as f:
         f.write(content)
     print(f'WROTE: {fname}')
@@ -262,6 +280,16 @@ def main(names):
                 results[name] = (url, saved)
                 got = True
                 break
+
+        # If nothing remote was found, attempt to generate a completion from
+        # the local program's --help output where possible.
+        if not got:
+            generated = generate_from_help(name)
+            if generated:
+                print(f'GENERATED completion for {name} from local --help')
+                save(name, generated)
+                results[name] = (f'generated:{name}', True)
+                got = True
 
         if not got:
             print(f'NOT FOUND: {name}')

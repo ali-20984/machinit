@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# github -> gh wrapper
+#compdef github
+
+if command -v gh >/dev/null 2>&1; then
+  gh -- "$@"
+fi
+
+return 0

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# clang++ completion; defer to _clang or _g++/_gcc where available
+#compdef clang++
+
+if type _clang >/dev/null 2>&1; then
+  _clang && return 0
+fi
+
+if type '_g++' >/dev/null 2>&1; then
+  _g++ && return 0
+fi
+
+if type _gcc >/dev/null 2>&1; then
+  _gcc && return 0
+fi
+
+_files

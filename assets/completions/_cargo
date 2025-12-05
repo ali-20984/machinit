@@ -1,33 +1,45 @@
 #!/usr/bin/env bash
-# Minimal cargo completion — basic subcommands
+# Curated cargo completion: common subcommands and options
 #compdef cargo
 
-local -a cmds
-cmds=(
+local -a commands
+commands=(
   'build:Compile the current package'
+  'check:Check the package without producing artifacts'
+  'clean:Remove artifacts'
   'run:Run a binary or example of the local package'
-  'test:Run the test suite'
+  'test:Run tests'
   'bench:Run benchmarks'
   'doc:Build documentation'
-  'new:Create a new cargo package'
-  'init:Create a new cargo package in an existing directory'
-  'install:Install a Rust binary'
+  'fmt:Format code (cargo fmt)'
+  'clippy:Run lints (cargo clippy)'
+  'new:Create a new package'
+  'init:Initialize a package in an existing directory'
+  'install:Install a binary'
   'update:Update dependencies'
-  'search:Search registry for a crate'
-  'publish:Upload a package to registry'
+  'search:Search registry for crates'
+  'publish:Publish package to registry'
+  'login:Login to registry (if supported)'
+  'metadata:Output package metadata as JSON'
   'help:Show help'
-  'check:Check if package compiles without producing artifacts'
-  'clean:Remove artifacts'
-  'fmt:Format code using rustfmt'
-  'clippy:Run clippy lints'
-  '--release:Build artifacts in release mode'
-  '--package:Select a package by name'
-  '--workspace:Operate on workspace'
-  '--manifest-path:Path to Cargo.toml:_files'
-  '--features:Cargo features to activate'
-  '--no-default-features:Disable default features'
 )
 
-_describe 'cargo subcommand' cmds && return 0
+_describe 'cargo subcommand' commands && return 0
 
-_files
+# Generic fallback: files / patterns (e.g., manifest-path)
+_arguments \
+  '(-v --verbose)'{-v,--verbose}'[Use verbose output]' \
+  '(--release)'--release'[Build artifacts in release mode]' \
+  '--package=[package]:package name' \
+  '--manifest-path=[path]:path:_files' \
+  '--features=[list]:features' \
+  '--no-default-features[Disable default features]' \
+  '*::arg:->rest'
+
+case $state in
+  rest)
+    _files
+    ;;
+esac
+
+return 0

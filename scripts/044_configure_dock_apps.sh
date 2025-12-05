@@ -98,3 +98,41 @@ execute_as_user killall cfprefsd &>/dev/null || true
 # at the very end (see scripts/999_restart_apps.sh)
 
 echo "Dock apps configured."
+
+# Add a separate Dock "folders" section for quick access to Downloads and Projects.
+echo "Adding folders (Downloads, Projects) to Dock..."
+
+# Ensure Downloads exists for the original user
+download_folder="${ORIGINAL_HOME}/Downloads"
+projects_folder="${ORIGINAL_HOME}/Projects"
+
+if [ ! -d "$download_folder" ]; then
+    execute_as_user mkdir -p "$download_folder"
+    print_info "Created missing Downloads folder at $download_folder"
+fi
+
+# Ensure Projects location exists (the installer may create a Documents/Projects earlier)
+if [ ! -d "$projects_folder" ]; then
+    # fallback to Documents/Projects if present
+    if [ -d "${ORIGINAL_HOME}/Documents/Projects" ]; then
+        projects_folder="${ORIGINAL_HOME}/Documents/Projects"
+    else
+        execute_as_user mkdir -p "${ORIGINAL_HOME}/Projects"
+        print_info "Created missing Projects folder at ${ORIGINAL_HOME}/Projects"
+        projects_folder="${ORIGINAL_HOME}/Projects"
+    fi
+fi
+
+# Add folders to Dock as stacks (right-side section). dockutil will place folders
+# on the right-hand (others) side by default. Use a friendly label and grid view.
+if execute_as_user dockutil --add "$download_folder" --label Downloads --view grid --display stack --no-restart; then
+    print_success "Pinned Downloads folder to Dock (as a stack)."
+else
+    print_error "Failed to pin Downloads folder to Dock."
+fi
+
+if execute_as_user dockutil --add "$projects_folder" --label Projects --view grid --display stack --no-restart; then
+    print_success "Pinned Projects folder to Dock (as a stack)."
+else
+    print_error "Failed to pin Projects folder to Dock."
+fi

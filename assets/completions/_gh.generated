@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Auto-generated completion for gh (from --help output)
+#compdef gh
+
+local -a opts
+opts=(
+  '--help:--help option'
+  '--version:--version option'
+  '-codes:-codes option'
+  '-key:-key option'
+  '-task:-task option'
+)
+_describe 'option' opts && return 0
+_files

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# gnumake -> delegate to make if available
+#compdef gnumake
+
+if (( $+functions[_make] )); then
+  _make && return 0
+fi
+
+_files

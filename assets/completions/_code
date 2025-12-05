@@ -1,18 +1,72 @@
 #!/usr/bin/env bash
-# Minimal VS Code CLI `code` completion — common flags
-
+# Auto-generated completion for code (from --help output)
 #compdef code
 
+local -a commands
+commands=(
+  'chat:chat subcommand'
+  'serve-web:serve-web subcommand'
+  'tunnel:tunnel subcommand'
+)
+_describe 'command' commands && return 0
 local -a opts
 opts=(
-  '--install-extension:install an extension'
-  '--uninstall-extension:uninstall an extension'
-  '--list-extensions:list installed extensions'
-  '--version:print version'
-  '--disable-extensions:do not load extensions'
-  '--help:show help'
+  '--add:--add option'
+  '--add-mcp:--add-mcp option'
+  '--category:--category option'
+  '--diff:--diff option'
+  '--disable-chromium-sandbox:--disable-chromium-sandbox option'
+  '--disable-extension:--disable-extension option'
+  '--disable-extensions:--disable-extensions option'
+  '--disable-gpu:--disable-gpu option'
+  '--disable-lcd-text:--disable-lcd-text option'
+  '--enable-proposed-api:--enable-proposed-api option'
+  '--extensions-dir:--extensions-dir option'
+  '--force:--force option'
+  '--goto:--goto option'
+  '--help:--help option'
+  '--inspect-brk-extensions:--inspect-brk-extensions option'
+  '--inspect-extensions:--inspect-extensions option'
+  '--install-extension:--install-extension option'
+  '--list-extensions:--list-extensions option'
+  '--locale:--locale option'
+  '--locate-shell-integration-path:--locate-shell-integration-path option'
+  '--log:--log option'
+  '--merge:--merge option'
+  '--new-window:--new-window option'
+  '--pre-release:--pre-release option'
+  '--prof-startup:--prof-startup option'
+  '--profile:--profile option'
+  '--remove:--remove option'
+  '--reuse-window:--reuse-window option'
+  '--show-versions:--show-versions option'
+  '--status:--status option'
+  '--sync:--sync option'
+  '--telemetry:--telemetry option'
+  '--transient:--transient option'
+  '--uninstall-extension:--uninstall-extension option'
+  '--update-extensions:--update-extensions option'
+  '--user-data-dir:--user-data-dir option'
+  '--verbose:--verbose option'
+  '--version:--version option'
+  '--wait:--wait option'
+  '-TW:-TW option'
+  '-US:-US option'
+  '-a:-a option'
+  '-d:-d option'
+  '-g:-g option'
+  '-h:-h option'
+  '-id:-id option'
+  '-m:-m option'
+  '-n:-n option'
+  '-name:-name option'
+  '-r:-r option'
+  '-release:-release option'
+  '-s:-s option'
+  '-v:-v option'
+  '-w:-w option'
+  '-way:-way option'
+  '-web:-web option'
 )
-
-_describe 'code option' opts && return 0
-
+_describe 'option' opts && return 0
 _files

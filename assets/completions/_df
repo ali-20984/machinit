@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# Minimal df completion (mount points / file args)
-
+# Auto-generated completion for df (from --help output)
 #compdef df
 
+local -a commands
+commands=(
+  'Filesystem:Filesystem subcommand'
+  'devfs:devfs subcommand'
+)
+_describe 'command' commands && return 0
 _files

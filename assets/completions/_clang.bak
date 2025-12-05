@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Basic clang completion: reuse gcc completions if present
+#compdef clang
+
+if (( $+functions[_gcc] )); then
+  _gcc && return 0
+fi
+
+local -a opts
+opts=(
+  '-Wall:enable all warnings'
+  '-Wextra:enable extra warnings'
+  '-O0:No optimization'
+  '-O2:Optimize'
+  '-g:generate debug info'
+  '-std:Specify language standard:_files'
+  '-I:include path:_files'
+  '-L:library path:_files'
+  '-o:output file:_files'
+)
+
+_describe 'clang option' opts && return 0
+
+# Fallback: filename completion
+_files

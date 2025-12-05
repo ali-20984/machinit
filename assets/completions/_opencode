@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# Curated OpenCode completion (fallback) — prefer opencode's native completion when available
+#compdef opencode
+
+if command -v opencode >/dev/null 2>&1; then
+  if out=$(opencode completion zsh 2>/dev/null); then
+    # shellcheck disable=SC2148
+    eval "$out" 2>/dev/null || true
+    return 0
+  fi
+fi
+
+local -a commands
+commands=(
+  'run:Run a one-off prompt (non-interactive) — shorthand: run <message>'
+  'models:List available models from configured providers'
+  'agent:Manage agents (create, list, configure, remove)'
+  'auth:Manage authentication (login/logout/configure providers)'
+  'serve:Launch a headless OpenCode server (attachable)'
+  'serve:server:Alias for serve (headless server)' 
+  'project:Project helper subcommand (project-specific actions)'
+  'help:Show help and command docs'
+)
+
+_describe 'opencode command' commands && return 0
+
+# Helpers
+_opencode_image_files() { _files -g '*.(png|jpg|jpeg|webp|gif|svg)'; }
+_opencode_paths() { _directories; }
+
+# In-TUI slash commands and shortcuts
+_opencode_slash() {
+  local -a slash
+  slash=(
+    '/help:Show interactive help and tips'
+    '/editor:Open external editor for multi-line input or edits'
+    '/export:Export conversation/session to Markdown or file'
+    '/new:Start a new session (alias /clear)'
+    '/sessions:List recent/open sessions'
+  )
+  _describe 'slash' slash
+}
+
+# Global options + support for `run` mode flags and run-specific suggestions
+_arguments -s \
+  '(-h --help)'{-h,--help}'[Show help]' \
+  '(-V --version)'{-V,--version}'[Show version]' \
+  '1:subcommand:->subcmd' \
+  '*:args:->args'
+
+case $state in
+  subcmd)
+    _describe 'command' commands && return 0
+    ;;
+
+  args)
+    # slash-commands inside TUI when user typed '/'
+    if [[ $words[CURRENT] == /* ]]; then
+      _opencode_slash && return 0
+    fi
+
+    # Provide per-subcommand completions
+    case $words[1] in
+      run)
+        _arguments -s \
+          '(-h --help)'{-h,--help}'[Show help for run]' \
+          '--command=-c=[cmd]:Command string to run' \
+          '(-f --file)'{-f,--file}'[Attach file(s) to the request]:file:_files' \
+          '--file=[path]:Attach file (repeatable):_files' \
+          '--format=[fmt]:Output format:(default json)' \
+          '--title=[title]:Session title' \
+          '--attach=[url]:Attach to server instance (http://host:port)' \
+          '--model=-m=[provider/model]:Model to use' \
+          '--prompt=-p=[text]:Prompt to run (or use positional args)' \
+          '--port=[port]:If launching server with run/attach' \
+          '--hostname=[host]:Server hostname' \
+          '--: :[End options; remaining arguments become prompt/command]'
+        ;;
+
+      models)
+        _values 'models' $(opencode models 2>/dev/null | sed -n 's/^\s*\(.*\)/\1/p') 2>/dev/null || _files
+        ;;
+
+      auth)
+        _arguments '1:auth subcommand:(login logout status)' && return 0
+        ;;
+
+      agent)
+        _arguments '1:agent subcommand:(create list delete configure)' && return 0
+        ;;
+
+      serve)
+        _arguments -s \
+          '(-h --help)'{-h,--help}'[Show serve help]' \
+          '--port=[port]:port to listen on' \
+          '--hostname=[host]:hostname to bind' \
+          '--attach=[url]:Attach to running server instance' && return 0
+        ;;
+
+      *)
+        # fallback: file completion for arguments that look like paths
+        _files && return 0
+        ;;
+    esac
+    ;;
+esac
+
+return 0

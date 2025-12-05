@@ -1,16 +1,51 @@
 #!/usr/bin/env bash
-# Minimal zsh completion wrapper for GitHub CLI (gh).
-# This tries to use the tool's built-in completion generator when available.
+# Curated zsh completion for GitHub CLI (gh)
+# Uses gh's built-in completion when available; falls back to a curated list
+# with commonly used subcommands and options when gh isn't present.
 
 #compdef gh
 
 if command -v gh >/dev/null 2>&1; then
-  # ask gh to dump its zsh completion and evaluate it
-  # (gh prints a complete zsh completion file when asked)
+  # gh can print a full zsh completion file; prefer that because it's canonical
   if out=$(gh completion -s zsh 2>/dev/null); then
     # shellcheck disable=SC2148
     eval "$out"
+    return 0
   fi
 fi
+
+# Curated fallback list when `gh` is not available or fails to produce completions.
+local -a commands
+commands=(
+  'auth:Authenticate with GitHub (login/logout/status)'
+  'repo:Work with repositories (create, fork, clone, view, edit)'
+  'pr:Create and manage pull requests'
+  'issue:Create and manage issues'
+  'release:Create and manage releases'
+  'gist:Create and manage gists'
+  'alias:Manage gh command aliases'
+  'extension:Manage gh extensions'
+  'workflow:Interact with GitHub Actions workflows'
+  'ci:Run CI workflows (shorthand/alias on some installs)'
+  'api:Make raw GitHub API requests'
+  'browse:Open repository or issue/pr in browser'
+  'codespace:Manage codespaces'
+  'config:Manage gh configuration'
+  'help:Show help'
+)
+
+_describe 'gh subcommand' commands && return 0
+
+# Generic fallback for subcommand arguments: file completion and generic options
+_arguments \
+  '(-h --help)'{-h,--help}'[show help]' \
+  '(-v --version)'{-v,--version}'[show version]' \
+  '*::args:->args'
+
+case $state in
+  args)
+    _files
+    ;;
+esac
 
 return 0

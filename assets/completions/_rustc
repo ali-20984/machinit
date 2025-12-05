@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
-# rustc completion stub — list options and files
+# Curated rustc completion — common flags, enumerations, and sensible file completion
 #compdef rustc
 
-local -a opts
-opts=(
-  '--version:print version'
-  '--help:show help'
-  '-o:output file:_files'
-  '--crate-type:crate type'
-  '--edition:specify edition (2015|2018|2021)'
-  '-C:codegen options'
-  '-g:include debug info'
-  '-O:optimize (equivalent to -C opt-level=3)'
-  '--emit:what to emit (asm,obj,link)
-)
+_arguments -s \
+  '(-h --help)'{-h,--help}'[show help]' \
+  '(-V --version)'{-V,--version}'[show version]' \
+  '(-v --verbose)'{-v,--verbose}'[use verbose output]' \
+  '(-Z)'--Z'[unstable options (use with caution)]:flag' \
+  '--crate-name=[name]:crate name' \
+  '--crate-type=[type]:crate type:(bin lib rlib dylib cdylib staticlib proc-macro)' \
+  '--edition=[edition]:edition:(2015 2018 2021 2024)' \
+  '--emit=[list]:emit type:(asm asm,dep-info link obj metadata llvm-ir llvm-bc link,dep-info)' \
+  '--out-dir=[path]:output directory:_directories' \
+  '--target=[triple]:target triple' \
+  '--print=[what]:value:(sysroot target-list targets codegen-options cfg file-names crate-name crate-type metadata)' \
+  '--explain=[code]:explanation code' \
+  '--cfg=[cfg]:cfg flag' \
+  '--codegen=[opt]:codegen option' \
+  '--emit-metadata[emit metadata]' \
+  '--test[compile as test]' \
+  '--test-args=[args]:arguments' \
+  '--out-name=[name]:output file name' \
+  '-o=[path]:output file:_files' \
+  '-L=[path]:add library search path:_directories' \
+  '-C=[flag]:codegen option' \
+  '-g[generate debug info]' \
+  '-O[optimize]' \
+  '-A=[lint]:allow lint' \
+  '-W=[lint]:warn lint' \
+  '-D=[lint]:deny lint' \
+  '-F=[lint]:forbid lint' \
+  '*:source file:_files -g "*.rs"'
 
-_describe 'rustc option' opts && return 0
-
-_files
+return 0

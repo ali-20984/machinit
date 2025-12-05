@@ -1,18 +1,58 @@
 #!/usr/bin/env bash
-# Minimal dockutil completion — macOS dock utility common commands
-
+# Auto-generated completion for dockutil (from --help output)
 #compdef dockutil
 
-local -a cmds
-cmds=(
-  'add:Add an app to Dock'
-  'remove:Remove an app from Dock'
-  'reset:Reset Dock to defaults'
-  'list:Show Dock items'
-  'install:Install plist or config'
-  'help:Show help'
+local -a commands
+commands=(
+  'Downloads:Downloads subcommand'
 )
-
-_describe 'dockutil command' cmds && return 0
-
+_describe 'command' commands && return 0
+local -a opts
+opts=(
+  '--add:--add option'
+  '--after:--after option'
+  '--allhomes:--allhomes option'
+  '--before:--before option'
+  '--display:--display option'
+  '--find:--find option'
+  '--help:--help option'
+  '--homeloc:--homeloc option'
+  '--label:--label option'
+  '--list:--list option'
+  '--move:--move option'
+  '--no-allhomes:--no-allhomes option'
+  '--no-list:--no-list option'
+  '--no-restart:--no-restart option'
+  '--no-version:--no-version option'
+  '--position:--position option'
+  '--remove:--remove option'
+  '--replacing:--replacing option'
+  '--restart:--restart option'
+  '--section:--section option'
+  '--sort:--sort option'
+  '--type:--type option'
+  '--verbose:--verbose option'
+  '--version:--version option'
+  '--view:--view option'
+  '-A:-A option'
+  '-B:-B option'
+  '-H:-H option'
+  '-L:-L option'
+  '-R:-R option'
+  '-V:-V option'
+  '-a:-a option'
+  '-f:-f option'
+  '-h:-h option'
+  '-l:-l option'
+  '-location-specifications:-location-specifications option'
+  '-m:-m option'
+  '-p:-p option'
+  '-r:-r option'
+  '-s:-s option'
+  '-spacer:-spacer option'
+  '-t:-t option'
+  '-tiles:-tiles option'
+  '-v:-v option'
+)
+_describe 'option' opts && return 0
 _files

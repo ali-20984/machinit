@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# zsh completion helper for npm — lightweight list of common subcommands
+# zsh completion helper for npm — curated subcommands and options
 # This is intentionally small and kept inside the dotfiles for convenience.
 # Users with longer completion needs should install npm completion from upstream.
 
@@ -8,6 +8,10 @@
 local -a commands
 commands=(
   'install:install packages'
+  'ci:install using package-lock only'
+  'i:install packages (alias)'
+  'add:Add a package to dependencies'
+  'remove:Remove a package from dependencies'
   'ci:install using package-lock only'
   'update:update packages'
   'start:start package'
@@ -30,3 +34,78 @@ commands=(
 )
 
 _describe 'npm command' commands && return 0
+
+# helper: list package.json scripts and dependencies when available
+_npm_pkg_json() {
+  local path="$PWD/package.json"
+  if [ -f "$path" ] && command -v perl >/dev/null 2>&1; then
+    perl -0777 -MJSON::PP -nE 'binmode(STDOUT, ":encoding(UTF-8)"); $r=decode_json($_); for my $k (qw(scripts dependencies devDependencies peerDependencies optionalDependencies)) { if($r->{$k}) { for my $s (sort keys %{$r->{$k}}) { say "$s" } } }' < "$path"
+  fi
+}
+
+# Main argument handling with common global flags and subcommand-specific cases
+_arguments -s \
+  '(-h --help)'{-h,--help}'[Show help/usage]' \
+  '(-v --version)'{-v,--version}'[Show npm version]' \
+  '(-g --global)'{-g,--global}'[Operate globally]' \
+  '(-C --prefix)'{-C,--prefix}'[Set prefix directory]:prefix:_directories' \
+  '(-s --silent)'{-s,--silent}'[Suppress most output]' \
+  '(-q --quiet)'{-q,--quiet}'[Minimal output (warnings only)]' \
+  '(-d --verbose)'{-d,--verbose}'[Increase verbosity]' \
+  '(-S --save)'{-S,--save}'[Add to dependencies]' \
+  '(-D --save-dev)'{-D,--save-dev}'[Add to devDependencies]' \
+  '(-O --save-optional)'{-O,--save-optional}'[Add to optionalDependencies]' \
+  '(-E --save-exact)'{-E,--save-exact}'[Save exact version]' \
+  '(-P --save-prod)'{-P,--save-prod}'[Save as prod dependency]' \
+  '(-B --save-bundle)'{-B,--save-bundle}'[Save as bundled dep]' \
+  '(-y --yes)'{-y,--yes}'[Auto accept prompts]' \
+  '(-n --no)'{-n,--no}'[Auto answer false to prompts]' \
+  '--registry=[url]:Registry URL' \
+  '--: :[End options, pass remaining args to subcommand]' \
+  '1:command:->cmds'
+
+case $state in
+  cmds)
+    # Offer built-in commands and, where appropriate, script/dependency suggestions
+    case $words[1] in
+      run|run-script)
+        # suggest package.json scripts first
+        local -a scripts
+        scripts=(${(f)$(_npm_pkg_json)})
+        if [ ${#scripts[@]} -gt 0 ]; then
+          _describe 'script' scripts && return 0
+        fi
+        ;;
+      install|i|add)
+        # try to suggest local packages (node_modules/.bin) or dependency names
+        local -a deps
+        if [ -f package.json ] && command -v perl >/dev/null 2>&1; then
+          deps=($(perl -0777 -MJSON::PP -nE 'binmode(STDOUT, ":encoding(UTF-8)"); $r=decode_json($_); for my $k (qw(dependencies devDependencies optionalDependencies peerDependencies)) { if($r->{$k}) { say for sort keys %{$r->{$k}} } }' < package.json ))
+        fi
+        if [ ${#deps[@]} -gt 0 ]; then
+          _describe 'package' deps && return 0
+        fi
+        ;;
+      config)
+        _values 'config action' get set delete list && return 0
+        ;;
+      uninstall|rm)
+        # suggest installed dependencies or global modules in node_modules
+        if [ -f package.json ]; then
+          local -a installed
+          installed=($(perl -0777 -MJSON::PP -nE 'binmode(STDOUT, ":encoding(UTF-8)"); $r=decode_json($_); for my $k (qw(dependencies devDependencies optionalDependencies peerDependencies)) { if($r->{$k}) { say for sort keys %{$r->{$k}} } }' < package.json ))
+          if [ ${#installed[@]} -gt 0 ]; then
+            _describe 'installed package' installed && return 0
+          fi
+        fi
+        ;;
+    esac
+
+    # no special handling -> fall back to showing subcommands
+    _describe 'npm command' commands && return 0
+    ;;
+  args)
+    ;; # pass-through handled via -- marker
+esac
+
+return 0

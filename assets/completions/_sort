@@ -1,14 +1,29 @@
 #!/usr/bin/env bash
-# sort completion — filenames/options
+# Auto-generated completion for sort (from --help output)
 #compdef sort
 
 local -a opts
 opts=(
-  '-n:numeric sort'
-  '-r:reverse'
-  '-u:unique'
+  '--batch-size:--batch-size option'
+  '--compress-program:--compress-program option'
+  '--files0-from:--files0-from option'
+  '--heapsort:--heapsort option'
+  '--human-numeric-sort:--human-numeric-sort option'
+  '--mergesort:--mergesort option'
+  '--mmap:--mmap option'
+  '--parallel:--parallel option'
+  '--qsort:--qsort option'
+  '--radixsort:--radixsort option'
+  '--random-sort:--random-sort option'
+  '--random-source:--random-source option'
+  '--version-sort:--version-sort option'
+  '-POS2:-POS2 option'
+  '-S:-S option'
+  '-T:-T option'
+  '-bcCdfigMmnrsuz:-bcCdfigMmnrsuz option'
+  '-kPOS1:-kPOS1 option'
+  '-o:-o option'
+  '-t:-t option'
 )
-
-_describe 'sort option' opts && return 0
-
+_describe 'option' opts && return 0
 _files

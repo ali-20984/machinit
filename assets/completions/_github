@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
-# github -> gh wrapper
+# Auto-generated completion for github (from --help output)
 #compdef github
 
-if command -v gh >/dev/null 2>&1; then
-  gh -- "$@"
-fi
-
-return 0
+local -a commands
+commands=(
+  'github:github subcommand'
+)
+_describe 'command' commands && return 0
+local -a opts
+opts=(
+  '-b:-b option'
+)
+_describe 'option' opts && return 0
+_files

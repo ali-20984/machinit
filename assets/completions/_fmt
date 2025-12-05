@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
-# Basic fmt completion — formatting tool (simple options)
-
+# Auto-generated completion for fmt (from --help output)
 #compdef fmt
 
 local -a opts
 opts=(
-  '-w#:wrap column'
-  '-c:use fixed width'
-  '--help:show help'
+  '-c:-c option'
+  '-cmps:-cmps option'
+  '-d:-d option'
+  '-l:-l option'
+  '-m:-m option'
+  '-n:-n option'
+  '-p:-p option'
+  '-s:-s option'
+  '-space:-space option'
+  '-t:-t option'
+  '-w:-w option'
+  '-width:-width option'
 )
-
-_describe 'fmt option' opts && return 0
-
+_describe 'option' opts && return 0
 _files
