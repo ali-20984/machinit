@@ -56,7 +56,8 @@ behavior and limit the scope of operations (useful for automation or CI). A quic
 - `--restart-ui` — After a successful run, perform the final UI restart step (Dock/Finder/etc.).
 - `--update-shell` — Only update `~/.aliases` and `~/.functions` then exit (runs `scripts/012_install_dotfiles.sh --only-shell`).
 - `--reset-finder-view` — Remove per-folder `.DS_Store` files under the user's home and set Finder list-view defaults.
-- `--pin-sidebar` — Pin configured Finder sidebar items (Downloads / Projects) then exit.
+- `--pin-sidebar` — Pin configured Finder sidebar items (Downloads / Projects) then exit. By default the installer uses the bundled FinderSidebarEditor implementation located at `scripts/lib/FinderSidebarEditor.py`.
+	- `--pin-sidebar-use-mysides` — When used with `--pin-sidebar`, explicitly request that the installer use the `mysides` tool instead of the default FinderSidebarEditor.
 - `--clear-logs` — Remove all files under `./logs/` and exit.
 - `--resume-failure` — Resume a previously failed run using the script name recorded in `logs/last_failed`.
 - `--exit` — Immediate no-op exit (used for testing/CI flows).
@@ -66,6 +67,36 @@ behavior and limit the scope of operations (useful for automation or CI). A quic
 Additionally some scripts accept their own flags. For example:
 
 - `scripts/052_configure_finder_and_sidebar.sh --add-sidebar-only` — Add Finder sidebar items only and exit (useful when run directly or via `install.sh --pin-sidebar`).
+- `scripts/052_configure_finder_and_sidebar.sh --use-mysides` — Explicitly request the script use the `mysides` tool to perform pinning; by default the script prefers the bundled FinderSidebarEditor under `scripts/lib` and will not try `mysides` unless explicitly instructed.
+
+FinderSidebarEditor integration (bundled)
+-------------------------------
+This repository includes a bundled, dependency-light FinderSidebarEditor
+implementation under `scripts/lib/FinderSidebarEditor.py` which is used by
+default by `scripts/052_configure_finder_and_sidebar.sh` and by the
+top-level `install.sh --pin-sidebar` flow. This avoids external dependencies
+and ensures predictable behavior across systems.
+
+If you'd prefer to use an external `mysides` binary instead, invoke the
+script or installer with the `--use-mysides` / `--pin-sidebar-use-mysides`
+flags (the installer won't try `mysides` unless explicitly requested).
+
+If you're interested in the original upstream project (robperc/FinderSidebarEditor),
+you may still install it separately via pip if you want the fuller behavior:
+
+Example:
+```bash
+python3 -m pip install "git+https://github.com/robperc/FinderSidebarEditor.git"
+```
+
+-- By default the repository uses the bundled `FinderSidebarEditor` under `scripts/lib`.
+	If you'd prefer the older cli-based `mysides` path instead, invoke the script
+	with `--use-mysides` or set the environment variable `USE_MYSIDES=1`. At the
+	top-level installer use `--pin-sidebar-use-mysides` when invoking `--pin-sidebar`.
+
+When the bundled FinderSidebarEditor cannot be used (for example, python3 is
+not found) the script falls back to AppleScript UI automation. `mysides` is
+only attempted when explicitly requested with `--use-mysides`.
 - `scripts/011_check_aliases_functions_conflicts.sh --abort-on-conflict` — Exit non-zero if conflicts detected (used by `scripts/012_install_dotfiles.sh` by default; the top-level installer bypasses aborts during a full run).
 
 Use `./install.sh --dry-run` to test these behaviors safely before running on a live machine.

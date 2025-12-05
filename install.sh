@@ -229,8 +229,8 @@ while [[ $# -gt 0 ]]; do
             PIN_SIDEBAR=true
             shift
             ;;
-        --pin-sidebar-use-fse)
-            PIN_SIDEBAR_USE_FSE=true
+        --pin-sidebar-use-mysides)
+            PIN_SIDEBAR_USE_MYSIDES=true
             shift
             ;;
         --run-only)
@@ -365,8 +365,8 @@ if [ "${PIN_SIDEBAR:-false}" = true ]; then
     echo "Pinning Finder sidebar items only..."
     if [ -x "$SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" ]; then
         add_args=(--add-sidebar-only)
-        if [ "${PIN_SIDEBAR_USE_FSE:-false}" = true ]; then
-            add_args+=(--use-fse)
+        if [ "${PIN_SIDEBAR_USE_MYSIDES:-false}" = true ]; then
+            add_args+=(--use-mysides)
         fi
 
         if "$SCRIPTS_DIR/052_configure_finder_and_sidebar.sh" "${add_args[@]}"; then

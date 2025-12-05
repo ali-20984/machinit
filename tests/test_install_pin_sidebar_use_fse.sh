@@ -4,12 +4,12 @@ set -euo pipefail
 
 INSTALL=./install.sh
 
-echo "Testing top-level install --pin-sidebar with --pin-sidebar-use-fse (dry-run)..."
+echo "Testing top-level install --pin-sidebar uses FinderSidebarEditor by default (dry-run)..."
 
-OUT=$("$INSTALL" --pin-sidebar --pin-sidebar-use-fse --dry-run 2>&1 || true)
+OUT=$("$INSTALL" --pin-sidebar --dry-run 2>&1 || true)
 
-if echo "$OUT" | grep -q "FinderSidebarEditor" || echo "$OUT" | grep -q "FinderSidebar().add"; then
-    echo "PASS: install.sh --pin-sidebar forwarded --use-fse to Finder script"
+if echo "$OUT" | grep -q "finder_sidebar_editor" || echo "$OUT" | grep -q "FinderSidebar().add"; then
+    echo "PASS: install.sh --pin-sidebar used finder_sidebar_editor by default"
     exit 0
 else
     echo "FAIL: expected FinderSidebarEditor invocation not found in output" >&2

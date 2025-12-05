@@ -10,8 +10,8 @@ source "$(dirname "$0")/utils.sh"
 # .DS_Store files. Also honor the environment variable RESET_FINDER_VIEW
 # (useful when the script is invoked from install.sh).
 RESET_FINDER_VIEW=${RESET_FINDER_VIEW:-false}
-ADD_SIDEBAR_ONLY=false
-USE_FSE=false
+ADD_SIDEBAR_ONLY=${ADD_SIDEBAR_ONLY:-false}
+USE_MYSIDES=${USE_MYSIDES:-false}
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --reset-view)
@@ -22,8 +22,8 @@ while [[ $# -gt 0 ]]; do
             ADD_SIDEBAR_ONLY=true
             shift
             ;;
-        --use-fse)
-            USE_FSE=true
+        --use-mysides)
+            USE_MYSIDES=true
             shift
             ;;
         *)
@@ -149,61 +149,71 @@ add_sidebar_item() {
     # Resolve to absolute path
     target="$(cd "$(dirname "$target")" 2>/dev/null && pwd)/$(basename "$target")"
 
-    # If requested, prefer using FinderSidebarEditor Python module
-    case "${USE_FSE:-}" in
+    # Normalize request flag into a simple boolean value (0/1)
+    case "${USE_MYSIDES:-}" in
         1|true|True|TRUE|yes|Yes|YES)
-        if command -v python3 >/dev/null 2>&1; then
-            print_action "Adding '$name' to Finder sidebar using FinderSidebarEditor (python module)..."
-            # Use the FinderSidebarEditor module if available in the user's environment
-            pycmd="from FinderSidebarEditor import FinderSidebar; FinderSidebar().add(\"${target}\")"
-            if execute_as_user python3 -c "$pycmd" >/dev/null 2>&1; then
-                print_success "Added '$name' (via FinderSidebarEditor)."
-                return 0
-            else
-                print_warning "FinderSidebarEditor invocation failed or module not present; falling back to other methods."
-            fi
-        else
-            print_notice "python3 not found; cannot use FinderSidebarEditor"
-        fi
-        ;;
+            USE_MYSIDES_FLAG=1
+            ;;
+        *)
+            USE_MYSIDES_FLAG=0
+            ;;
     esac
 
-    # Prefer Homebrew-installed mysides (may be in /usr/local or /opt/homebrew)
-    local mysides_bin=""
-    for p in "/usr/local/bin/mysides" "/opt/homebrew/bin/mysides" "/usr/bin/mysides"; do
-        if [ -x "$p" ]; then
-            mysides_bin="$p"
-            break
-        fi
-    done
-
-    if [ -n "$mysides_bin" ]; then
-        print_action "Adding '$name' to Finder sidebar using mysides..."
-        # Construct file:// URL (escape spaces/unsafe chars)
+    # 1) Default path: use the bundled FinderSidebarEditor under scripts/lib
+    if [ "${USE_MYSIDES_FLAG:-0}" -eq 0 ]; then
         if command -v python3 >/dev/null 2>&1; then
-            # Use urllib.parse.quote with safe='/' to preserve path separators
-            # while percent-encoding spaces/unsafe characters for file:// URLs.
-            fileurl=$(python3 -c 'import urllib.parse,sys;print("file://" + urllib.parse.quote(sys.argv[1], safe="/"))' "$target")
-        else
-            # Fallback: naive space-escape
-            # URL-encode spaces in path using parameter expansion (faster, avoids sed)
-            enc_target="${target// /%20}"
-            fileurl="file://$enc_target"
-        fi
+            print_action "Adding '$name' to Finder sidebar using finder_sidebar_editor (local module)..."
+            repo_root="$(cd "$(dirname "$0")/.." >/dev/null && pwd)"
+            libpath="${repo_root}/scripts/lib"
 
-        # Try with file:// URL first, then raw path
-        # Run mysides as the original user so changes land in the right account
-        if execute_as_user "$mysides_bin" add "$name" "$fileurl" >/dev/null 2>&1; then
-            print_success "Added '$name' (via mysides URL)."
-            return 0
-        elif execute_as_user "$mysides_bin" add "$name" "$target" >/dev/null 2>&1; then
-            print_success "Added '$name' (via mysides path)."
-            return 0
+            if execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[1])" -- "${target}" >/dev/null 2>&1; then
+                print_success "Added '$name' (via finder_sidebar_editor)."
+                return 0
+            else
+                print_warning "finder_sidebar_editor invocation failed or module not present; will fall back to AppleScript UI method."
+            fi
         else
-            print_warning "mysides failed to add '$name' — falling back to AppleScript UI method."
+            print_notice "python3 not found; cannot use finder_sidebar_editor — will fall back to AppleScript UI method."
+        fi
+    fi
+
+    # 2) Optional: if the user explicitly requested mysides, try that path
+    if [ "${USE_MYSIDES_FLAG:-0}" -eq 1 ]; then
+        local mysides_bin=""
+        for p in "/usr/local/bin/mysides" "/opt/homebrew/bin/mysides" "/usr/bin/mysides"; do
+            if [ -x "$p" ]; then
+                mysides_bin="$p"
+                break
+            fi
+        done
+
+        if [ -n "$mysides_bin" ]; then
+            print_action "Adding '$name' to Finder sidebar using mysides..."
+
+            # Construct file:// URL (escape spaces/unsafe chars) using python if available
+            if command -v python3 >/dev/null 2>&1; then
+                fileurl=$(python3 -c 'import urllib.parse,sys;print("file://" + urllib.parse.quote(sys.argv[1], safe="/"))' "$target")
+            else
+                # Fallback: naive space-escape
+                enc_target="${target// /%20}"
+                fileurl="file://$enc_target"
+            fi
+
+            # Try with file:// URL first, then raw path
+            if execute_as_user "$mysides_bin" add "$name" "$fileurl" >/dev/null 2>&1; then
+                print_success "Added '$name' (via mysides URL)."
+                return 0
+            elif execute_as_user "$mysides_bin" add "$name" "$target" >/dev/null 2>&1; then
+                print_success "Added '$name' (via mysides path)."
+                return 0
+            else
+                print_warning "mysides failed to add '$name' — falling back to AppleScript UI method."
+            fi
+        else
+            print_notice "mysides not found; will try AppleScript UI fallback."
         fi
     else
-        print_notice "mysides not found; will try AppleScript UI fallback."
+        print_notice "mysides not requested; will use finder_sidebar_editor (default) or AppleScript fallback."
     fi
 
     # AppleScript fallback: select the folder in Finder and use the File > Add to Sidebar menu
