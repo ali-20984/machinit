@@ -64,7 +64,7 @@ if [ "${DRY_RUN:-false}" = "true" ]; then
 else
     for app in "${apps[@]}"; do
         echo "Restarting: $app"
-        killall "$app" &>/dev/null || true
+        execute_as_user killall "$app" &>/dev/null || true
     done
 fi
 

@@ -16,8 +16,8 @@ if [ "$DRY_RUN" = true ]; then
     print_dry_run "killall SystemUIServer"
     print_dry_run "killall Siri"
 else
-    killall SystemUIServer 2>/dev/null || true
-    killall Siri 2>/dev/null || true
+    execute_as_user killall SystemUIServer 2>/dev/null || true
+    execute_as_user killall Siri 2>/dev/null || true
 fi
 
 print_success "Siri has been disabled."

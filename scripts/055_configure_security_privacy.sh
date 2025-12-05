@@ -20,14 +20,14 @@ execute_sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall on
 
 # Disallow AirDrop (set to no one)
 echo "Disabling AirDrop..."
-defaults write com.apple.NetworkBrowser DisableAirDrop -bool true
+set_default com.apple.NetworkBrowser DisableAirDrop bool true
 
 # Disable AirPlay Receiver
 echo "Disabling AirPlay Receiver..."
-defaults write com.apple.airplay receiverEnabled -bool false
+set_default com.apple.airplay receiverEnabled bool false
 
 # Bypass confirmation to open apps installed by Brew (Disable Quarantine)
 echo "Disabling Quarantine for downloaded apps..."
-defaults write com.apple.LaunchServices LSQuarantine -bool false
+set_default com.apple.LaunchServices LSQuarantine bool false
 
 echo "Security and Privacy configuration complete."

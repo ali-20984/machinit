@@ -20,8 +20,8 @@ function check_status() {
 }
 
 echo "Disabling global animations..."
-defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
-defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
+set_default NSGlobalDomain NSAutomaticWindowAnimationsEnabled bool false
+set_default NSGlobalDomain NSWindowResizeTime float 0.001
 check_status "Global animations disabled"
 
 echo "Optimizing SSD settings..."

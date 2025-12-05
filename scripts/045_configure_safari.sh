@@ -7,16 +7,19 @@
 source "$(dirname "$0")/utils.sh"
 
 function require_safari_full_disk_access() {
+    # When running a dry run we should not touch user files — indicate to
+    # the caller that we are skipping the Safari filesystem operations.
     if [ "$DRY_RUN" = true ]; then
-        return 0
+        print_dry_run "Skipping Safari filesystem checks (dry run)"
+        return 1
     fi
 
     local safari_dir="$HOME/Library/Safari"
     local probe="$safari_dir/.machinit_fda_test"
 
-    mkdir -p "$safari_dir" 2>/dev/null || true
+    execute mkdir -p "$safari_dir" 2>/dev/null || true
     if touch "$probe" 2>/dev/null; then
-        rm -f "$probe"
+        execute rm -f "$probe"
         return 0
     fi
 
@@ -32,7 +35,11 @@ EOF
 echo "Clearing Safari Favorites..."
 
 # Close Safari to ensure we can write to the file
-killall Safari 2>/dev/null
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "killall Safari"
+else
+    execute_as_user killall Safari 2>/dev/null || true
+fi
 
 if ! require_safari_full_disk_access; then
     exit 0
@@ -107,10 +114,10 @@ fi
 echo "Disabling Safari 'launched' notifications..."
 set_default com.apple.coreservices.uiagent CSUIHasSafariBeenLaunched bool YES
 # Date handling in set_default is tricky, using raw defaults write for date
-if [ "$DRY_RUN" = true ]; then
-    echo "[DRY RUN] defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z"
-else
-    if ! defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z 2>/dev/null; then
+    if [ "$DRY_RUN" = true ]; then
+        echo "[DRY RUN] defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z"
+    else
+        if ! execute_as_user defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z 2>/dev/null; then
         print_error "Failed to postpone Safari recommendation notification."
     fi
 fi
@@ -184,7 +191,7 @@ else
     history_errors=0
     for file in "${HISTORY_FILES[@]}"; do
         if [ -e "$file" ]; then
-            if ! rm -rf "$file" 2>/dev/null; then
+            if ! execute rm -rf "$file" 2>/dev/null; then
                 history_errors=1
                 print_error "Failed to remove $file."
             fi
@@ -199,6 +206,10 @@ else
 fi
 
 echo "Restarting Safari..."
-killall Safari &>/dev/null
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "killall Safari"
+else
+    execute_as_user killall Safari &>/dev/null || true
+fi
 
 echo "Safari configuration complete."

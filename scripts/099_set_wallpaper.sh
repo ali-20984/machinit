@@ -39,7 +39,7 @@ if [ ! -d "$HOME/Pictures/Wallpapers" ]; then
     if [ "$DRY_RUN" = true ]; then
         print_dry_run "ln -s $DEST_DIR $HOME/Pictures/Wallpapers"
     else
-        ln -s "$DEST_DIR" "$HOME/Pictures/Wallpapers"
+        execute_as_user ln -s "$DEST_DIR" "$HOME/Pictures/Wallpapers"
     fi
 fi
 

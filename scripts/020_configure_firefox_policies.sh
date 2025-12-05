@@ -29,7 +29,7 @@ function ensure_distribution_dir() {
 
 function move_policies() {
     local source_file="$1"
-    if mv "$source_file" "$POLICIES_FILE" 2>/dev/null; then
+    if execute mv "$source_file" "$POLICIES_FILE" 2>/dev/null; then
         return 0
     fi
 
@@ -94,7 +94,7 @@ cat <<'EOF' >"$TMP_POLICIES"
 EOF
 
 if ! move_policies "$TMP_POLICIES"; then
-    rm -f "$TMP_POLICIES"
+    execute rm -f "$TMP_POLICIES"
     exit 1
 fi
 

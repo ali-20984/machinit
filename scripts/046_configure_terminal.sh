@@ -15,8 +15,12 @@ if [ -z "$THEME_NAME" ]; then
 fi
 
 # Only use UTF-8 in Terminal.app
-# -array is complex for set_default, using raw defaults write
-defaults write com.apple.terminal StringEncodings -array 4
+# -array is complex for set_default so guard the raw defaults write with DRY_RUN
+if [ "$DRY_RUN" = true ]; then
+    print_dry_run "defaults write com.apple.terminal StringEncodings -array 4"
+else
+    execute defaults write com.apple.terminal StringEncodings -array 4
+fi
 
 # Enable Secure Keyboard Entry in Terminal.app
 # See: https://security.stackexchange.com/a/47786/8918

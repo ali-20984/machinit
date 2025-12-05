@@ -25,7 +25,7 @@ function check_status() {
 #              suggestions before restarting the metadata server.
 function run_spotlight_configuration() {
     execute_sudo mdutil -i on /
-    defaults write com.apple.spotlight orderedItems -array \
+    execute_as_user defaults write com.apple.spotlight orderedItems -array \
         '{"enabled" = 1; "name" = "APPLICATIONS";}' \
         '{"enabled" = 0; "name" = "SYSTEM_PREFS";}' \
         '{"enabled" = 0; "name" = "DIRECTORIES";}' \
@@ -47,10 +47,10 @@ function run_spotlight_configuration() {
         '{"enabled" = 0; "name" = "MENU_EXPRESSION";}' \
         '{"enabled" = 0; "name" = "MENU_WEBSEARCH";}' \
         '{"enabled" = 0; "name" = "MENU_SPOTLIGHT_SUGGESTIONS";}'
-    defaults write com.apple.spotlight showSpotlightSuggestions -bool false
-    defaults write com.apple.spotlight showQuerySuggestions -bool false
-    defaults write com.apple.lookup.shared LookupSuggestionsDisabled -bool true
-    defaults write com.apple.Siri SuggestionsSpotlightEnabled -bool false
+    execute_as_user defaults write com.apple.spotlight showSpotlightSuggestions -bool false
+    execute_as_user defaults write com.apple.spotlight showQuerySuggestions -bool false
+    execute_as_user defaults write com.apple.lookup.shared LookupSuggestionsDisabled -bool true
+    execute_as_user defaults write com.apple.Siri SuggestionsSpotlightEnabled -bool false
     execute_sudo killall mds >/dev/null 2>&1 || true
 }
 
