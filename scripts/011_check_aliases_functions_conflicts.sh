@@ -81,13 +81,11 @@ parse_functions_in_file() {
 }
 
 parse_functions() {
+  # Only consider functions defined in the dotfile asset (assets/.functions).
+  # This repository keeps interactive/helper functions in the dotfiles and
+  # keeps script-local helpers inside scripts — making the dotfiles the
+  # authoritative source of user-facing functions avoids confusion.
   [ -f "$functions_file" ] && parse_functions_in_file "$functions_file"
-  # also scan scripts for additional functions
-  for f in "$(cd "$(dirname "$0")" && pwd)"/*.sh; do
-    # only if exists
-    [ -f "$f" ] || continue
-    parse_functions_in_file "$f"
-  done
 }
 
 # Parse inputs
@@ -182,7 +180,7 @@ report_lines+=("### Alias names ($alias_file)")
 for name in "${alias_names[@]}"; do report_lines+=("- $name"); done
 
 report_lines+=("")
-report_lines+=("### Function names (scan: $functions_file and scripts/*.sh)")
+report_lines+=("### Function names (scan: $functions_file)")
 for name in "${func_names[@]}"; do report_lines+=("- $name"); done
 
 
