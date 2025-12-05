@@ -4,13 +4,12 @@
 <br>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/supermarsx/machinit/.github/workflows/test-suite.yml?branch=main&style=flat-square)](https://github.com/supermarsx/machinit/actions/workflows/test-suite.yml)
-[![Made with Shell & Tears](https://img.shields.io/badge/made%20with-Shell%20%26%20Tears-ffa500?style=flat-square)](https://github.com/supermarsx/machinit)
-[![DRY-RUN safe](https://img.shields.io/badge/DRY--RUN-SAFE-brightgreen?style=flat-square)](./tests/test_dry_run_protection.sh)
-[![Inventory](https://img.shields.io/badge/inventory-docs-green?style=flat-square)](docs/inventory.md)
 [![GitHub stars](https://img.shields.io/github/stars/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/network/members)
 [![GitHub watchers](https://img.shields.io/github/watchers/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/watchers)
 [![Open issues](https://img.shields.io/github/issues/supermarsx/machinit?style=flat-square)](https://github.com/supermarsx/machinit/issues)
+[![Made with Shell & Tears](https://img.shields.io/badge/made%20with-Shell%20%26%20Tears-ffa500?style=flat-square)](https://github.com/supermarsx/machinit)
+
 
 # machinit — macOS bootstrap & dotfiles installer
 
@@ -53,6 +52,29 @@ chmod +x install.sh
 - `tests/` — local test harness that validates non-destructive behavior (safely using DRY_RUN).
 
 ---
+
+## Global gitignore
+
+This repository provides a recommended global gitignore at `assets/.gitignore_global`. It is intended as a sensible default for macOS developer machines and includes common ignores for:
+
+- OS files and caches (macOS)
+- Editors / IDEs (VS Code, JetBrains/IntelliJ/Android Studio)
+- Language/tool build artifacts (Node.js, Python, Rust, Go, Java/Gradle, Ruby/Rails, PHP/Composer)
+- Mobile/tooling (Android/Kotlin, Xcode/iOS)
+- Containers / infra (Docker, Terraform)
+- Environment and secret files (e.g. `.env`, private keys)
+
+How to use it locally as your global excludes file:
+
+```bash
+cp assets/.gitignore_global ~/.gitignore_global
+git config --global core.excludesfile ~/.gitignore_global
+```
+
+Notes:
+- The file is meant to be a convenient starting point — review and customize it for your workflow before applying globally.
+- It intentionally does not ignore dependency lockfiles (e.g. `package-lock.json`, `Gemfile.lock`, `Cargo.lock`) since those are commonly committed for reproducible builds.
+- Contributions and additions are welcome; keep unrelated repo-specific ignores out of the global file.
 
 ## Aliases
 
