@@ -40,3 +40,99 @@ Thumbs.db
 .vagrant/
 node_modules
 npm-debug.log
+
+# Build / distribution folders
+############################
+dist/
+build/
+out/
+release/
+bin/
+obj/
+cmake-build*/
+CMakeFiles/
+CMakeCache.txt
+
+# Node/JS caches & frameworks
+############################
+.next/
+.nuxt/
+.parcel-cache/
+.cache/
+.turbo/
+.vercel/
+.serverless/
+
+# Coverage / test output
+######################
+coverage/
+.nyc_output/
+.cache/jest
+.pytest_cache/
+
+# Python
+########
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+ENV/
+pip-wheel-metadata/
+dist-info/
+
+# Rust
+######
+target/
+
+# C/C++ and compiled artifacts
+#############################
+*.ilk
+*.pdb
+*.ipdb
+*.dSYM/
+*.exe
+*.out
+*.elf
+*.map
+
+# IDE / editor folders (already some above)
+##########################################
+*.sublime-workspace
+*.sublime-project
+.idea/
+.vscode/
+.history/
+
+# Environment and secrets
+#########################
+.env
+.env.*
+.env.local
+.secret
+secrets.*
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.asc
+
+# Terraform / cloud state
+########################
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Misc
+#######
+.DS_Store
+.cache/
+.grunt/
+.sass-cache/
+thumbs.db
