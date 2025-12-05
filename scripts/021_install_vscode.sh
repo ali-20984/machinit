@@ -26,7 +26,7 @@ fi
 if [ "$DRY_RUN" = true ]; then
     print_dry_run "update VS Code settings in $SETTINGS_FILE"
 else
-python3 - <<EOF
+    python3 - <<EOF
 import json
 import os
 
@@ -44,6 +44,6 @@ data['workbench.startupEditor'] = 'none'
         json.dump(data, f, indent=4)
 EOF
 
-echo "VS Code configured."
+    echo "VS Code configured."
 
 fi

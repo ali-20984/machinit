@@ -13,14 +13,16 @@ for f in "${CANDIDATES[@]}"; do
         if [ -s "$f" ]; then
             echo "PASS: $f is non-empty"
         else
-            echo "FAIL: $f is empty"; exit 2
+            echo "FAIL: $f is empty"
+            exit 2
         fi
         # check common helper list pattern if present so npm/yarn remain validated
         if grep -Eq "_describe '.* command' commands|_describe \'.* command\' commands" "$f"; then
             echo "PASS: completion script contains expected helper list"
         fi
     else
-        echo "FAIL: completion file not found: $f"; exit 2
+        echo "FAIL: completion file not found: $f"
+        exit 2
     fi
 done
 exit 0

@@ -18,17 +18,29 @@ USE_PYTEST=false
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --pattern)
-            PATTERN="$2"; shift 2;;
+            PATTERN="$2"
+            shift 2
+            ;;
         --list)
-            LIST_ONLY=true; shift;;
+            LIST_ONLY=true
+            shift
+            ;;
         --pytest)
-            USE_PYTEST=true; shift;;
+            USE_PYTEST=true
+            shift
+            ;;
         --verbose)
-            VERBOSE=true; shift;;
-        -h|--help)
-            echo "Usage: $0 [--pattern <pattern>] [--list] [--verbose]"; exit 0;;
+            VERBOSE=true
+            shift
+            ;;
+        -h | --help)
+            echo "Usage: $0 [--pattern <pattern>] [--list] [--verbose]"
+            exit 0
+            ;;
         *)
-            echo "Unknown arg: $1"; exit 2;;
+            echo "Unknown arg: $1"
+            exit 2
+            ;;
     esac
 done
 
@@ -73,7 +85,8 @@ echo "Found ${#TESTS[@]} test(s):"
 for t in "${TESTS[@]}"; do echo " - $t"; done
 
 if [ "$LIST_ONLY" = true ]; then
-    echo "List-only mode; not executing tests."; exit 0
+    echo "List-only mode; not executing tests."
+    exit 0
 fi
 
 FAILED=0
@@ -90,36 +103,51 @@ run_test() {
     if [ "$VERBOSE" = true ]; then echo " (verbose)"; else echo; fi
 
     if [ ! -f "$filepath" ]; then
-        echo "SKIP: file not found: $file";
-        SKIPPED=$((SKIPPED+1)); return
+        echo "SKIP: file not found: $file"
+        SKIPPED=$((SKIPPED + 1))
+        return
     fi
 
     case "$ext" in
         sh)
             if ! bash "$filepath"; then
-                echo "✗ $file failed"; FAILED=1; return 1
+                echo "✗ $file failed"
+                FAILED=1
+                return 1
             else
-                echo "✓ $file passed"; PASSED=$((PASSED+1)); return 0
+                echo "✓ $file passed"
+                PASSED=$((PASSED + 1))
+                return 0
             fi
             ;;
         py)
             # Prefer pytest if available or when --pytest was requested
             if [ "$USE_PYTEST" = true ] || command -v pytest >/dev/null 2>&1; then
                 if ! pytest -q "$filepath"; then
-                    echo "✗ $file failed"; FAILED=1; return 1
+                    echo "✗ $file failed"
+                    FAILED=1
+                    return 1
                 else
-                    echo "✓ $file passed"; PASSED=$((PASSED+1)); return 0
+                    echo "✓ $file passed"
+                    PASSED=$((PASSED + 1))
+                    return 0
                 fi
             else
                 if ! python3 "$filepath"; then
-                    echo "✗ $file failed"; FAILED=1; return 1
+                    echo "✗ $file failed"
+                    FAILED=1
+                    return 1
                 else
-                    echo "✓ $file passed"; PASSED=$((PASSED+1)); return 0
+                    echo "✓ $file passed"
+                    PASSED=$((PASSED + 1))
+                    return 0
                 fi
             fi
             ;;
         *)
-            echo "SKIP: unsupported test type: $file"; SKIPPED=$((SKIPPED+1)); return
+            echo "SKIP: unsupported test type: $file"
+            SKIPPED=$((SKIPPED + 1))
+            return
             ;;
     esac
 }
@@ -134,7 +162,9 @@ echo "--------------------------------------------------"
 echo "Summary: Passed: $PASSED | Skipped: $SKIPPED | Failed: $FAILED"
 
 if [ $FAILED -ne 0 ]; then
-    echo "Some tests failed."; exit 1
+    echo "Some tests failed."
+    exit 1
 else
-    echo "All tests passed!"; exit 0
+    echo "All tests passed!"
+    exit 0
 fi

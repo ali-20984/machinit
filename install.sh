@@ -53,15 +53,15 @@ CONFIG_FILE=""
 PARSER_SCRIPT="./scripts/lib/config_parser.py"
 
 # Flags
-DRY_RUN=false        # If true, commands are printed but not executed
-UPDATE=false         # If true, the script updates itself via git and exits
-NO_LOG=false         # If true, logging to file is disabled
-VERBOSE=false        # If true, enables shell debug mode (set -x)
-CLEAR_LOGS=false     # If true, delete logs directory and exit
-RESUME_FAILURE=false # If true, resume from last failure recorded in logs/last_failed
-EXIT_NOW=false       # If true, exit immediately (no-op)
-RESTART_UI=false     # If true, run final UI restart script at the end (non-interactive)
-UPDATE_SHELL=false   # If true, update only aliases and functions and exit
+DRY_RUN=false           # If true, commands are printed but not executed
+UPDATE=false            # If true, the script updates itself via git and exits
+NO_LOG=false            # If true, logging to file is disabled
+VERBOSE=false           # If true, enables shell debug mode (set -x)
+CLEAR_LOGS=false        # If true, delete logs directory and exit
+RESUME_FAILURE=false    # If true, resume from last failure recorded in logs/last_failed
+EXIT_NOW=false          # If true, exit immediately (no-op)
+RESTART_UI=false        # If true, run final UI restart script at the end (non-interactive)
+UPDATE_SHELL=false      # If true, update only aliases and functions and exit
 RESET_FINDER_VIEW=false # If true, remove per-folder .DS_Store and reset Finder view behavior
 
 # State variables
@@ -226,9 +226,9 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
         --pin-sidebar)
-                PIN_SIDEBAR=true
-                shift
-                ;;
+            PIN_SIDEBAR=true
+            shift
+            ;;
         --run-only)
             RUN_ONLY_INDEX="$2"
             shift 2

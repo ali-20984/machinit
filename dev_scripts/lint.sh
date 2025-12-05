@@ -16,7 +16,7 @@ fi
 # Exclude SC1091 (Not following sourced files) as we source utils.sh dynamically
 # Exclude SC2155 (Declare and assign separately) which is common in these scripts
 # Search from the project root (parent of dev_scripts)
-find "$(dirname "$0")/.." -name "*.sh" -not -path "*/node_modules/*" -print0 | \
+find "$(dirname "$0")/.." -name "*.sh" -not -path "*/node_modules/*" -print0 |
     xargs -0 shellcheck --severity=error -e SC1091,SC2155
 
 SHELLCHECK_EXIT=$?

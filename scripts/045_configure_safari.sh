@@ -114,10 +114,10 @@ fi
 echo "Disabling Safari 'launched' notifications..."
 set_default com.apple.coreservices.uiagent CSUIHasSafariBeenLaunched bool YES
 # Date handling in set_default is tricky, using raw defaults write for date
-    if [ "$DRY_RUN" = true ]; then
-        echo "[DRY RUN] defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z"
-    else
-        if ! execute_as_user defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z 2>/dev/null; then
+if [ "$DRY_RUN" = true ]; then
+    echo "[DRY RUN] defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z"
+else
+    if ! execute_as_user defaults write com.apple.coreservices.uiagent CSUIRecommendSafariNextNotificationDate -date 2099-01-01T00:00:00Z 2>/dev/null; then
         print_error "Failed to postpone Safari recommendation notification."
     fi
 fi

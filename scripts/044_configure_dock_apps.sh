@@ -49,7 +49,7 @@ if [ -z "${SKIP_DOCK_CLEANUP:-}" ] || [ "${SKIP_DOCK_CLEANUP}" = "0" ]; then
     # dockutil must run as the non-root user so we modify the correct user's Dock.
     execute_as_user dockutil --remove all --no-restart
 else
-    echo "SKIP_DOCK_CLEANUP is set; skipping removal of existing Dock items.";
+    echo "SKIP_DOCK_CLEANUP is set; skipping removal of existing Dock items."
 fi
 
 echo "Adding apps to Dock..."
