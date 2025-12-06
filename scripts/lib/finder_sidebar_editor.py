@@ -39,6 +39,12 @@ class FinderSidebar:
     def __init__(self):
         self._dry_run = os.environ.get("DRY_RUN") not in (None, "0", "false", "False", "FALSE")
 
+        # Only attempt to use the external "mysides" binary if explicitly
+        # enabled via MACHINIT_USE_MYSIDES. This ensures the module behaves
+        # deterministically by default and avoids unexpectedly preferring
+        # an external tool over bundled logic.
+        self._allow_mysides = os.environ.get("MACHINIT_USE_MYSIDES") not in (None, "0", "false", "False", "FALSE")
+
     def _run(self, cmd: List[str], **kwargs) -> subprocess.CompletedProcess:
         try:
             return subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
@@ -75,8 +81,14 @@ class FinderSidebar:
 
         # Try mysides if available
         # Allow tests and callers to override the mysides path via MACHINIT_MYSIDES
-        env_override = os.environ.get("MACHINIT_MYSIDES")
-        mysides_candidates = []
+        # Only attempt mysides if explicitly allowed by environment
+        if not self._allow_mysides:
+            mysides_candidates = []
+        else:
+            env_override = os.environ.get("MACHINIT_MYSIDES")
+            mysides_candidates = []
+            if env_override:
+                mysides_candidates.append(env_override)
         if env_override:
             mysides_candidates.append(env_override)
         mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
@@ -126,9 +138,14 @@ end tell
             print("[DRY_RUN] list")
             return []
 
-        # Try mysides if present for a clean listing
-        env_override = os.environ.get("MACHINIT_MYSIDES")
-        mysides_candidates = []
+        # Try mysides if present for a clean listing (only when explicitly enabled)
+        if not self._allow_mysides:
+            mysides_candidates = []
+        else:
+            env_override = os.environ.get("MACHINIT_MYSIDES")
+            mysides_candidates = []
+            if env_override:
+                mysides_candidates.append(env_override)
         if env_override:
             mysides_candidates.append(env_override)
         mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
@@ -322,6 +339,134 @@ end try
         cp = self._run(["/usr/bin/osascript", "-e", applescript])
         return cp.returncode == 0
 
+    def remove_all(self) -> bool:
+        """Remove all sidebar favorites (best-effort).
+
+        This performs a best-effort iteration over the current list() of
+        entries and attempts to remove each one. If any remove operation
+        returns non-zero (failure) the method still proceeds; it returns
+        True if all removals either succeed or are treated as OK.
+        """
+        if self._dry_run:
+            print("[DRY_RUN] remove_all")
+            return True
+
+        try:
+            items = self.list()
+        except Exception:
+            items = []
+
+        ok = True
+        for item in items:
+            # Some backends (like a fake mysides in tests) may return 'Name|path'
+            # so prefer removing by the friendly name portion when present.
+            if isinstance(item, str) and "|" in item:
+                name_part = item.split("|", 1)[0]
+                res = self.remove(name_part)
+            else:
+                res = self.remove(item)
+            ok = ok and bool(res)
+
+        return ok
+
+    def remove_by_path(self, path: str) -> bool:
+        """Attempt to remove a sidebar entry identified by a filesystem path.
+
+        The method will try a file:// variant and basename and fall back to
+        the normal remove behaviour if necessary.
+        """
+        if self._dry_run:
+            print(f"[DRY_RUN] remove_by_path: {path}")
+            return True
+
+        if not path:
+            raise ValueError("path is required")
+
+        # Normalize path
+        target = os.path.abspath(os.path.expanduser(path))
+
+        # Try mysides if allowed
+        if self._allow_mysides:
+            env_override = os.environ.get("MACHINIT_MYSIDES")
+            mysides_candidates = []
+            if env_override:
+                mysides_candidates.append(env_override)
+            mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+
+            for mysides in mysides_candidates:
+                if os.path.exists(mysides) and os.access(mysides, os.X_OK):
+                    fileurl = self._file_url(target)
+                    cp = self._run([mysides, "rm", fileurl])
+                    if cp.returncode == 0:
+                        return True
+                    cp = self._run([mysides, "rm", target])
+                    if cp.returncode == 0:
+                        return True
+
+        # As an alternative try to remove items that include the basename/path
+        base = os.path.basename(target)
+        try:
+            candidates = self.list()
+        except Exception:
+            candidates = []
+
+        for cand in candidates:
+            # match on path content or basename
+            if cand and (base and base in cand or target in cand):
+                if self.remove(cand):
+                    return True
+
+        # Best-effort fallback: call remove() directly with the target
+        return self.remove(target)
+
+    def get_index_from_name(self, name: str) -> Optional[int]:
+        """Return 1-based index of the sidebar item matching name, or None."""
+        if self._dry_run:
+            print(f"[DRY_RUN] get_index_from_name: {name}")
+            return None
+
+        try:
+            items = self.list()
+        except Exception:
+            return None
+
+        for idx, val in enumerate(items, start=1):
+            if val and val.lower() == name.lower():
+                return idx
+
+        return None
+
+    def get_name_from_index(self, index: int) -> Optional[str]:
+        """Return the name at 1-based index (or None if not found)."""
+        if self._dry_run:
+            print(f"[DRY_RUN] get_name_from_index: {index}")
+            return None
+
+        try:
+            items = self.list()
+        except Exception:
+            return None
+
+        if index <= 0 or index > len(items):
+            return None
+
+        return items[index - 1]
+
+    def synchronize(self) -> bool:
+        """Best-effort synchronization so Finder picks up changes (flush prefs).
+
+        This is a best-effort convenience wrapper and may not be required in
+        all environments.
+        """
+        if self._dry_run:
+            print("[DRY_RUN] synchronize")
+            return True
+
+        # Best-effort preference read to nudge macOS into realizing any changes;
+        # we avoid destructive commands here so the function remains safe.
+        cp = self._run(["/usr/bin/defaults", "read", "com.apple.sidebarlists"]) 
+        return cp.returncode == 0
+
     def move(self, name: str, position: int) -> bool:
         """Move a sidebar item to a new (1-based) position – best-effort.
 
@@ -375,6 +520,20 @@ def main(argv=None) -> int:
     p_move.add_argument("name")
     p_move.add_argument("position", type=int)
 
+    # Additional commands to mirror the original script's surface
+    sub.add_parser("remove-all")
+
+    p_rbp = sub.add_parser("remove-by-path")
+    p_rbp.add_argument("path")
+
+    p_idx = sub.add_parser("get-index")
+    p_idx.add_argument("name")
+
+    p_name = sub.add_parser("get-name")
+    p_name.add_argument("index", type=int)
+
+    sub.add_parser("sync")
+
     args = parser.parse_args(argv)
     fs = FinderSidebar()
 
@@ -394,6 +553,35 @@ def main(argv=None) -> int:
             for line in items:
                 print(line)
             return 0
+
+        if args.cmd == "remove-all":
+            ok = fs.remove_all()
+            print("RemovedAll" if ok else "Failed")
+            return 0 if ok else 2
+
+        if args.cmd == "remove-by-path":
+            ok = fs.remove_by_path(args.path)
+            print("Removed" if ok else "Failed")
+            return 0 if ok else 2
+
+        if args.cmd == "get-index":
+            idx = fs.get_index_from_name(args.name)
+            if idx is None:
+                return 2
+            print(idx)
+            return 0
+
+        if args.cmd == "get-name":
+            nm = fs.get_name_from_index(args.index)
+            if nm is None:
+                return 2
+            print(nm)
+            return 0
+
+        if args.cmd == "sync":
+            ok = fs.synchronize()
+            print("Synced" if ok else "Failed")
+            return 0 if ok else 2
 
         if args.cmd == "move":
             ok = fs.move(args.name, args.position)

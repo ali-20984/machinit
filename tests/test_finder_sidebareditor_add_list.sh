@@ -47,6 +47,8 @@ chmod +x "$FAKE_MYSIDES"
 
 # Export variables so finder_sidebar_editor picks our mysides
 export MACHINIT_MYSIDES="$FAKE_MYSIDES"
+# Tests should explicitly enable mysides usage
+export MACHINIT_USE_MYSIDES=1
 export MYSIDES_STATE="$STATE_FILE"
 
 # Ensure targets exist
