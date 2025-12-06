@@ -36,14 +36,22 @@ class FinderSidebar:
     not attempt to modify the system.
     """
 
-    def __init__(self):
+    def __init__(self, allow_mysides: Optional[bool] = None, allow_pyobjc: Optional[bool] = None):
+        # Respect DRY_RUN via environment like before
         self._dry_run = os.environ.get("DRY_RUN") not in (None, "0", "false", "False", "FALSE")
 
-        # Only attempt to use the external "mysides" binary if explicitly
-        # enabled via MACHINIT_USE_MYSIDES. This ensures the module behaves
-        # deterministically by default and avoids unexpectedly preferring
-        # an external tool over bundled logic.
-        self._allow_mysides = os.environ.get("MACHINIT_USE_MYSIDES") not in (None, "0", "false", "False", "FALSE")
+        # Allow callers to explicitly enable mysides on a per-instance basis
+        # via the allow_mysides parameter. If not provided, fall back to the
+        # MACHINIT_USE_MYSIDES environment variable (unchanged behaviour).
+        if allow_mysides is None:
+            self._allow_mysides = os.environ.get("MACHINIT_USE_MYSIDES") not in (None, "0", "false", "False", "FALSE")
+        else:
+            self._allow_mysides = bool(allow_mysides)
+        # Optional pyobjc / LSSharedFileList path (opt-in only).
+        if allow_pyobjc is None:
+            self._allow_pyobjc = os.environ.get("MACHINIT_USE_PYOBJC") not in (None, "0", "false", "False", "FALSE")
+        else:
+            self._allow_pyobjc = bool(allow_pyobjc)
 
     def _run(self, cmd: List[str], **kwargs) -> subprocess.CompletedProcess:
         try:
@@ -52,6 +60,21 @@ class FinderSidebar:
             # emulate a non-zero returncode to indicate missing binary
             cp = subprocess.CompletedProcess(cmd, returncode=127)
             return cp
+
+    def _pyobjc_available(self) -> bool:
+        """Return True if pyobjc-based LaunchServices APIs are importable.
+
+        Only returns True when the instance is configured to allow pyobjc
+        (opt-in), and the expected modules can be imported.
+        """
+        if not self._allow_pyobjc:
+            return False
+        try:
+            import LaunchServices  # type: ignore
+            import Foundation  # type: ignore
+            return True
+        except Exception:
+            return False
 
     def _file_url(self, path: str) -> str:
         p = os.path.expanduser(path)
@@ -89,8 +112,6 @@ class FinderSidebar:
             mysides_candidates = []
             if env_override:
                 mysides_candidates.append(env_override)
-        if env_override:
-            mysides_candidates.append(env_override)
         mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
 
         for mysides in mysides_candidates:
@@ -104,6 +125,25 @@ class FinderSidebar:
                 cp = self._run([mysides, "add", friendly, target])
                 if cp.returncode == 0:
                     return True
+
+        # If allowed, try the native macOS LSSharedFileList API via pyobjc.
+        if self._pyobjc_available():
+            try:
+                from Foundation import NSURL  # type: ignore
+                from LaunchServices import (
+                    LSSharedFileListCreate,  # type: ignore
+                    kLSSharedFileListFavorites,  # type: ignore
+                    LSSharedFileListInsertItemURL,  # type: ignore
+                )
+
+                shared = LSSharedFileListCreate(None, kLSSharedFileListFavorites, None)
+                url = NSURL.fileURLWithPath_(target)
+                # Insert at end (None for position)
+                LSSharedFileListInsertItemURL(shared, None, None, None, url, None, None)
+                return True
+            except Exception:
+                # best-effort: fall back to AppleScript
+                pass
 
         # AppleScript fallback (UI automation) — best-effort
         applescript = """
@@ -146,8 +186,6 @@ end tell
             mysides_candidates = []
             if env_override:
                 mysides_candidates.append(env_override)
-        if env_override:
-            mysides_candidates.append(env_override)
         mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
 
         for mysides in mysides_candidates:
@@ -174,7 +212,36 @@ end tell
                         parsed.append(name)
                     return parsed
 
-        # Fallback: read Finder sidebar prefs (best-effort parsing)
+            # If allowed, try the native macOS LSSharedFileList API via pyobjc.
+            if self._pyobjc_available():
+                try:
+                    from LaunchServices import (
+                        LSSharedFileListCreate,  # type: ignore
+                        kLSSharedFileListFavorites,  # type: ignore
+                        LSSharedFileListCopySnapshot,  # type: ignore
+                        LSSharedFileListItemCopyResolvedURL,  # type: ignore
+                    )
+                    from Foundation import NSURL  # type: ignore
+
+                    shared = LSSharedFileListCreate(None, kLSSharedFileListFavorites, None)
+                    items, seed = LSSharedFileListCopySnapshot(shared, None)
+                    parsed = []
+                    for it in items:
+                        try:
+                            url, flags = LSSharedFileListItemCopyResolvedURL(it, 0, None)
+                            if url is not None:
+                                p = url.path()
+                                parsed.append(os.path.basename(p) or p)
+                        except Exception:
+                            # ignore problematic items
+                            pass
+                    if parsed:
+                        return parsed
+                except Exception:
+                    # fallback to plist/defaults parsing
+                    pass
+
+            # Fallback: read Finder sidebar prefs (best-effort parsing)
         # Next try reading the user's preferences plist directly (best-effort)
         try:
             prefs_path = os.path.expanduser("~/Library/Preferences/com.apple.sidebarlists.plist")
@@ -251,12 +318,15 @@ end tell
         if name and name.startswith("file://"):
             target_path = urllib.parse.unquote(name[len("file://"):])
 
-        # Try mysides remove/rm first
-        env_override = os.environ.get("MACHINIT_MYSIDES")
-        mysides_candidates = []
-        if env_override:
-            mysides_candidates.append(env_override)
-        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+        # Try mysides remove/rm first (only when explicitly allowed)
+        if not self._allow_mysides:
+            mysides_candidates = []
+        else:
+            env_override = os.environ.get("MACHINIT_MYSIDES")
+            mysides_candidates = []
+            if env_override:
+                mysides_candidates.append(env_override)
+            mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 # try both 'remove' and 'rm'
@@ -477,12 +547,15 @@ end try
             print(f"[DRY_RUN] move: {name} -> {position}")
             return True
 
-        # Try mysides move if it supports it (best-effort)
-        env_override = os.environ.get("MACHINIT_MYSIDES")
-        mysides_candidates = []
-        if env_override:
-            mysides_candidates.append(env_override)
-        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+        # Try mysides move if it supports it (best-effort) and only when allowed
+        if not self._allow_mysides:
+            mysides_candidates = []
+        else:
+            env_override = os.environ.get("MACHINIT_MYSIDES")
+            mysides_candidates = []
+            if env_override:
+                mysides_candidates.append(env_override)
+            mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 cp = self._run([mysides, "move", name, str(position)])
@@ -505,6 +578,13 @@ def main(argv=None) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(prog="finder_sidebar_editor")
+    # Global option: only allow mysides when explicitly requested by CLI flag
+    # If the flag is omitted, use_mysides will be None so the FinderSidebar
+    # instance falls back to the MACHINIT_USE_MYSIDES environment variable.
+    parser.add_argument("--use-mysides", action="store_true", dest="use_mysides", default=None,
+                        help="Allow use of external mysides binary (explicit opt-in)")
+    parser.add_argument("--use-pyobjc", action="store_true", dest="use_pyobjc", default=None,
+                        help="Allow use of native pyobjc LSSharedFileList APIs (explicit opt-in)")
     sub = parser.add_subparsers(dest="cmd")
 
     p_add = sub.add_parser("add")
@@ -535,7 +615,9 @@ def main(argv=None) -> int:
     sub.add_parser("sync")
 
     args = parser.parse_args(argv)
-    fs = FinderSidebar()
+    # honor the global --use-mysides and --use-pyobjc flags (these do not change environment)
+    fs = FinderSidebar(allow_mysides=getattr(args, "use_mysides", None),
+                       allow_pyobjc=getattr(args, "use_pyobjc", None))
 
     try:
         if args.cmd == "add":

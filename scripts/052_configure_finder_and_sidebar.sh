@@ -12,6 +12,7 @@ source "$(dirname "$0")/utils.sh"
 RESET_FINDER_VIEW=${RESET_FINDER_VIEW:-false}
 ADD_SIDEBAR_ONLY=${ADD_SIDEBAR_ONLY:-false}
 USE_MYSIDES=${USE_MYSIDES:-false}
+USE_PYOBJC=${USE_PYOBJC:-false}
 FSE_SYNC=${FSE_SYNC:-true}
 FSE_WAIT_SECONDS=${FSE_WAIT_SECONDS:-2.5}
 while [[ $# -gt 0 ]]; do
@@ -26,6 +27,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --use-mysides)
             USE_MYSIDES=true
+            shift
+            ;;
+        --use-pyobjc)
+            USE_PYOBJC=true
             shift
             ;;
         --fse-sync)
@@ -172,6 +177,21 @@ start_bg() {
         pid=$!
         FSE_PIDS+=("$pid")
         print_info "Started background job for Finder operation (PID: $pid)"
+
+        # IMPORTANT: block until the background Finder automation process finishes
+        # so we don't start the next UI interaction until the current one completes.
+        # This ensures sequential, deterministic operations even when using
+        # detached background jobs (best-effort). DRY_RUN will not actually run
+        # or wait.
+        if [ "$DRY_RUN" = true ]; then
+            print_info "(DRY_RUN) Would wait for PID $pid to finish"
+        else
+            print_info "Waiting for Finder background job (PID: $pid) to finish..."
+            # wait for the child to exit
+            wait "$pid" 2>/dev/null || true
+            print_info "Finder background job (PID: $pid) finished"
+        fi
+
         return 0
     fi
 
@@ -243,6 +263,15 @@ add_sidebar_item() {
             ;;
     esac
 
+    case "${USE_PYOBJC:-}" in
+        1|true|True|TRUE|yes|Yes|YES)
+            USE_PYOBJC_FLAG=1
+            ;;
+        *)
+            USE_PYOBJC_FLAG=0
+            ;;
+    esac
+
     # Ensure the background PID array is initialized (top-level variable)
     if [ -z "${FSE_PIDS+x}" ]; then
         FSE_PIDS=()
@@ -251,13 +280,21 @@ add_sidebar_item() {
     # 1) Default path: use the bundled finder_sidebar_editor under scripts/lib
     if [ "${USE_MYSIDES_FLAG:-0}" -eq 0 ]; then
         if command -v python3 >/dev/null 2>&1; then
-            print_action "Adding '$name' to Finder sidebar using finder_sidebar_editor (local module)..."
+            if [ "${USE_PYOBJC_FLAG:-0}" -eq 1 ]; then
+                print_action "Adding '$name' to Finder sidebar using finder_sidebar_editor (local module + pyobjc)..."
+            else
+                print_action "Adding '$name' to Finder sidebar using finder_sidebar_editor (local module)..."
+            fi
             repo_root="$(cd "$(dirname "$0")/.." >/dev/null && pwd)"
             libpath="${repo_root}/scripts/lib"
 
             # Run the local Python helper in the background so the installer does not block
             # use sys.argv[-1] so a leading -- marker doesn't end up as the target
-            cmd="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[-1])\" -- '${target}'"
+            if [ "${USE_PYOBJC_FLAG:-0}" -eq 1 ]; then
+                cmd="env PYTHONPATH='${libpath}' MACHINIT_USE_PYOBJC=1 python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[-1])\" -- '${target}'"
+            else
+                cmd="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[-1])\" -- '${target}'"
+            fi
             if run_fse_cmd "$cmd"; then
                 print_success "Launched background add for '$name' (via finder_sidebar_editor)."
                 return 0
@@ -363,7 +400,11 @@ clear_sidebar() {
 
     if command -v python3 >/dev/null 2>&1; then
         # get the current list (one per line) using the bundled module
-        current_items=$(execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true)
+        if [ "${USE_PYOBJC_FLAG:-0}" -eq 1 ]; then
+            current_items=$(execute_as_user env PYTHONPATH="${libpath}" MACHINIT_USE_PYOBJC=1 python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true)
+        else
+            current_items=$(execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true)
+        fi
 
         # Print the current items for diagnostics so callers can verify what's present
         print_info "Current Finder sidebar items (pre-clear):"
@@ -380,12 +421,20 @@ clear_sidebar() {
                 # Best-effort: try removing the raw item value, and also try basename
                 # Start removal in background so the installer doesn't block on UI operations
                 # use last arg to be robust against a preceding -- marker
-                cmd_remove="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${item}'"
+                if [ "${USE_PYOBJC_FLAG:-0}" -eq 1 ]; then
+                    cmd_remove="env PYTHONPATH='${libpath}' MACHINIT_USE_PYOBJC=1 python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${item}'"
+                else
+                    cmd_remove="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${item}'"
+                fi
                 run_fse_cmd "$cmd_remove" >/dev/null 2>&1 || true
                 # Try removing the basename of the item in case list() returned "Name file://..."
                 base_item="$(basename "${item}")"
                 if [ -n "${base_item}" ] && [ "${base_item}" != "${item}" ]; then
-                    cmd_base="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${base_item}'"
+                    if [ "${USE_PYOBJC_FLAG:-0}" -eq 1 ]; then
+                        cmd_base="env PYTHONPATH='${libpath}' MACHINIT_USE_PYOBJC=1 python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${base_item}'"
+                    else
+                        cmd_base="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${base_item}'"
+                    fi
                     run_fse_cmd "$cmd_base" >/dev/null 2>&1 || true
                 fi
 
@@ -518,7 +567,11 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
         # Print final list so callers can verify what was added in add-only mode
         if command -v python3 >/dev/null 2>&1; then
             print_info "Final Finder sidebar items (post-add, add-only mode):"
-            execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true
+            if [ "${USE_PYOBJC_FLAG:-0}" -eq 1 ]; then
+                execute_as_user env PYTHONPATH="${libpath}" MACHINIT_USE_PYOBJC=1 python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true
+            else
+                execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true
+            fi
         fi
     exit 0
 fi
