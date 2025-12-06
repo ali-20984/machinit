@@ -37,11 +37,23 @@ class FinderSidebar:
     """
 
     def __init__(self):
-        self._dry_run = os.environ.get("DRY_RUN") not in (None, "0", "false", "False", "FALSE")
+        self._dry_run = os.environ.get("DRY_RUN") not in (
+            None,
+            "0",
+            "false",
+            "False",
+            "FALSE",
+        )
 
     def _run(self, cmd: List[str], **kwargs) -> subprocess.CompletedProcess:
         try:
-            return subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+            return subprocess.run(
+                cmd,
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                **kwargs,
+            )
         except FileNotFoundError:
             # emulate a non-zero returncode to indicate missing binary
             cp = subprocess.CompletedProcess(cmd, returncode=127)
@@ -74,7 +86,11 @@ class FinderSidebar:
             raise RuntimeError(f"target does not exist: {target}")
 
         # Try mysides if available
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        for mysides in (
+            "/usr/local/bin/mysides",
+            "/opt/homebrew/bin/mysides",
+            "/usr/bin/mysides",
+        ):
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 friendly = name or os.path.basename(target) or target
                 # try the file:// URL form first
@@ -120,7 +136,11 @@ end tell
             return []
 
         # Try mysides if present for a clean listing
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        for mysides in (
+            "/usr/local/bin/mysides",
+            "/opt/homebrew/bin/mysides",
+            "/usr/bin/mysides",
+        ):
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 cp = self._run([mysides, "list"])
                 if cp.returncode == 0:
@@ -147,7 +167,9 @@ end tell
         # Fallback: read Finder sidebar prefs (best-effort parsing)
         # Next try reading the user's preferences plist directly (best-effort)
         try:
-            prefs_path = os.path.expanduser("~/Library/Preferences/com.apple.sidebarlists.plist")
+            prefs_path = os.path.expanduser(
+                "~/Library/Preferences/com.apple.sidebarlists.plist"
+            )
             if os.path.exists(prefs_path):
                 with open(prefs_path, "rb") as f:
                     obj = plistlib.load(f)
@@ -157,7 +179,11 @@ end tell
                     names = []
                     if isinstance(o, dict):
                         for k, v in o.items():
-                            if isinstance(k, str) and k.lower() == "name" and isinstance(v, str):
+                            if (
+                                isinstance(k, str)
+                                and k.lower() == "name"
+                                and isinstance(v, str)
+                            ):
                                 names.append(v)
                             else:
                                 names.extend(_collect_names(v))
@@ -184,7 +210,10 @@ end tell
             # best-effort — fall back to defaults read if available
             pass
 
-        cp = self._run(["/usr/bin/defaults", "read", "com.apple.sidebarlists"], stderr=subprocess.DEVNULL)
+        cp = self._run(
+            ["/usr/bin/defaults", "read", "com.apple.sidebarlists"],
+            stderr=subprocess.DEVNULL,
+        )
         if cp.returncode == 0 and cp.stdout:
             # Attempt simple parsing: find file:// occurrences and use the preceding tokens as names
             txt = cp.stdout.decode()
@@ -205,7 +234,9 @@ end tell
             if parsed:
                 return parsed
 
-        raise RuntimeError("Unable to list Finder sidebar items (no mysides and failed to read prefs)")
+        raise RuntimeError(
+            "Unable to list Finder sidebar items (no mysides and failed to read prefs)"
+        )
 
     def remove(self, name: str) -> bool:
         """Attempt to remove a sidebar item by name.
@@ -219,10 +250,14 @@ end tell
         # If the name looks like a file:// URL, try to derive path
         target_path = None
         if name and name.startswith("file://"):
-            target_path = urllib.parse.unquote(name[len("file://"):])
+            target_path = urllib.parse.unquote(name[len("file://") :])
 
         # Try mysides remove/rm first
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        for mysides in (
+            "/usr/local/bin/mysides",
+            "/opt/homebrew/bin/mysides",
+            "/usr/bin/mysides",
+        ):
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 # try both 'remove' and 'rm'
                 for cmd in ("remove", "rm"):
@@ -315,7 +350,11 @@ end try
             return True
 
         # Try mysides move if it supports it (best-effort)
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        for mysides in (
+            "/usr/local/bin/mysides",
+            "/opt/homebrew/bin/mysides",
+            "/usr/bin/mysides",
+        ):
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 cp = self._run([mysides, "move", name, str(position)])
                 if cp.returncode == 0:
