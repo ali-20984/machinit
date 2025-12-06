@@ -9,6 +9,7 @@ echo "Testing Finder sidebar add-only flag (dry-run)..."
 OUT=$(DRY_RUN=true "$SCRIPT" --add-sidebar-only 2>&1 || true)
 
 if echo "$OUT" | grep -q "Clearing Finder sidebar favorites" && \
+    echo "$OUT" | grep -q "Closing any open Finder windows" && \
    echo "$OUT" | grep -q "Adding 'Recents' to Finder sidebar" && \
    echo "$OUT" | grep -q "Adding 'Applications' to Finder sidebar" && \
    echo "$OUT" | grep -q "Adding 'Home' to Finder sidebar" && \

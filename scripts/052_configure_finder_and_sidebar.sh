@@ -263,7 +263,19 @@ clear_sidebar() {
         # remove each item (best-effort)
         while IFS= read -r item; do
             if [ -n "${item}" ]; then
+                # Best-effort: try removing the raw item value, and also try basename
                 execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])" -- "${item}" >/dev/null 2>&1 || true
+                # Try removing the basename of the item in case list() returned "Name file://..."
+                base_item="$(basename "${item}")"
+                if [ -n "${base_item}" ] && [ "${base_item}" != "${item}" ]; then
+                    execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])" -- "${base_item}" >/dev/null 2>&1 || true
+                fi
+
+                # After attempting removal, close any Finder windows that may have been opened
+                print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+                execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+                # small pause so Finder state can settle between UI operations
+                sleep 0.25
             fi
         done <<EOF
 ${current_items:-}
@@ -283,15 +295,46 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
     # Clear existing favorites then populate in a deterministic order
     clear_sidebar
 
-    # Populate favorites from top to bottom
+    # Populate favorites from top to bottom — close Finder windows and pause briefly after each
     add_sidebar_item "Recents" "${ORIGINAL_HOME}"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     add_sidebar_item "Applications" "/Applications"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     add_sidebar_item "Home" "${ORIGINAL_HOME}"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     add_sidebar_item "Desktop" "${ORIGINAL_HOME}/Desktop"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     add_sidebar_item "Documents" "${ORIGINAL_HOME}/Documents"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     add_sidebar_item "Downloads" "${ORIGINAL_HOME}/Downloads"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     add_sidebar_item "Nextcloud" "${ORIGINAL_HOME}/Nextcloud"
+    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
 
     # Flush preferences so Finder picks up the change
     print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
@@ -304,14 +347,47 @@ fi
 # Use the original home path when adding the item
 # On a full run, clear and re-add a curated list (same as add-only)
 clear_sidebar
+
+# Add each favorite and close Finder windows / pause between steps so the UI can settle
 add_sidebar_item "Recents" "${ORIGINAL_HOME}"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
+
 add_sidebar_item "Applications" "/Applications"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
+
 add_sidebar_item "Home" "${ORIGINAL_HOME}"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
+
 add_sidebar_item "Desktop" "${ORIGINAL_HOME}/Desktop"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
+
 add_sidebar_item "Documents" "${ORIGINAL_HOME}/Documents"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
+
 add_sidebar_item "Downloads" "${ORIGINAL_HOME}/Downloads"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
+
 add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
+
 add_sidebar_item "Nextcloud" "${ORIGINAL_HOME}/Nextcloud"
+print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
 
 # Flush cfprefsd cache for the original user so Finder will pick up the new settings
 print_info "Flushing preference cache for user ${ORIGINAL_USER}..."

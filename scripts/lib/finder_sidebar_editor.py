@@ -24,6 +24,7 @@ import os
 import subprocess
 import sys
 import urllib.parse
+import plistlib
 from typing import List, Optional
 
 
@@ -124,13 +125,85 @@ end tell
                 cp = self._run([mysides, "list"])
                 if cp.returncode == 0:
                     out = cp.stdout.decode().strip().splitlines()
-                    return out
+                    # Parse lines like "Name <separator> URL" — extract the friendly name
+                    parsed = []
+                    for ln in out:
+                        ln = ln.strip()
+                        if not ln:
+                            continue
+                        # If the line contains a file:// URL, the friendly name is usually before it
+                        idx = ln.rfind("file://")
+                        if idx != -1:
+                            name = ln[:idx].strip()
+                            if not name:
+                                # fallback to basename of the path
+                                name = os.path.basename(urllib.parse.unquote(ln[idx:]))
+                        else:
+                            # Otherwise use the whole line
+                            name = ln
+                        parsed.append(name)
+                    return parsed
 
         # Fallback: read Finder sidebar prefs (best-effort parsing)
+        # Next try reading the user's preferences plist directly (best-effort)
+        try:
+            prefs_path = os.path.expanduser("~/Library/Preferences/com.apple.sidebarlists.plist")
+            if os.path.exists(prefs_path):
+                with open(prefs_path, "rb") as f:
+                    obj = plistlib.load(f)
+
+                # Recursively search the plist for 'Name' or URL-like entries
+                def _collect_names(o):
+                    names = []
+                    if isinstance(o, dict):
+                        for k, v in o.items():
+                            if isinstance(k, str) and k.lower() == "name" and isinstance(v, str):
+                                names.append(v)
+                            else:
+                                names.extend(_collect_names(v))
+                    elif isinstance(o, (list, tuple)):
+                        for item in o:
+                            names.extend(_collect_names(item))
+                    elif isinstance(o, str):
+                        # if the string looks like a path/url, use its basename
+                        if "file://" in o or o.startswith("/"):
+                            names.append(os.path.basename(urllib.parse.unquote(o)))
+                    return names
+
+                parsed = _collect_names(obj)
+                if parsed:
+                    # preserve order and uniqueness
+                    seen = set()
+                    out = []
+                    for n in parsed:
+                        if n and n not in seen:
+                            seen.add(n)
+                            out.append(n)
+                    return out
+        except Exception:
+            # best-effort — fall back to defaults read if available
+            pass
+
         cp = self._run(["/usr/bin/defaults", "read", "com.apple.sidebarlists"], stderr=subprocess.DEVNULL)
         if cp.returncode == 0 and cp.stdout:
-            # Return raw lines – callers can inspect
-            return cp.stdout.decode().splitlines()
+            # Attempt simple parsing: find file:// occurrences and use the preceding tokens as names
+            txt = cp.stdout.decode()
+            lines = txt.splitlines()
+            parsed = []
+            for ln in lines:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                idx = ln.rfind("file://")
+                if idx != -1:
+                    name = ln[:idx].strip()
+                    if not name:
+                        name = os.path.basename(urllib.parse.unquote(ln[idx:]))
+                    parsed.append(name)
+                elif len(ln) < 256:
+                    parsed.append(ln)
+            if parsed:
+                return parsed
 
         raise RuntimeError("Unable to list Finder sidebar items (no mysides and failed to read prefs)")
 
@@ -143,27 +216,90 @@ end tell
             print(f"[DRY_RUN] remove: {name}")
             return True
 
+        # If the name looks like a file:// URL, try to derive path
+        target_path = None
+        if name and name.startswith("file://"):
+            target_path = urllib.parse.unquote(name[len("file://"):])
+
         # Try mysides remove/rm first
         for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 # try both 'remove' and 'rm'
                 for cmd in ("remove", "rm"):
+                    # Try the name first
                     cp = self._run([mysides, cmd, name])
                     if cp.returncode == 0:
                         return True
 
+                    # Try file:// URL form
+                    if target_path is None and os.path.exists(name):
+                        # caller passed a path — try file:// form
+                        fileurl = self._file_url(name)
+                        cp = self._run([mysides, cmd, fileurl])
+                        if cp.returncode == 0:
+                            return True
+
+                    if target_path is not None:
+                        # if we resolved a path from a file://, try removing that path too
+                        cp = self._run([mysides, cmd, target_path])
+                        if cp.returncode == 0:
+                            return True
+
+                    # As a final attempt try the basename of the provided name
+                    base = os.path.basename(name)
+                    if base and base != name:
+                        cp = self._run([mysides, cmd, base])
+                        if cp.returncode == 0:
+                            return True
+
+                    # Also try to find a candidate from the listing and remove that
+                    try:
+                        candidates = self.list()
+                    except Exception:
+                        candidates = []
+                    for cand in candidates:
+                        if cand and name.lower() in cand.lower():
+                            cp = self._run([mysides, cmd, cand])
+                            if cp.returncode == 0:
+                                return True
+
         # Best-effort AppleScript: find item in sidebar and remove via UI
-        applescript = """
-tell application "System Events"
-    tell process "Finder"
-        try
-            -- attempt to find menu item by name in the sidebar UI (best-effort)
-            -- UI scripting is fragile; simply attempt the contextual 'Remove from Sidebar' action
-            -- This approach may not work on all OS versions/locales.
-        on error
-        end try
+        # Best-effort AppleScript: try selecting the item via UI and use the "Remove from Sidebar" menu.
+        # UI scripting is fragile and localized; we attempt a few approaches.
+        safe_name = name.replace('"', '\\"') if isinstance(name, str) else name
+        applescript = f"""
+try
+    tell application "Finder"
+        activate
     end tell
-end tell
+    delay 0.1
+    tell application "System Events"
+        tell process "Finder"
+            -- Try to click a sidebar element matching the name
+            try
+                repeat with anOutline in (every outline of scroll area 1 of splitter group 1 of window 1)
+                    try
+                        repeat with r in (UI elements of anOutline)
+                            try
+                                if (value of attribute "AXTitle" of r as string) contains "{safe_name}" then
+                                    perform action "AXPress" of r
+                                    delay 0.1
+                                    -- invoke the File menu remove action
+                                    try
+                                        click menu item "Remove from Sidebar" of menu "File" of menu bar 1
+                                    end try
+                                    return
+                                end if
+                            end try
+                        end repeat
+                    end try
+                end repeat
+            end try
+        end tell
+    end tell
+on error
+    -- best-effort; ignore UI failures
+end try
 """
         cp = self._run(["/usr/bin/osascript", "-e", applescript])
         return cp.returncode == 0
