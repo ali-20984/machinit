@@ -6,7 +6,7 @@ SCRIPT=scripts/052_configure_finder_and_sidebar.sh
 
 echo "Inspecting file:// generation in $SCRIPT..."
 
-if grep -q "urllib.parse.quote(sys.argv\[1\], safe=\"/\")" "$SCRIPT"; then
+if grep -E "urllib.parse.quote\(sys.argv\[(1|-1)\], safe=\"/\"\)" "$SCRIPT"; then
     echo "PASS: script uses urllib.parse.quote(..., safe='/') to preserve slashes"
     exit 0
 else

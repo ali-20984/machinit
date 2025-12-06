@@ -256,7 +256,8 @@ add_sidebar_item() {
             libpath="${repo_root}/scripts/lib"
 
             # Run the local Python helper in the background so the installer does not block
-            cmd="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[1])\" -- '${target}'"
+            # use sys.argv[-1] so a leading -- marker doesn't end up as the target
+            cmd="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[-1])\" -- '${target}'"
             if run_fse_cmd "$cmd"; then
                 print_success "Launched background add for '$name' (via finder_sidebar_editor)."
                 return 0
@@ -283,7 +284,8 @@ add_sidebar_item() {
 
             # Construct file:// URL (escape spaces/unsafe chars) using python if available
             if command -v python3 >/dev/null 2>&1; then
-                fileurl=$(python3 -c 'import urllib.parse,sys;print("file://" + urllib.parse.quote(sys.argv[1], safe="/"))' "$target")
+                # accept the last arg so callers using -- still work correctly
+                fileurl=$(python3 -c 'import urllib.parse,sys;print("file://" + urllib.parse.quote(sys.argv[-1], safe="/"))' "$target")
             else
                 # Fallback: naive space-escape
                 enc_target="${target// /%20}"
@@ -363,17 +365,27 @@ clear_sidebar() {
         # get the current list (one per line) using the bundled module
         current_items=$(execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true)
 
+        # Print the current items for diagnostics so callers can verify what's present
+        print_info "Current Finder sidebar items (pre-clear):"
+        if [ -n "${current_items}" ]; then
+            # Print the possibly multi-line current_items safely
+            printf '%s\n' "${current_items}"
+        else
+            print_info "(none)"
+        fi
+
         # remove each item (best-effort)
         while IFS= read -r item; do
             if [ -n "${item}" ]; then
                 # Best-effort: try removing the raw item value, and also try basename
                 # Start removal in background so the installer doesn't block on UI operations
-                cmd_remove="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])\" -- '${item}'"
+                # use last arg to be robust against a preceding -- marker
+                cmd_remove="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${item}'"
                 run_fse_cmd "$cmd_remove" >/dev/null 2>&1 || true
                 # Try removing the basename of the item in case list() returned "Name file://..."
                 base_item="$(basename "${item}")"
                 if [ -n "${base_item}" ] && [ "${base_item}" != "${item}" ]; then
-                    cmd_base="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])\" -- '${base_item}'"
+                    cmd_base="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[-1])\" -- '${base_item}'"
                     run_fse_cmd "$cmd_base" >/dev/null 2>&1 || true
                 fi
 
@@ -493,6 +505,11 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
     fi
 
     echo "Finder sidebar pinning done (add-only mode)."
+        # Print final list so callers can verify what was added in add-only mode
+        if command -v python3 >/dev/null 2>&1; then
+            print_info "Final Finder sidebar items (post-add, add-only mode):"
+            execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true
+        fi
     exit 0
 fi
 
@@ -557,6 +574,12 @@ fi
 print_notice "Finder restarts are deferred until the final restart step. Run scripts/999_restart_apps.sh when the full run is complete to restart Finder and apply changes."
 
 echo "Finder configuration complete."
+
+# Print the final list so callers can verify the results
+if command -v python3 >/dev/null 2>&1; then
+    print_info "Final Finder sidebar items (post-add):"
+    execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; print('\n'.join(FinderSidebar().list()))" 2>/dev/null || true
+fi
 
 ## Verification: ensure per-user settings were written
 print_config "Verify Finder settings"
