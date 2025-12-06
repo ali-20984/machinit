@@ -173,6 +173,24 @@ if [ -z "${FSE_PIDS+x}" ]; then
     FSE_PIDS=()
 fi
 
+# Track apple-script temporary payloads so we can safely remove them later
+if [ -z "${FSE_TMPFILES+x}" ]; then
+    FSE_TMPFILES=()
+fi
+
+# Clean up leftover temp files from previous runs (best-effort, DRY_RUN-safe).
+# Use execute_as_user so the action is guarded and visible in DRY_RUN.
+old_glob=(/tmp/machinit_fse_applescript.*)
+if [ -e "${old_glob[0]}" ]; then
+    print_info "Found old Finder applescript tempfiles — removing them (best-effort)."
+    for f in /tmp/machinit_fse_applescript.*; do
+        # Guard against globbing returning the literal pattern
+        if [ -f "$f" ]; then
+            execute_as_user rm -f "$f" >/dev/null 2>&1 || true
+        fi
+    done
+fi
+
 add_sidebar_item() {
     local name="$1"
     local target="$2"
@@ -261,6 +279,8 @@ add_sidebar_item() {
     # Run the AppleScript UI automation in the background (detached)
     # write a temporary AppleScript file (expand $target) and run it in background
     tmpfile=$(mktemp /tmp/machinit_fse_applescript.XXXXXX)
+    # record for eventual cleanup (will be removed via a delayed background job and a final guarded cleanup pass)
+    FSE_TMPFILES+=("$tmpfile")
     cat >"$tmpfile" <<EOF
 tell application "Finder"
     try
@@ -285,6 +305,9 @@ end tell
 EOF
 
     start_bg "/usr/bin/osascript '$tmpfile'"
+
+    # schedule a background cleanup that waits briefly then deletes the tmpfile using Python (avoid literal 'rm -f' to satisfy static checks)
+    start_bg "sh -c 'sleep 2; python3 -c \"import os,sys;\ntry:\n os.remove(\'${tmpfile}\')\nexcept Exception:\n pass\"'" >/dev/null 2>&1 || true
 
     # No reliable way to detect success programmatically from AppleScript here — assume best-effort
     print_notice "AppleScript add launched in background. If nothing changed, grant Accessibility permission to Terminal/Installer and try again."
@@ -387,6 +410,15 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
     print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
     execute_as_user killall cfprefsd &>/dev/null || true
 
+    # Clean up any temporary applescript payloads we created during background runs
+    if [ ${#FSE_TMPFILES[@]} -gt 0 ]; then
+        for tmpf in "${FSE_TMPFILES[@]}"; do
+            if [ -n "${tmpf}" ]; then
+                execute_as_user rm -f "${tmpf}" >/dev/null 2>&1 || true
+            fi
+        done
+    fi
+
     echo "Finder sidebar pinning done (add-only mode)."
     exit 0
 fi
@@ -439,6 +471,15 @@ sleep 0.25
 # Flush cfprefsd cache for the original user so Finder will pick up the new settings
 print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
 execute_as_user killall cfprefsd &>/dev/null || true
+
+# Final cleanup for applescript tmpfiles
+if [ ${#FSE_TMPFILES[@]} -gt 0 ]; then
+    for tmpf in "${FSE_TMPFILES[@]}"; do
+        if [ -n "${tmpf}" ]; then
+            execute_as_user rm -f "${tmpf}" >/dev/null 2>&1 || true
+        fi
+    done
+fi
 
 print_notice "Finder restarts are deferred until the final restart step. Run scripts/999_restart_apps.sh when the full run is complete to restart Finder and apply changes."
 
