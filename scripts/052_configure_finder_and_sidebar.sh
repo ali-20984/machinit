@@ -13,7 +13,7 @@ RESET_FINDER_VIEW=${RESET_FINDER_VIEW:-false}
 ADD_SIDEBAR_ONLY=${ADD_SIDEBAR_ONLY:-false}
 USE_MYSIDES=${USE_MYSIDES:-false}
 FSE_SYNC=${FSE_SYNC:-true}
-FSE_WAIT_SECONDS=${FSE_WAIT_SECONDS:-1.0}
+FSE_WAIT_SECONDS=${FSE_WAIT_SECONDS:-2.5}
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --reset-view)
@@ -415,6 +415,12 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
     execute_as_user mkdir -p "${ORIGINAL_HOME}/Downloads" || true
     execute_as_user mkdir -p "${ORIGINAL_HOME}/Documents/Projects" || true
 
+    # Close Finder windows before starting operations so UI interactions start
+    # from a clean state (best-effort, DRY_RUN-safe)
+    print_info "Closing any open Finder windows before starting sidebar operations (best-effort)..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
+
     # Clear existing favorites then populate in a deterministic order
     clear_sidebar
 
@@ -505,6 +511,10 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
     fi
 
     echo "Finder sidebar pinning done (add-only mode)."
+    # Close Finder windows after operations to leave Finder in a tidy state
+    print_info "Closing any open Finder windows after sidebar operations (best-effort)..."
+    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+    sleep 0.25
         # Print final list so callers can verify what was added in add-only mode
         if command -v python3 >/dev/null 2>&1; then
             print_info "Final Finder sidebar items (post-add, add-only mode):"
@@ -570,6 +580,11 @@ if [ ${#FSE_TMPFILES[@]} -gt 0 ]; then
         fi
     done
 fi
+
+# Close Finder windows after final add operations so Finder state is tidy
+print_info "Closing any open Finder windows after sidebar operations (best-effort)..."
+execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+sleep 0.25
 
 print_notice "Finder restarts are deferred until the final restart step. Run scripts/999_restart_apps.sh when the full run is complete to restart Finder and apply changes."
 
