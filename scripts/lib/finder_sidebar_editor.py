@@ -74,7 +74,14 @@ class FinderSidebar:
             raise RuntimeError(f"target does not exist: {target}")
 
         # Try mysides if available
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        # Allow tests and callers to override the mysides path via MACHINIT_MYSIDES
+        env_override = os.environ.get("MACHINIT_MYSIDES")
+        mysides_candidates = []
+        if env_override:
+            mysides_candidates.append(env_override)
+        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+
+        for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 friendly = name or os.path.basename(target) or target
                 # try the file:// URL form first
@@ -120,7 +127,13 @@ end tell
             return []
 
         # Try mysides if present for a clean listing
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        env_override = os.environ.get("MACHINIT_MYSIDES")
+        mysides_candidates = []
+        if env_override:
+            mysides_candidates.append(env_override)
+        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+
+        for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 cp = self._run([mysides, "list"])
                 if cp.returncode == 0:
@@ -222,7 +235,12 @@ end tell
             target_path = urllib.parse.unquote(name[len("file://"):])
 
         # Try mysides remove/rm first
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        env_override = os.environ.get("MACHINIT_MYSIDES")
+        mysides_candidates = []
+        if env_override:
+            mysides_candidates.append(env_override)
+        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+        for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 # try both 'remove' and 'rm'
                 for cmd in ("remove", "rm"):
@@ -315,7 +333,12 @@ end try
             return True
 
         # Try mysides move if it supports it (best-effort)
-        for mysides in ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"):
+        env_override = os.environ.get("MACHINIT_MYSIDES")
+        mysides_candidates = []
+        if env_override:
+            mysides_candidates.append(env_override)
+        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+        for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 cp = self._run([mysides, "move", name, str(position)])
                 if cp.returncode == 0:

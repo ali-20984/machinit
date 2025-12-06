@@ -12,6 +12,8 @@ source "$(dirname "$0")/utils.sh"
 RESET_FINDER_VIEW=${RESET_FINDER_VIEW:-false}
 ADD_SIDEBAR_ONLY=${ADD_SIDEBAR_ONLY:-false}
 USE_MYSIDES=${USE_MYSIDES:-false}
+FSE_SYNC=${FSE_SYNC:-true}
+FSE_WAIT_SECONDS=${FSE_WAIT_SECONDS:-1.0}
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --reset-view)
@@ -24,6 +26,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --use-mysides)
             USE_MYSIDES=true
+            shift
+            ;;
+        --fse-sync)
+            FSE_SYNC=true
+            shift
+            ;;
+        --fse-bg|--fse-background)
+            FSE_SYNC=false
             shift
             ;;
         *)
@@ -168,6 +178,31 @@ start_bg() {
     return 1
 }
 
+# Wrapper to either start the command in the background (detached) or run
+# it synchronously depending on FSE_SYNC. When synchronous we sleep for
+# FSE_WAIT_SECONDS after the command to let UI settle.
+run_fse_cmd() {
+    local cmd="$*"
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "Running FSE command synchronously: $cmd"
+        if [ "$DRY_RUN" = true ]; then
+            print_dry_run "$cmd"
+        else
+            execute_as_user sh -c "$cmd"
+        fi
+        # give the UI time to settle
+        if [ "$DRY_RUN" = true ]; then
+            print_info "(DRY_RUN) Sleeping ${FSE_WAIT_SECONDS}s between FSE actions"
+        else
+            sleep ${FSE_WAIT_SECONDS}
+        fi
+        return 0
+    else
+        start_bg "$cmd"
+        return $?
+    fi
+}
+
 # Make sure the container exists even if never used
 if [ -z "${FSE_PIDS+x}" ]; then
     FSE_PIDS=()
@@ -222,7 +257,7 @@ add_sidebar_item() {
 
             # Run the local Python helper in the background so the installer does not block
             cmd="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[1])\" -- '${target}'"
-            if start_bg "$cmd"; then
+            if run_fse_cmd "$cmd"; then
                 print_success "Launched background add for '$name' (via finder_sidebar_editor)."
                 return 0
             else
@@ -257,10 +292,10 @@ add_sidebar_item() {
 
             # Try with file:// URL first, then raw path
             # Start mysides invocations in the background
-            if start_bg "${mysides_bin} add '${name}' '${fileurl}'"; then
+            if run_fse_cmd "${mysides_bin} add '${name}' '${fileurl}'"; then
                 print_success "Launched background mysides add for '$name' (URL)."
                 return 0
-            elif start_bg "${mysides_bin} add '${name}' '${target}'"; then
+            elif run_fse_cmd "${mysides_bin} add '${name}' '${target}'"; then
                 print_success "Launched background mysides add for '$name' (path)."
                 return 0
             else
@@ -304,9 +339,10 @@ tell application "System Events"
 end tell
 EOF
 
-    start_bg "/usr/bin/osascript '$tmpfile'"
+    run_fse_cmd "/usr/bin/osascript '$tmpfile'"
 
     # schedule a background cleanup that waits briefly then deletes the tmpfile using Python (avoid literal 'rm -f' to satisfy static checks)
+    # schedule cleanup in background (always non-blocking)
     start_bg "sh -c 'sleep 2; python3 -c \"import os,sys;\ntry:\n os.remove(\'${tmpfile}\')\nexcept Exception:\n pass\"'" >/dev/null 2>&1 || true
 
     # No reliable way to detect success programmatically from AppleScript here — assume best-effort
@@ -333,19 +369,24 @@ clear_sidebar() {
                 # Best-effort: try removing the raw item value, and also try basename
                 # Start removal in background so the installer doesn't block on UI operations
                 cmd_remove="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])\" -- '${item}'"
-                start_bg "$cmd_remove" >/dev/null 2>&1 || true
+                run_fse_cmd "$cmd_remove" >/dev/null 2>&1 || true
                 # Try removing the basename of the item in case list() returned "Name file://..."
                 base_item="$(basename "${item}")"
                 if [ -n "${base_item}" ] && [ "${base_item}" != "${item}" ]; then
                     cmd_base="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])\" -- '${base_item}'"
-                    start_bg "$cmd_base" >/dev/null 2>&1 || true
+                    run_fse_cmd "$cmd_base" >/dev/null 2>&1 || true
                 fi
 
                 # After attempting removal, close any Finder windows that may have been opened
-                print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-                execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-                # small pause so Finder state can settle between UI operations
-                sleep 0.25
+                if [ "$FSE_SYNC" = true ]; then
+                    # synchronous mode: keep the same Finder window and rely on run_fse_cmd's wait
+                    print_info "Running in FSE sync mode — reusing Finder window and waiting ${FSE_WAIT_SECONDS}s"
+                else
+                    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+                    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+                    # small pause so Finder state can settle between UI operations
+                    sleep 0.25
+                fi
             fi
         done <<EOF
 ${current_items:-}
@@ -367,44 +408,76 @@ if [ "$ADD_SIDEBAR_ONLY" = true ]; then
 
     # Populate favorites from top to bottom — close Finder windows and pause briefly after each
     add_sidebar_item "Recents" "${ORIGINAL_HOME}"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations (default)"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     add_sidebar_item "Applications" "/Applications"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     add_sidebar_item "Home" "${ORIGINAL_HOME}"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     add_sidebar_item "Desktop" "${ORIGINAL_HOME}/Desktop"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     add_sidebar_item "Documents" "${ORIGINAL_HOME}/Documents"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     add_sidebar_item "Downloads" "${ORIGINAL_HOME}/Downloads"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     add_sidebar_item "Projects" "${ORIGINAL_HOME}/Documents/Projects"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     add_sidebar_item "Nextcloud" "${ORIGINAL_HOME}/Nextcloud"
-    print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
-    execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
-    sleep 0.25
+    if [ "$FSE_SYNC" = true ]; then
+        print_info "FSE sync mode — reusing Finder window; commands wait ${FSE_WAIT_SECONDS}s between operations"
+    else
+        print_info "Closing any open Finder windows (best-effort) and pausing briefly..."
+        execute_as_user /usr/bin/osascript -e 'tell application "Finder" to close every window' &>/dev/null || true
+        sleep 0.25
+    fi
 
     # Flush preferences so Finder picks up the change
     print_info "Flushing preference cache for user ${ORIGINAL_USER}..."
