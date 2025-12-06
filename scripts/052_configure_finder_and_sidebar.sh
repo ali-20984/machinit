@@ -142,6 +142,37 @@ fi
 # Attempt automated sidebar additions. Prefer `mysides` if available, fall back
 # to an AppleScript UI automation (requires Accessibility permissions).
 
+# Helper: start a detached background job under the original user and record its PID.
+# Uses nohup to detach; respects DRY_RUN by printing the intended command instead.
+start_bg() {
+    # Usage: start_bg <command string>
+    local cmd="$*"
+    if [ "$DRY_RUN" = true ]; then
+        print_dry_run "$cmd &"
+        return 0
+    fi
+
+    # Ensure FSE_PIDS exists
+    if [ -z "${FSE_PIDS+x}" ]; then
+        FSE_PIDS=()
+    fi
+
+    # Use execute_as_user with nohup so the job runs detached under the original user
+    if execute_as_user nohup sh -c "$cmd" >/dev/null 2>&1 & then
+        pid=$!
+        FSE_PIDS+=("$pid")
+        print_info "Started background job for Finder operation (PID: $pid)"
+        return 0
+    fi
+
+    return 1
+}
+
+# Make sure the container exists even if never used
+if [ -z "${FSE_PIDS+x}" ]; then
+    FSE_PIDS=()
+fi
+
 add_sidebar_item() {
     local name="$1"
     local target="$2"
@@ -159,6 +190,11 @@ add_sidebar_item() {
             ;;
     esac
 
+    # Ensure the background PID array is initialized (top-level variable)
+    if [ -z "${FSE_PIDS+x}" ]; then
+        FSE_PIDS=()
+    fi
+
     # 1) Default path: use the bundled finder_sidebar_editor under scripts/lib
     if [ "${USE_MYSIDES_FLAG:-0}" -eq 0 ]; then
         if command -v python3 >/dev/null 2>&1; then
@@ -166,8 +202,10 @@ add_sidebar_item() {
             repo_root="$(cd "$(dirname "$0")/.." >/dev/null && pwd)"
             libpath="${repo_root}/scripts/lib"
 
-            if execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[1])" -- "${target}" >/dev/null 2>&1; then
-                print_success "Added '$name' (via finder_sidebar_editor)."
+            # Run the local Python helper in the background so the installer does not block
+            cmd="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().add(sys.argv[1])\" -- '${target}'"
+            if start_bg "$cmd"; then
+                print_success "Launched background add for '$name' (via finder_sidebar_editor)."
                 return 0
             else
                 print_warning "finder_sidebar_editor invocation failed or module not present; will fall back to AppleScript UI method."
@@ -200,11 +238,12 @@ add_sidebar_item() {
             fi
 
             # Try with file:// URL first, then raw path
-            if execute_as_user "$mysides_bin" add "$name" "$fileurl" >/dev/null 2>&1; then
-                print_success "Added '$name' (via mysides URL)."
+            # Start mysides invocations in the background
+            if start_bg "${mysides_bin} add '${name}' '${fileurl}'"; then
+                print_success "Launched background mysides add for '$name' (URL)."
                 return 0
-            elif execute_as_user "$mysides_bin" add "$name" "$target" >/dev/null 2>&1; then
-                print_success "Added '$name' (via mysides path)."
+            elif start_bg "${mysides_bin} add '${name}' '${target}'"; then
+                print_success "Launched background mysides add for '$name' (path)."
                 return 0
             else
                 print_warning "mysides failed to add '$name' — falling back to AppleScript UI method."
@@ -219,10 +258,13 @@ add_sidebar_item() {
     # AppleScript fallback: select the folder in Finder and use the File > Add to Sidebar menu
     print_action "Adding '$name' to Finder sidebar using AppleScript (requires Accessibility permission)..."
     # Run AppleScript as the original user so the script interacts with the user's Finder session
-    execute_as_user /usr/bin/osascript <<EOF
+    # Run the AppleScript UI automation in the background (detached)
+    # write a temporary AppleScript file (expand $target) and run it in background
+    tmpfile=$(mktemp /tmp/machinit_fse_applescript.XXXXXX)
+    cat >"$tmpfile" <<EOF
 tell application "Finder"
     try
-        set targetFolder to (POSIX file "$target") as alias
+        set targetFolder to (POSIX file "${target}") as alias
         -- Open the folder so Finder has a selection
         open targetFolder
         delay 0.2
@@ -242,8 +284,10 @@ tell application "System Events"
 end tell
 EOF
 
+    start_bg "/usr/bin/osascript '$tmpfile'"
+
     # No reliable way to detect success programmatically from AppleScript here — assume best-effort
-    print_notice "AppleScript attempt complete. If nothing changed, grant Accessibility permission to Terminal/Installer and try again."
+    print_notice "AppleScript add launched in background. If nothing changed, grant Accessibility permission to Terminal/Installer and try again."
 }
 
 # Add the Projects folder created above to the sidebar (friendly name: Projects)
@@ -264,11 +308,14 @@ clear_sidebar() {
         while IFS= read -r item; do
             if [ -n "${item}" ]; then
                 # Best-effort: try removing the raw item value, and also try basename
-                execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])" -- "${item}" >/dev/null 2>&1 || true
+                # Start removal in background so the installer doesn't block on UI operations
+                cmd_remove="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])\" -- '${item}'"
+                start_bg "$cmd_remove" >/dev/null 2>&1 || true
                 # Try removing the basename of the item in case list() returned "Name file://..."
                 base_item="$(basename "${item}")"
                 if [ -n "${base_item}" ] && [ "${base_item}" != "${item}" ]; then
-                    execute_as_user env PYTHONPATH="${libpath}" python3 -c "from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])" -- "${base_item}" >/dev/null 2>&1 || true
+                    cmd_base="env PYTHONPATH='${libpath}' python3 -c \"from finder_sidebar_editor import FinderSidebar; import sys; FinderSidebar().remove(sys.argv[1])\" -- '${base_item}'"
+                    start_bg "$cmd_base" >/dev/null 2>&1 || true
                 fi
 
                 # After attempting removal, close any Finder windows that may have been opened
