@@ -36,31 +36,61 @@ class FinderSidebar:
     not attempt to modify the system.
     """
 
-    def __init__(self, allow_mysides: Optional[bool] = None, allow_pyobjc: Optional[bool] = None,
-                 allow_verbose: Optional[bool] = None):
+    def __init__(
+        self,
+        allow_mysides: Optional[bool] = None,
+        allow_pyobjc: Optional[bool] = None,
+        allow_verbose: Optional[bool] = None,
+    ):
         # Respect DRY_RUN via environment like before
-        self._dry_run = os.environ.get("DRY_RUN") not in (None, "0", "false", "False", "FALSE")
+        self._dry_run = os.environ.get("DRY_RUN") not in (
+            None,
+            "0",
+            "false",
+            "False",
+            "FALSE",
+        )
 
         # Allow callers to explicitly enable mysides on a per-instance basis
         # via the allow_mysides parameter. If not provided, fall back to the
         # MACHINIT_USE_MYSIDES environment variable (unchanged behaviour).
         if allow_mysides is None:
-            self._allow_mysides = os.environ.get("MACHINIT_USE_MYSIDES") not in (None, "0", "false", "False", "FALSE")
+            self._allow_mysides = os.environ.get("MACHINIT_USE_MYSIDES") not in (
+                None,
+                "0",
+                "false",
+                "False",
+                "FALSE",
+            )
         else:
             self._allow_mysides = bool(allow_mysides)
         # Optional pyobjc / LSSharedFileList path (opt-in only).
         if allow_pyobjc is None:
-            self._allow_pyobjc = os.environ.get("MACHINIT_USE_PYOBJC") not in (None, "0", "false", "False", "FALSE")
+            self._allow_pyobjc = os.environ.get("MACHINIT_USE_PYOBJC") not in (
+                None,
+                "0",
+                "false",
+                "False",
+                "FALSE",
+            )
         else:
             self._allow_pyobjc = bool(allow_pyobjc)
         # Optional verbose logging for debugging; opt-in via constructor or
         # MACHINIT_FSE_VERBOSE env var (non-zero/non-false enables verbose output)
         if allow_verbose is None:
-            self._verbose = os.environ.get("MACHINIT_FSE_VERBOSE") not in (None, "0", "false", "False", "FALSE")
+            self._verbose = os.environ.get("MACHINIT_FSE_VERBOSE") not in (
+                None,
+                "0",
+                "false",
+                "False",
+                "FALSE",
+            )
         else:
             self._verbose = bool(allow_verbose)
 
-    def _run(self, cmd: List[str], timeout: Optional[float] = None, **kwargs) -> subprocess.CompletedProcess:
+    def _run(
+        self, cmd: List[str], timeout: Optional[float] = None, **kwargs
+    ) -> subprocess.CompletedProcess:
         try:
             # debug logging (best-effort)
             try:
@@ -70,7 +100,14 @@ class FinderSidebar:
             # Use a modest default timeout for UI automation or external CLI
             if timeout is None:
                 timeout = 10.0
-            return subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout, **kwargs)
+            return subprocess.run(
+                cmd,
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=timeout,
+                **kwargs,
+            )
         except FileNotFoundError:
             # emulate a non-zero returncode to indicate missing binary
             cp = subprocess.CompletedProcess(cmd, returncode=127)
@@ -92,7 +129,14 @@ class FinderSidebar:
             # best-effort logging only
             pass
 
-    def _retry_cmd(self, cmd: List[str], retries: int = 2, delay: float = 0.15, timeout: Optional[float] = None, **kwargs) -> subprocess.CompletedProcess:
+    def _retry_cmd(
+        self,
+        cmd: List[str],
+        retries: int = 2,
+        delay: float = 0.15,
+        timeout: Optional[float] = None,
+        **kwargs,
+    ) -> subprocess.CompletedProcess:
         """Run a command with a small retry/backoff loop for transient failures.
 
         The function invokes _run and will sleep for an increasing amount of
@@ -102,7 +146,9 @@ class FinderSidebar:
         last = None
         while attempt <= retries:
             try:
-                self._debug(f"_retry_cmd attempt", attempt + 1, "of", retries + 1, "->", cmd)
+                self._debug(
+                    f"_retry_cmd attempt", attempt + 1, "of", retries + 1, "->", cmd
+                )
             except Exception:
                 pass
             last = self._run(cmd, timeout=timeout, **kwargs)
@@ -133,6 +179,7 @@ class FinderSidebar:
         try:
             import LaunchServices  # type: ignore
             import Foundation  # type: ignore
+
             return True
         except Exception:
             return False
@@ -173,7 +220,9 @@ class FinderSidebar:
             mysides_candidates = []
             if env_override:
                 mysides_candidates.append(env_override)
-        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+        mysides_candidates.extend(
+            ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides")
+        )
 
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
@@ -227,7 +276,9 @@ tell application "System Events"
 end tell
 """
 
-        cp = self._retry_cmd(["/usr/bin/osascript", "-e", applescript], retries=3, delay=0.2)
+        cp = self._retry_cmd(
+            ["/usr/bin/osascript", "-e", applescript], retries=3, delay=0.2
+        )
         return cp.returncode == 0
 
     def list(self) -> List[str]:
@@ -247,7 +298,9 @@ end tell
             mysides_candidates = []
             if env_override:
                 mysides_candidates.append(env_override)
-        mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+        mysides_candidates.extend(
+            ("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides")
+        )
 
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
@@ -298,12 +351,16 @@ end tell
                     )
                     from Foundation import NSURL  # type: ignore
 
-                    shared = LSSharedFileListCreate(None, kLSSharedFileListFavorites, None)
+                    shared = LSSharedFileListCreate(
+                        None, kLSSharedFileListFavorites, None
+                    )
                     items, seed = LSSharedFileListCopySnapshot(shared, None)
                     parsed = []
                     for it in items:
                         try:
-                            url, flags = LSSharedFileListItemCopyResolvedURL(it, 0, None)
+                            url, flags = LSSharedFileListItemCopyResolvedURL(
+                                it, 0, None
+                            )
                             if url is not None:
                                 p = url.path()
                                 parsed.append(f"{os.path.basename(p) or p}|{p}")
@@ -319,7 +376,9 @@ end tell
             # Fallback: read Finder sidebar prefs (best-effort parsing)
         # Next try reading the user's preferences plist directly (best-effort)
         try:
-            prefs_path = os.path.expanduser("~/Library/Preferences/com.apple.sidebarlists.plist")
+            prefs_path = os.path.expanduser(
+                "~/Library/Preferences/com.apple.sidebarlists.plist"
+            )
             if os.path.exists(prefs_path):
                 with open(prefs_path, "rb") as f:
                     obj = plistlib.load(f)
@@ -329,7 +388,11 @@ end tell
                     names = []
                     if isinstance(o, dict):
                         for k, v in o.items():
-                            if isinstance(k, str) and k.lower() == "name" and isinstance(v, str):
+                            if (
+                                isinstance(k, str)
+                                and k.lower() == "name"
+                                and isinstance(v, str)
+                            ):
                                 names.append(v)
                             else:
                                 names.extend(_collect_names(v))
@@ -356,7 +419,12 @@ end tell
             # best-effort — fall back to defaults read if available
             pass
 
-        cp = self._retry_cmd(["/usr/bin/defaults", "read", "com.apple.sidebarlists"], retries=2, delay=0.12, stderr=subprocess.DEVNULL)
+        cp = self._retry_cmd(
+            ["/usr/bin/defaults", "read", "com.apple.sidebarlists"],
+            retries=2,
+            delay=0.12,
+            stderr=subprocess.DEVNULL,
+        )
         if cp.returncode == 0 and cp.stdout:
             # Attempt simple parsing: find file:// occurrences and use the preceding tokens as names
             txt = cp.stdout.decode()
@@ -377,7 +445,9 @@ end tell
             if parsed:
                 return parsed
 
-        raise RuntimeError("Unable to list Finder sidebar items (no mysides and failed to read prefs)")
+        raise RuntimeError(
+            "Unable to list Finder sidebar items (no mysides and failed to read prefs)"
+        )
 
     def remove(self, name: str) -> bool:
         """Attempt to remove a sidebar item by name.
@@ -397,7 +467,7 @@ end tell
         # If the name looks like a file:// URL, try to derive path
         target_path = None
         if name and name.startswith("file://"):
-            target_path = urllib.parse.unquote(name[len("file://"):])
+            target_path = urllib.parse.unquote(name[len("file://") :])
 
         # Try mysides remove/rm first (only when explicitly allowed)
         if not self._allow_mysides:
@@ -407,7 +477,13 @@ end tell
             mysides_candidates = []
             if env_override:
                 mysides_candidates.append(env_override)
-            mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+            mysides_candidates.extend(
+                (
+                    "/usr/local/bin/mysides",
+                    "/opt/homebrew/bin/mysides",
+                    "/usr/bin/mysides",
+                )
+            )
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                 # try both 'remove' and 'rm'
@@ -421,38 +497,63 @@ end tell
                             after = self.list()
                         except Exception:
                             after = []
-                        still_present = any((name.lower() in str(c).lower()) for c in after if c)
+                        still_present = any(
+                            (name.lower() in str(c).lower()) for c in after if c
+                        )
                         if not still_present:
                             self._debug("mysides", cmd, name, "removed (verified)")
                             return True
-                        self._debug("mysides", cmd, name, "reported success but target still present")
+                        self._debug(
+                            "mysides",
+                            cmd,
+                            name,
+                            "reported success but target still present",
+                        )
 
                     # Try file:// URL form
                     if target_path is None and os.path.exists(name):
                         # caller passed a path — try file:// form
                         fileurl = self._file_url(name)
-                        cp = self._retry_cmd([mysides, cmd, fileurl], retries=2, delay=0.12)
+                        cp = self._retry_cmd(
+                            [mysides, cmd, fileurl], retries=2, delay=0.12
+                        )
                         if cp.returncode == 0:
                             return True
 
                     if target_path is not None:
                         # if we resolved a path from a file://, try removing that path too
-                        cp = self._retry_cmd([mysides, cmd, target_path], retries=2, delay=0.12)
+                        cp = self._retry_cmd(
+                            [mysides, cmd, target_path], retries=2, delay=0.12
+                        )
                         if cp.returncode == 0:
                             try:
                                 after = self.list()
                             except Exception:
                                 after = []
-                            still_present = any((target_path in str(c)) or (name.lower() in str(c).lower()) for c in after if c)
+                            still_present = any(
+                                (target_path in str(c))
+                                or (name.lower() in str(c).lower())
+                                for c in after
+                                if c
+                            )
                             if not still_present:
-                                self._debug("mysides", cmd, target_path, "removed (verified)")
+                                self._debug(
+                                    "mysides", cmd, target_path, "removed (verified)"
+                                )
                                 return True
-                            self._debug("mysides", cmd, target_path, "reported success but target still present")
+                            self._debug(
+                                "mysides",
+                                cmd,
+                                target_path,
+                                "reported success but target still present",
+                            )
 
                     # As a final attempt try the basename of the provided name
                     base = os.path.basename(name)
                     if base and base != name:
-                        cp = self._retry_cmd([mysides, cmd, base], retries=2, delay=0.12)
+                        cp = self._retry_cmd(
+                            [mysides, cmd, base], retries=2, delay=0.12
+                        )
                         if cp.returncode == 0:
                             return True
 
@@ -465,18 +566,29 @@ end tell
                         if cand and name.lower() in cand.lower():
                             # If candidate includes a 'name|path' form, prefer the friendly
                             # name portion when calling mysides (external tool expects name)
-                            candidate_arg = cand.split("|", 1)[0] if "|" in cand else cand
-                            cp = self._retry_cmd([mysides, cmd, candidate_arg], retries=2, delay=0.12)
+                            candidate_arg = (
+                                cand.split("|", 1)[0] if "|" in cand else cand
+                            )
+                            cp = self._retry_cmd(
+                                [mysides, cmd, candidate_arg], retries=2, delay=0.12
+                            )
                             if cp.returncode == 0:
                                 # verify it's gone
                                 try:
                                     after = self.list()
                                 except Exception:
                                     after = []
-                                still_present = any((name.lower() in str(c).lower()) for c in after if c)
+                                still_present = any(
+                                    (name.lower() in str(c).lower()) for c in after if c
+                                )
                                 if not still_present:
                                     return True
-                                self._debug("mysides", cmd, candidate_arg, "reported success but target still present")
+                                self._debug(
+                                    "mysides",
+                                    cmd,
+                                    candidate_arg,
+                                    "reported success but target still present",
+                                )
 
         # If available, try to remove using the native LSSharedFileList APIs via pyobjc
         if self._pyobjc_available():
@@ -503,7 +615,11 @@ end tell
                             candidates.append(p)
                             candidates.append(os.path.basename(p))
                         for cand in candidates:
-                            if cand and isinstance(cand, str) and cand.lower() in (name or "").lower():
+                            if (
+                                cand
+                                and isinstance(cand, str)
+                                and cand.lower() in (name or "").lower()
+                            ):
                                 try:
                                     LSSharedFileListItemRemove(shared, it)
                                     # verify removal via our list() (best-effort)
@@ -511,11 +627,18 @@ end tell
                                         after = self.list()
                                     except Exception:
                                         after = []
-                                    found = any((cand.lower() in str(c).lower()) for c in after if c)
+                                    found = any(
+                                        (cand.lower() in str(c).lower())
+                                        for c in after
+                                        if c
+                                    )
                                     if not found:
                                         self._debug("pyobjc removed item", cand)
                                         return True
-                                    self._debug("pyobjc reported removal but item still present (verified)", cand)
+                                    self._debug(
+                                        "pyobjc reported removal but item still present (verified)",
+                                        cand,
+                                    )
                                 except Exception:
                                     # If removing this specific item fails, continue to try others
                                     pass
@@ -563,7 +686,9 @@ on error
     -- best-effort; ignore UI failures
 end try
 """
-        cp = self._retry_cmd(["/usr/bin/osascript", "-e", applescript], retries=3, delay=0.2)
+        cp = self._retry_cmd(
+            ["/usr/bin/osascript", "-e", applescript], retries=3, delay=0.2
+        )
         if cp.returncode != 0:
             return False
         # verify the item actually disappeared
@@ -633,7 +758,7 @@ end try
         # Normalize path. Support incoming file:// URLs by unwrapping them.
         if path.startswith("file://"):
             try:
-                path = urllib.parse.unquote(path[len("file://"):])
+                path = urllib.parse.unquote(path[len("file://") :])
             except Exception:
                 pass
         target = os.path.abspath(os.path.expanduser(path))
@@ -647,31 +772,45 @@ end try
             mysides_candidates = []
             if env_override:
                 mysides_candidates.append(env_override)
-            mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+            mysides_candidates.extend(
+                (
+                    "/usr/local/bin/mysides",
+                    "/opt/homebrew/bin/mysides",
+                    "/usr/bin/mysides",
+                )
+            )
 
             for mysides in mysides_candidates:
                 if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                     fileurl = self._file_url(target)
-                    cp = self._retry_cmd([mysides, "rm", fileurl], retries=2, delay=0.12)
+                    cp = self._retry_cmd(
+                        [mysides, "rm", fileurl], retries=2, delay=0.12
+                    )
                     if cp.returncode == 0:
-                            # mysides may return 0 even when nothing was removed (fake mysides
-                            # used in tests behaves this way). Verify the item is gone by
-                            # re-listing and checking for the target/base; only treat as
-                            # success if the candidate is absent.
-                            try:
-                                after = self.list()
-                            except Exception:
-                                after = []
-                            still_present = any((target in str(c)) or (base and base in str(c)) for c in after)
-                            if not still_present:
-                                return True
+                        # mysides may return 0 even when nothing was removed (fake mysides
+                        # used in tests behaves this way). Verify the item is gone by
+                        # re-listing and checking for the target/base; only treat as
+                        # success if the candidate is absent.
+                        try:
+                            after = self.list()
+                        except Exception:
+                            after = []
+                        still_present = any(
+                            (target in str(c)) or (base and base in str(c))
+                            for c in after
+                        )
+                        if not still_present:
+                            return True
                     cp = self._retry_cmd([mysides, "rm", target], retries=2, delay=0.12)
                     if cp.returncode == 0:
                         try:
                             after = self.list()
                         except Exception:
                             after = []
-                        still_present = any((target in str(c)) or (base and base in str(c)) for c in after)
+                        still_present = any(
+                            (target in str(c)) or (base and base in str(c))
+                            for c in after
+                        )
                         if not still_present:
                             return True
 
@@ -696,7 +835,9 @@ end try
                         after = self.list()
                     except Exception:
                         after = []
-                    still_present = any((target in str(c)) or (base and base in str(c)) for c in after)
+                    still_present = any(
+                        (target in str(c)) or (base and base in str(c)) for c in after
+                    )
                     if not still_present:
                         return True
 
@@ -766,7 +907,11 @@ end try
 
         # Best-effort preference read to nudge macOS into realizing any changes;
         # we avoid destructive commands here so the function remains safe.
-        cp = self._retry_cmd(["/usr/bin/defaults", "read", "com.apple.sidebarlists"], retries=2, delay=0.12)
+        cp = self._retry_cmd(
+            ["/usr/bin/defaults", "read", "com.apple.sidebarlists"],
+            retries=2,
+            delay=0.12,
+        )
         return cp.returncode == 0
 
     def move(self, name: str, position: int) -> bool:
@@ -787,10 +932,18 @@ end try
             mysides_candidates = []
             if env_override:
                 mysides_candidates.append(env_override)
-            mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
+            mysides_candidates.extend(
+                (
+                    "/usr/local/bin/mysides",
+                    "/opt/homebrew/bin/mysides",
+                    "/usr/bin/mysides",
+                )
+            )
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
-                cp = self._retry_cmd([mysides, "move", name, str(position)], retries=2, delay=0.12)
+                cp = self._retry_cmd(
+                    [mysides, "move", name, str(position)], retries=2, delay=0.12
+                )
                 if cp.returncode == 0:
                     return True
 
@@ -816,7 +969,10 @@ end try
                         url, flags = LSSharedFileListItemCopyResolvedURL(it, 0, None)
                         if url is not None:
                             p = url.path()
-                            if name.lower() == os.path.basename(p).lower() or name.lower() in os.path.basename(p).lower():
+                            if (
+                                name.lower() == os.path.basename(p).lower()
+                                or name.lower() in os.path.basename(p).lower()
+                            ):
                                 found_item = it
                                 found_url = url
                                 break
@@ -836,7 +992,9 @@ end try
                         after_item = items[position - 2]
 
                     try:
-                        LSSharedFileListInsertItemURL(shared, after_item, None, None, found_url, None, None)
+                        LSSharedFileListInsertItemURL(
+                            shared, after_item, None, None, found_url, None, None
+                        )
                         return True
                     except Exception:
                         pass
@@ -850,7 +1008,9 @@ end try
 return 1
 """
         # Attempt a no-op that returns non-success
-        cp = self._retry_cmd(["/usr/bin/osascript", "-e", applescript], retries=2, delay=0.12)
+        cp = self._retry_cmd(
+            ["/usr/bin/osascript", "-e", applescript], retries=2, delay=0.12
+        )
         return cp.returncode == 0
 
 
@@ -863,10 +1023,20 @@ def main(argv=None) -> int:
     # Global option: only allow mysides when explicitly requested by CLI flag
     # If the flag is omitted, use_mysides will be None so the FinderSidebar
     # instance falls back to the MACHINIT_USE_MYSIDES environment variable.
-    parser.add_argument("--use-mysides", action="store_true", dest="use_mysides", default=None,
-                        help="Allow use of external mysides binary (explicit opt-in)")
-    parser.add_argument("--use-pyobjc", action="store_true", dest="use_pyobjc", default=None,
-                        help="Allow use of native pyobjc LSSharedFileList APIs (explicit opt-in)")
+    parser.add_argument(
+        "--use-mysides",
+        action="store_true",
+        dest="use_mysides",
+        default=None,
+        help="Allow use of external mysides binary (explicit opt-in)",
+    )
+    parser.add_argument(
+        "--use-pyobjc",
+        action="store_true",
+        dest="use_pyobjc",
+        default=None,
+        help="Allow use of native pyobjc LSSharedFileList APIs (explicit opt-in)",
+    )
     sub = parser.add_subparsers(dest="cmd")
 
     p_add = sub.add_parser("add")
@@ -898,8 +1068,10 @@ def main(argv=None) -> int:
 
     args = parser.parse_args(argv)
     # honor the global --use-mysides and --use-pyobjc flags (these do not change environment)
-    fs = FinderSidebar(allow_mysides=getattr(args, "use_mysides", None),
-                       allow_pyobjc=getattr(args, "use_pyobjc", None))
+    fs = FinderSidebar(
+        allow_mysides=getattr(args, "use_mysides", None),
+        allow_pyobjc=getattr(args, "use_pyobjc", None),
+    )
 
     try:
         if args.cmd == "add":
