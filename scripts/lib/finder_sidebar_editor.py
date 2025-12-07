@@ -36,7 +36,8 @@ class FinderSidebar:
     not attempt to modify the system.
     """
 
-    def __init__(self, allow_mysides: Optional[bool] = None, allow_pyobjc: Optional[bool] = None):
+    def __init__(self, allow_mysides: Optional[bool] = None, allow_pyobjc: Optional[bool] = None,
+                 allow_verbose: Optional[bool] = None):
         # Respect DRY_RUN via environment like before
         self._dry_run = os.environ.get("DRY_RUN") not in (None, "0", "false", "False", "FALSE")
 
@@ -52,9 +53,20 @@ class FinderSidebar:
             self._allow_pyobjc = os.environ.get("MACHINIT_USE_PYOBJC") not in (None, "0", "false", "False", "FALSE")
         else:
             self._allow_pyobjc = bool(allow_pyobjc)
+        # Optional verbose logging for debugging; opt-in via constructor or
+        # MACHINIT_FSE_VERBOSE env var (non-zero/non-false enables verbose output)
+        if allow_verbose is None:
+            self._verbose = os.environ.get("MACHINIT_FSE_VERBOSE") not in (None, "0", "false", "False", "FALSE")
+        else:
+            self._verbose = bool(allow_verbose)
 
     def _run(self, cmd: List[str], timeout: Optional[float] = None, **kwargs) -> subprocess.CompletedProcess:
         try:
+            # debug logging (best-effort)
+            try:
+                self._debug("_run:", cmd, "timeout:", timeout)
+            except Exception:
+                pass
             # Use a modest default timeout for UI automation or external CLI
             if timeout is None:
                 timeout = 10.0
@@ -63,6 +75,22 @@ class FinderSidebar:
             # emulate a non-zero returncode to indicate missing binary
             cp = subprocess.CompletedProcess(cmd, returncode=127)
             return cp
+
+    def _debug(self, *parts: object) -> None:
+        """Print debugging information when verbose mode is enabled.
+
+        We write debug output to stderr to keep normal stdout stable for tests
+        and CLI consumers.
+        """
+        if not self._verbose:
+            return
+        try:
+            import sys
+
+            print("[FSE DEBUG]", *parts, file=sys.stderr)
+        except Exception:
+            # best-effort logging only
+            pass
 
     def _retry_cmd(self, cmd: List[str], retries: int = 2, delay: float = 0.15, timeout: Optional[float] = None, **kwargs) -> subprocess.CompletedProcess:
         """Run a command with a small retry/backoff loop for transient failures.
@@ -73,8 +101,16 @@ class FinderSidebar:
         attempt = 0
         last = None
         while attempt <= retries:
+            try:
+                self._debug(f"_retry_cmd attempt", attempt + 1, "of", retries + 1, "->", cmd)
+            except Exception:
+                pass
             last = self._run(cmd, timeout=timeout, **kwargs)
             if last.returncode == 0:
+                try:
+                    self._debug("_retry_cmd success:", cmd)
+                except Exception:
+                    pass
                 return last
             attempt += 1
             # small backoff
@@ -352,6 +388,12 @@ end tell
             print(f"[DRY_RUN] remove: {name}")
             return True
 
+        # Guardrails: avoid accidental destructive calls
+        if not name or not isinstance(name, str) or not name.strip():
+            raise ValueError("name is required")
+        if name.strip() in ("/", "."):
+            raise ValueError("refusing to remove root or ambiguous name")
+
         # If the name looks like a file:// URL, try to derive path
         target_path = None
         if name and name.startswith("file://"):
@@ -371,9 +413,19 @@ end tell
                 # try both 'remove' and 'rm'
                 for cmd in ("remove", "rm"):
                     # Try the name first
+                    self._debug("mysides", cmd, "->", name)
                     cp = self._retry_cmd([mysides, cmd, name], retries=2, delay=0.12)
                     if cp.returncode == 0:
-                        return True
+                        # re-list to confirm the removal actually happened
+                        try:
+                            after = self.list()
+                        except Exception:
+                            after = []
+                        still_present = any((name.lower() in str(c).lower()) for c in after if c)
+                        if not still_present:
+                            self._debug("mysides", cmd, name, "removed (verified)")
+                            return True
+                        self._debug("mysides", cmd, name, "reported success but target still present")
 
                     # Try file:// URL form
                     if target_path is None and os.path.exists(name):
@@ -387,7 +439,15 @@ end tell
                         # if we resolved a path from a file://, try removing that path too
                         cp = self._retry_cmd([mysides, cmd, target_path], retries=2, delay=0.12)
                         if cp.returncode == 0:
-                            return True
+                            try:
+                                after = self.list()
+                            except Exception:
+                                after = []
+                            still_present = any((target_path in str(c)) or (name.lower() in str(c).lower()) for c in after if c)
+                            if not still_present:
+                                self._debug("mysides", cmd, target_path, "removed (verified)")
+                                return True
+                            self._debug("mysides", cmd, target_path, "reported success but target still present")
 
                     # As a final attempt try the basename of the provided name
                     base = os.path.basename(name)
@@ -408,7 +468,15 @@ end tell
                             candidate_arg = cand.split("|", 1)[0] if "|" in cand else cand
                             cp = self._retry_cmd([mysides, cmd, candidate_arg], retries=2, delay=0.12)
                             if cp.returncode == 0:
-                                return True
+                                # verify it's gone
+                                try:
+                                    after = self.list()
+                                except Exception:
+                                    after = []
+                                still_present = any((name.lower() in str(c).lower()) for c in after if c)
+                                if not still_present:
+                                    return True
+                                self._debug("mysides", cmd, candidate_arg, "reported success but target still present")
 
         # If available, try to remove using the native LSSharedFileList APIs via pyobjc
         if self._pyobjc_available():
@@ -438,7 +506,16 @@ end tell
                             if cand and isinstance(cand, str) and cand.lower() in (name or "").lower():
                                 try:
                                     LSSharedFileListItemRemove(shared, it)
-                                    return True
+                                    # verify removal via our list() (best-effort)
+                                    try:
+                                        after = self.list()
+                                    except Exception:
+                                        after = []
+                                    found = any((cand.lower() in str(c).lower()) for c in after if c)
+                                    if not found:
+                                        self._debug("pyobjc removed item", cand)
+                                        return True
+                                    self._debug("pyobjc reported removal but item still present (verified)", cand)
                                 except Exception:
                                     # If removing this specific item fails, continue to try others
                                     pass
@@ -487,7 +564,19 @@ on error
 end try
 """
         cp = self._retry_cmd(["/usr/bin/osascript", "-e", applescript], retries=3, delay=0.2)
-        return cp.returncode == 0
+        if cp.returncode != 0:
+            return False
+        # verify the item actually disappeared
+        try:
+            after = self.list()
+        except Exception:
+            after = []
+        still_present = any((name.lower() in str(c).lower()) for c in after if c)
+        if not still_present:
+            self._debug("osascript removed (verified)", name)
+            return True
+        self._debug("osascript reported success but item still present", name)
+        return False
 
     def remove_all(self) -> bool:
         """Remove all sidebar favorites (best-effort).
