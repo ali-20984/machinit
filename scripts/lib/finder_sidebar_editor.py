@@ -53,13 +53,38 @@ class FinderSidebar:
         else:
             self._allow_pyobjc = bool(allow_pyobjc)
 
-    def _run(self, cmd: List[str], **kwargs) -> subprocess.CompletedProcess:
+    def _run(self, cmd: List[str], timeout: Optional[float] = None, **kwargs) -> subprocess.CompletedProcess:
         try:
-            return subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+            # Use a modest default timeout for UI automation or external CLI
+            if timeout is None:
+                timeout = 10.0
+            return subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout, **kwargs)
         except FileNotFoundError:
             # emulate a non-zero returncode to indicate missing binary
             cp = subprocess.CompletedProcess(cmd, returncode=127)
             return cp
+
+    def _retry_cmd(self, cmd: List[str], retries: int = 2, delay: float = 0.15, timeout: Optional[float] = None, **kwargs) -> subprocess.CompletedProcess:
+        """Run a command with a small retry/backoff loop for transient failures.
+
+        The function invokes _run and will sleep for an increasing amount of
+        time between attempts. It returns the last CompletedProcess.
+        """
+        attempt = 0
+        last = None
+        while attempt <= retries:
+            last = self._run(cmd, timeout=timeout, **kwargs)
+            if last.returncode == 0:
+                return last
+            attempt += 1
+            # small backoff
+            try:
+                import time
+
+                time.sleep(delay * attempt)
+            except Exception:
+                pass
+        return last
 
     def _pyobjc_available(self) -> bool:
         """Return True if pyobjc-based LaunchServices APIs are importable.
@@ -119,10 +144,10 @@ class FinderSidebar:
                 friendly = name or os.path.basename(target) or target
                 # try the file:// URL form first
                 fileurl = self._file_url(target)
-                cp = self._run([mysides, "add", friendly, fileurl])
+                cp = self._retry_cmd([mysides, "add", friendly, fileurl])
                 if cp.returncode == 0:
                     return True
-                cp = self._run([mysides, "add", friendly, target])
+                cp = self._retry_cmd([mysides, "add", friendly, target])
                 if cp.returncode == 0:
                     return True
 
@@ -166,7 +191,7 @@ tell application "System Events"
 end tell
 """
 
-        cp = self._run(["/usr/bin/osascript", "-e", applescript])
+        cp = self._retry_cmd(["/usr/bin/osascript", "-e", applescript], retries=3, delay=0.2)
         return cp.returncode == 0
 
     def list(self) -> List[str]:
@@ -190,7 +215,7 @@ end tell
 
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
-                cp = self._run([mysides, "list"])
+                cp = self._retry_cmd([mysides, "list"], retries=2, delay=0.12)
                 if cp.returncode == 0:
                     out = cp.stdout.decode().strip().splitlines()
                     # Parse lines like "Name <separator> URL" — extract the friendly name
@@ -199,17 +224,31 @@ end tell
                         ln = ln.strip()
                         if not ln:
                             continue
-                        # If the line contains a file:// URL, the friendly name is usually before it
+                        # Normalize mysides output that may use 'name|path' or embed a file://
+                        if "|" in ln:
+                            left, rest = ln.split("|", 1)
+                            left = left.strip()
+                            rest = rest.strip()
+                            if rest.startswith("file://"):
+                                path = urllib.parse.unquote(rest)
+                            else:
+                                path = rest
+                            name = left or os.path.basename(path)
+                            parsed.append(f"{name}|{path}")
+                            continue
+                        # If the line contains a file:// URL without an explicit '|',
+                        # the friendly name is usually before it
                         idx = ln.rfind("file://")
                         if idx != -1:
-                            name = ln[:idx].strip()
+                            name = ln[:idx].strip().rstrip("|")
+                            fileurl = ln[idx:].strip()
+                            path = urllib.parse.unquote(fileurl)
                             if not name:
-                                # fallback to basename of the path
-                                name = os.path.basename(urllib.parse.unquote(ln[idx:]))
-                        else:
-                            # Otherwise use the whole line
-                            name = ln
-                        parsed.append(name)
+                                name = os.path.basename(path)
+                            parsed.append(f"{name}|{path}")
+                            continue
+                        # Otherwise use the whole line
+                        parsed.append(ln)
                     return parsed
 
             # If allowed, try the native macOS LSSharedFileList API via pyobjc.
@@ -231,7 +270,7 @@ end tell
                             url, flags = LSSharedFileListItemCopyResolvedURL(it, 0, None)
                             if url is not None:
                                 p = url.path()
-                                parsed.append(os.path.basename(p) or p)
+                                parsed.append(f"{os.path.basename(p) or p}|{p}")
                         except Exception:
                             # ignore problematic items
                             pass
@@ -281,7 +320,7 @@ end tell
             # best-effort — fall back to defaults read if available
             pass
 
-        cp = self._run(["/usr/bin/defaults", "read", "com.apple.sidebarlists"], stderr=subprocess.DEVNULL)
+        cp = self._retry_cmd(["/usr/bin/defaults", "read", "com.apple.sidebarlists"], retries=2, delay=0.12, stderr=subprocess.DEVNULL)
         if cp.returncode == 0 and cp.stdout:
             # Attempt simple parsing: find file:// occurrences and use the preceding tokens as names
             txt = cp.stdout.decode()
@@ -332,7 +371,7 @@ end tell
                 # try both 'remove' and 'rm'
                 for cmd in ("remove", "rm"):
                     # Try the name first
-                    cp = self._run([mysides, cmd, name])
+                    cp = self._retry_cmd([mysides, cmd, name], retries=2, delay=0.12)
                     if cp.returncode == 0:
                         return True
 
@@ -340,20 +379,20 @@ end tell
                     if target_path is None and os.path.exists(name):
                         # caller passed a path — try file:// form
                         fileurl = self._file_url(name)
-                        cp = self._run([mysides, cmd, fileurl])
+                        cp = self._retry_cmd([mysides, cmd, fileurl], retries=2, delay=0.12)
                         if cp.returncode == 0:
                             return True
 
                     if target_path is not None:
                         # if we resolved a path from a file://, try removing that path too
-                        cp = self._run([mysides, cmd, target_path])
+                        cp = self._retry_cmd([mysides, cmd, target_path], retries=2, delay=0.12)
                         if cp.returncode == 0:
                             return True
 
                     # As a final attempt try the basename of the provided name
                     base = os.path.basename(name)
                     if base and base != name:
-                        cp = self._run([mysides, cmd, base])
+                        cp = self._retry_cmd([mysides, cmd, base], retries=2, delay=0.12)
                         if cp.returncode == 0:
                             return True
 
@@ -364,9 +403,50 @@ end tell
                         candidates = []
                     for cand in candidates:
                         if cand and name.lower() in cand.lower():
-                            cp = self._run([mysides, cmd, cand])
+                            # If candidate includes a 'name|path' form, prefer the friendly
+                            # name portion when calling mysides (external tool expects name)
+                            candidate_arg = cand.split("|", 1)[0] if "|" in cand else cand
+                            cp = self._retry_cmd([mysides, cmd, candidate_arg], retries=2, delay=0.12)
                             if cp.returncode == 0:
                                 return True
+
+        # If available, try to remove using the native LSSharedFileList APIs via pyobjc
+        if self._pyobjc_available():
+            try:
+                from LaunchServices import (
+                    LSSharedFileListCreate,  # type: ignore
+                    kLSSharedFileListFavorites,  # type: ignore
+                    LSSharedFileListCopySnapshot,  # type: ignore
+                    LSSharedFileListItemCopyResolvedURL,  # type: ignore
+                    LSSharedFileListItemRemove,  # type: ignore
+                )
+
+                shared = LSSharedFileListCreate(None, kLSSharedFileListFavorites, None)
+                items, seed = LSSharedFileListCopySnapshot(shared, None)
+                for it in items:
+                    try:
+                        url, flags = LSSharedFileListItemCopyResolvedURL(it, 0, None)
+                        p = None
+                        if url is not None:
+                            p = url.path()
+                        # Build comparison candidates
+                        candidates = [name]
+                        if p:
+                            candidates.append(p)
+                            candidates.append(os.path.basename(p))
+                        for cand in candidates:
+                            if cand and isinstance(cand, str) and cand.lower() in (name or "").lower():
+                                try:
+                                    LSSharedFileListItemRemove(shared, it)
+                                    return True
+                                except Exception:
+                                    # If removing this specific item fails, continue to try others
+                                    pass
+                    except Exception:
+                        pass
+            except Exception:
+                # fall back to AppleScript if pyobjc removal fails
+                pass
 
         # Best-effort AppleScript: find item in sidebar and remove via UI
         # Best-effort AppleScript: try selecting the item via UI and use the "Remove from Sidebar" menu.
@@ -406,7 +486,7 @@ on error
     -- best-effort; ignore UI failures
 end try
 """
-        cp = self._run(["/usr/bin/osascript", "-e", applescript])
+        cp = self._retry_cmd(["/usr/bin/osascript", "-e", applescript], retries=3, delay=0.2)
         return cp.returncode == 0
 
     def remove_all(self) -> bool:
@@ -429,10 +509,19 @@ end try
         ok = True
         for item in items:
             # Some backends (like a fake mysides in tests) may return 'Name|path'
-            # so prefer removing by the friendly name portion when present.
+            # Prefer removal by the path when available as it is more precise
+            # (e.g. when multiple items share the same friendly name).
             if isinstance(item, str) and "|" in item:
-                name_part = item.split("|", 1)[0]
-                res = self.remove(name_part)
+                name_part, path_part = item.split("|", 1)
+                # Prefer removing by friendly name first (works for mysides
+                # and many backends). If that fails, fall back to path-based
+                # removal which is more deterministic for native backends.
+                if name_part and self.remove(name_part):
+                    res = True
+                elif path_part and self.remove_by_path(path_part):
+                    res = True
+                else:
+                    res = False
             else:
                 res = self.remove(item)
             ok = ok and bool(res)
@@ -452,8 +541,16 @@ end try
         if not path:
             raise ValueError("path is required")
 
-        # Normalize path
+        # Normalize path. Support incoming file:// URLs by unwrapping them.
+        if path.startswith("file://"):
+            try:
+                path = urllib.parse.unquote(path[len("file://"):])
+            except Exception:
+                pass
         target = os.path.abspath(os.path.expanduser(path))
+
+        # Normalize base early — used for matching and verification below
+        base = os.path.basename(target)
 
         # Try mysides if allowed
         if self._allow_mysides:
@@ -466,15 +563,30 @@ end try
             for mysides in mysides_candidates:
                 if os.path.exists(mysides) and os.access(mysides, os.X_OK):
                     fileurl = self._file_url(target)
-                    cp = self._run([mysides, "rm", fileurl])
+                    cp = self._retry_cmd([mysides, "rm", fileurl], retries=2, delay=0.12)
                     if cp.returncode == 0:
-                        return True
-                    cp = self._run([mysides, "rm", target])
+                            # mysides may return 0 even when nothing was removed (fake mysides
+                            # used in tests behaves this way). Verify the item is gone by
+                            # re-listing and checking for the target/base; only treat as
+                            # success if the candidate is absent.
+                            try:
+                                after = self.list()
+                            except Exception:
+                                after = []
+                            still_present = any((target in str(c)) or (base and base in str(c)) for c in after)
+                            if not still_present:
+                                return True
+                    cp = self._retry_cmd([mysides, "rm", target], retries=2, delay=0.12)
                     if cp.returncode == 0:
-                        return True
+                        try:
+                            after = self.list()
+                        except Exception:
+                            after = []
+                        still_present = any((target in str(c)) or (base and base in str(c)) for c in after)
+                        if not still_present:
+                            return True
 
         # As an alternative try to remove items that include the basename/path
-        base = os.path.basename(target)
         try:
             candidates = self.list()
         except Exception:
@@ -483,8 +595,21 @@ end try
         for cand in candidates:
             # match on path content or basename
             if cand and (base and base in cand or target in cand):
-                if self.remove(cand):
-                    return True
+                # If backend returns 'name|path' prefer to remove by friendly name
+                if isinstance(cand, str) and "|" in cand:
+                    cand_name = cand.split("|", 1)[0]
+                else:
+                    cand_name = cand
+                if self.remove(cand_name):
+                    # Ensure the item actually disappeared from the listing — some
+                    # backends may report success while making no real change.
+                    try:
+                        after = self.list()
+                    except Exception:
+                        after = []
+                    still_present = any((target in str(c)) or (base and base in str(c)) for c in after)
+                    if not still_present:
+                        return True
 
         # Best-effort fallback: call remove() directly with the target
         return self.remove(target)
@@ -501,7 +626,22 @@ end try
             return None
 
         for idx, val in enumerate(items, start=1):
-            if val and val.lower() == name.lower():
+            if not val:
+                continue
+            # Support name|path format returned by list() — compare both friendly name and path
+            if "|" in val:
+                try:
+                    name_part, path_part = val.split("|", 1)
+                except Exception:
+                    name_part = val
+                    path_part = ""
+                if name_part and name_part.lower() == name.lower():
+                    return idx
+                if path_part and name.lower() in path_part.lower():
+                    return idx
+            else:
+                if val.lower() == name.lower():
+                    return idx
                 return idx
 
         return None
@@ -520,7 +660,10 @@ end try
         if index <= 0 or index > len(items):
             return None
 
-        return items[index - 1]
+        val = items[index - 1]
+        if isinstance(val, str) and "|" in val:
+            return val.split("|", 1)[0]
+        return val
 
     def synchronize(self) -> bool:
         """Best-effort synchronization so Finder picks up changes (flush prefs).
@@ -534,7 +677,7 @@ end try
 
         # Best-effort preference read to nudge macOS into realizing any changes;
         # we avoid destructive commands here so the function remains safe.
-        cp = self._run(["/usr/bin/defaults", "read", "com.apple.sidebarlists"]) 
+        cp = self._retry_cmd(["/usr/bin/defaults", "read", "com.apple.sidebarlists"], retries=2, delay=0.12)
         return cp.returncode == 0
 
     def move(self, name: str, position: int) -> bool:
@@ -558,9 +701,59 @@ end try
             mysides_candidates.extend(("/usr/local/bin/mysides", "/opt/homebrew/bin/mysides", "/usr/bin/mysides"))
         for mysides in mysides_candidates:
             if os.path.exists(mysides) and os.access(mysides, os.X_OK):
-                cp = self._run([mysides, "move", name, str(position)])
+                cp = self._retry_cmd([mysides, "move", name, str(position)], retries=2, delay=0.12)
                 if cp.returncode == 0:
                     return True
+
+        # If allowed, attempt a native pyobjc reorder (best-effort)
+        if self._pyobjc_available():
+            try:
+                from LaunchServices import (
+                    LSSharedFileListCreate,  # type: ignore
+                    kLSSharedFileListFavorites,  # type: ignore
+                    LSSharedFileListCopySnapshot,  # type: ignore
+                    LSSharedFileListItemCopyResolvedURL,  # type: ignore
+                    LSSharedFileListItemRemove,  # type: ignore
+                    LSSharedFileListInsertItemURL,  # type: ignore
+                )
+
+                shared = LSSharedFileListCreate(None, kLSSharedFileListFavorites, None)
+                items, seed = LSSharedFileListCopySnapshot(shared, None)
+                # locate the item to move
+                found_item = None
+                found_url = None
+                for it in items:
+                    try:
+                        url, flags = LSSharedFileListItemCopyResolvedURL(it, 0, None)
+                        if url is not None:
+                            p = url.path()
+                            if name.lower() == os.path.basename(p).lower() or name.lower() in os.path.basename(p).lower():
+                                found_item = it
+                                found_url = url
+                                break
+                    except Exception:
+                        continue
+
+                if found_item is not None and found_url is not None:
+                    try:
+                        # remove existing
+                        LSSharedFileListItemRemove(shared, found_item)
+                    except Exception:
+                        pass
+
+                    # compute insertion point (after_item) — position is 1-based
+                    after_item = None
+                    if position > 1 and position - 2 < len(items):
+                        after_item = items[position - 2]
+
+                    try:
+                        LSSharedFileListInsertItemURL(shared, after_item, None, None, found_url, None, None)
+                        return True
+                    except Exception:
+                        pass
+            except Exception:
+                # fallback to other methods below
+                pass
 
         # UI automation fallback is complex; attempt best-effort AppleScript
         applescript = """
@@ -568,7 +761,7 @@ end try
 return 1
 """
         # Attempt a no-op that returns non-success
-        cp = self._run(["/usr/bin/osascript", "-e", applescript])
+        cp = self._retry_cmd(["/usr/bin/osascript", "-e", applescript], retries=2, delay=0.12)
         return cp.returncode == 0
 
 

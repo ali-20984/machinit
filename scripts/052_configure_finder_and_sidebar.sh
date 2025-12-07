@@ -15,6 +15,8 @@ USE_MYSIDES=${USE_MYSIDES:-false}
 USE_PYOBJC=${USE_PYOBJC:-false}
 FSE_SYNC=${FSE_SYNC:-true}
 FSE_WAIT_SECONDS=${FSE_WAIT_SECONDS:-2.5}
+# How many times to retry a synchronous FSE command before giving up
+FSE_CMD_RETRIES=${FSE_CMD_RETRIES:-2}
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --reset-view)
@@ -208,10 +210,27 @@ run_fse_cmd() {
         if [ "$DRY_RUN" = true ]; then
             print_dry_run "$cmd"
         else
-            execute_as_user sh -c "$cmd"
+            # Try the command, retrying a few times (best-effort) in case UI
+            # automation or mysides is temporarily unavailable.
+            local attempt=0
+            local rc=1
+            while : ; do
+                execute_as_user sh -c "$cmd"
+                rc=$?
+                if [ "$rc" -eq 0 ]; then
+                    break
+                fi
+                attempt=$((attempt + 1))
+                if [ "$attempt" -gt "$FSE_CMD_RETRIES" ]; then
+                    print_warning "FSE command failed after $attempt attempts: $cmd"
+                    break
+                fi
+                print_warning "FSE command failed (attempt $attempt/$FSE_CMD_RETRIES), retrying after ${FSE_WAIT_SECONDS}s..."
+                sleep ${FSE_WAIT_SECONDS}
+            done
         fi
         # give the UI time to settle
-        if [ "$DRY_RUN" = true ]; then
+            if [ "$DRY_RUN" = true ]; then
             print_info "(DRY_RUN) Sleeping ${FSE_WAIT_SECONDS}s between FSE actions"
         else
             sleep ${FSE_WAIT_SECONDS}
